@@ -5,7 +5,7 @@ import { select } from "d3";
 /**
  * Base class to work in a 2D polar coordinates chart.
  */
-export class PolarGraph {
+class PolarGraph {
   /**
    * The list of horizontal positioning of the chart allowed.
    * @type {Array<string>}
@@ -366,3 +366,5 @@ export class PolarGraph {
       .text(String);
   }
 }
+
+export default PolarGraph;

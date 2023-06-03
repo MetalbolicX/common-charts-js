@@ -1,5 +1,5 @@
 import { scaleBand, format, select, selectAll } from "d3";
-import { RectangularGraph } from "./rectangular_graph";
+import RectangularGraph from "./rectangular_graph.js";
 
 ("use strict");
 
@@ -7,7 +7,7 @@ import { RectangularGraph } from "./rectangular_graph";
  * Class to create an instance of a bar chart.
  * @extends RectangularGraph Class for the 2D in rectangular coordinates chart.
  */
-export class BarGraph extends RectangularGraph {
+class BarGraph extends RectangularGraph {
   /** @type {boolean} */
   #isNormalized;
   /** @type {boolean} */
@@ -589,3 +589,5 @@ export class BarGraph extends RectangularGraph {
       .attr("y2", (datum) => this._dependentScale(datum));
   }
 }
+
+export default BarGraph;

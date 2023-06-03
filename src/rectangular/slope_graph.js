@@ -1,5 +1,5 @@
 import { format, select } from "d3";
-import { RectangularGraph } from "./rectangular_graph";
+import RectangularGraph from "./rectangular_graph.js";
 
 ("use strict");
 
@@ -277,3 +277,5 @@ export class SlopeGraph extends RectangularGraph {
       .attr("y2", (datum) => this._dependentScale(datum));
   }
 }
+
+export default SlopeGraph;

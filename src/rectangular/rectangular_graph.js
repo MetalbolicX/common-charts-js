@@ -5,7 +5,7 @@ import { select } from "d3";
 /**
  * Base class to work in a 2D rectangular coordinates chart.
  */
-export class RectangularGraph {
+class RectangularGraph {
   /**
    * The list of horizontal positioning of the chart allowed.
    * @type {Array<string>}
@@ -586,3 +586,5 @@ export class RectangularGraph {
       });
   }
 }
+
+export default RectangularGraph;
