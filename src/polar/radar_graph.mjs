@@ -1,5 +1,5 @@
 import { select, format, lineRadial, curveLinearClosed, greatest } from  "d3";
-import PolarGraph from "./polar_graph.js";
+import PolarGraph from "./polar_graph.mjs";
 
 ("use strict");
 

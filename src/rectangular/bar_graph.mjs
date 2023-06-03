@@ -1,5 +1,5 @@
 import { scaleBand, format, select, selectAll } from "d3";
-import RectangularGraph from "./rectangular_graph.js";
+import RectangularGraph from "./rectangular_graph.mjs";
 
 ("use strict");
 

@@ -1,5 +1,5 @@
 import { select, area, greatestIndex } from "d3";
-import { MultiLineGraph } from "./multiseries_graph.js";
+import { MultiLineGraph } from "./multiseries_graph.mjs";
 
 ("use strict");
 
