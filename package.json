@@ -8,12 +8,14 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
-    "d3",
     "d3.js",
     "data visualization",
     "svg",
     "graphs",
-    "charts"
+    "charts",
+    "html",
+    "css",
+    "javascript"
   ],
   "author": {
     "name": "José Martínez Santana",

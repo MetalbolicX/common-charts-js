@@ -1,11 +1,26 @@
 
 # common-charts-js
 
-**D3.js**, the short name for <u>Data-Driven Documents</u>, is a JavaScript library for manipulating documents based on data. D3 helps to bind data to *HTML*, *SVG* and *CSS*. It provides a wide range of tools and functions that enable developers to create interactive and dynamic data visualizations.
+By José Martínez Santana
+
+## Technologies used
+
+<div align="center">
+  <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript" target="_blank" rel="noreferrer">
+      <img  alt="JavaScript" height="50px" style="padding-right:10px;" src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/javascript/javascript-plain.svg"/>
+  </a>
+  <a href="https://d3js.org/" target="_blank" rel="noreferrer">
+      <img  alt="JavaScript" height="50px" style="padding-right:10px;" src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/d3js/d3js-original.svg"/>
+  </a>
+</div>
+
+## Description
+
+**D3**, the short name for <u>Data-Driven Documents</u>, is a JavaScript library for manipulating documents based on data. D3 helps to bind data to *HTML*, *SVG* and *CSS*. It provides a wide range of tools and functions that enable developers to create interactive and dynamic data visualizations.
 
 **common-charts-js** solves the problem re write again and again the same code for the common data visualization charts (like line, bar, etc.). This is a library which has prebuild charts using the <u>Object Oriented Programming</u> classes of **ECMAScript 6**. The user only needs to import the class chart and provide the parameters to create it.
 
-In addition the user knows D3.js, it is possible to customize more any of the pre build chart.
+In addition the user knows `D3`, it is possible to customize more any of the pre build chart.
 
 ## Charts at disposal
 
@@ -25,11 +40,11 @@ npm i -S common-charts-js
 
 # Usage
 
-## How to download D3.js library
+## How to download D3 library
 
-This library do not use the `npm install d3` to avoid the unnecessary loading `js` files of the whole `D3.js` library
+This library do not use the `npm install d3` to avoid the unnecessary loading `js` files of the whole `D3` library.
 
-In order to download `D3.js` and use it in a vanilla HTML in modern browsers, import D3 from [jsDelivr](https://www.jsdelivr.com/package/npm/d3) or [unpkg](https://unpkg.com/d3) or another <u>CDN</u>.
+In order to download `D3` and use it in a vanilla HTML in modern browsers, import D3 from [jsDelivr](https://www.jsdelivr.com/package/npm/d3) or [unpkg](https://unpkg.com/d3) or another <u>CDN</u>.
 
 *Example of the import from unpkg*
 
@@ -233,7 +248,7 @@ graph.renderDependentAxis();
 
 # Limitations
 
-Neither the *common-chart-js* and [D3](https://d3js.org/) are libraries for complex data cleaning. The recommended use of them are with **cleaned semi structured data** previously processed with another tool such as [Ms Excel](https://www.microsoft.com/en/microsoft-365/excel) or [Pandas for Python](https://pandas.pydata.org/) or any other software for data manipulation.
+Neither the *common-chart-js* and *[D3](https://d3js.org/)* are libraries for complex data cleaning. The recommended use of them are with **cleaned semi structured data** previously processed with another tool such as [Ms Excel](https://www.microsoft.com/en/microsoft-365/excel) or [Pandas for Python](https://pandas.pydata.org/) or any other software for data manipulation.
 
 # Contributing
 Anybody who wants to add or improve something, I invite you to collaborate directly in this repository: [common-charts-js](https://github.com/MetalbolicX/common-charts-js)
