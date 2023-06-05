@@ -1,5 +1,5 @@
-import { format, select } from "d3";
 import RectangularGraph from "./rectangular_graph.mjs";
+const { format, select } = d3;
 
 ("use strict");
 

@@ -1,4 +1,4 @@
-import { select } from "d3";
+const { select } = d3;
 
 ("use strict");
 

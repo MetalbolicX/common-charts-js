@@ -1,5 +1,5 @@
-import { extent, select, line, greatestIndex, format, selectAll } from "d3";
 import RectangularGraph from "./rectangular_graph.mjs";
+const { extent, select, line, greatestIndex, format, selectAll } = d3;
 
 ("use strict");
 
@@ -7,7 +7,7 @@ import RectangularGraph from "./rectangular_graph.mjs";
  * Class to create an instance of a multi line series chart.
  * @extends RectangularGraph Class for the 2D in rectangular coordinates chart.
  */
-class MultiLineGraph extends RectangularGraph {
+export class MultiLineGraph extends RectangularGraph {
   /**
    * @typedef {object} ySerie The record of each y serie.
    * @property {string} serie The name of the serie.

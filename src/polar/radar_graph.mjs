@@ -1,14 +1,13 @@
-import { select, format, lineRadial, curveLinearClosed, greatest } from  "d3";
 import PolarGraph from "./polar_graph.mjs";
+const { select, format, lineRadial, curveLinearClosed, greatest } = d3;
 
 ("use strict");
-
 
 /**
  * Class to create an instance of a radar series chart.
  * @extends PolarGraph Class for the 2D in polar coordinates chart.
  */
-class RadarGraph extends PolarGraph {
+export class RadarGraph extends PolarGraph {
   /**
    * @typedef {object} margins The margins for the chart. According to the D3.js conventions.
    * @property {number} top The top margin for the chart.

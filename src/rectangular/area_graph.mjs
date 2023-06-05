@@ -1,5 +1,5 @@
-import { select, area, greatestIndex } from "d3";
 import { MultiLineGraph } from "./multiseries_graph.mjs";
+const { select, area, greatestIndex } = d3;
 
 ("use strict");
 
@@ -7,7 +7,7 @@ import { MultiLineGraph } from "./multiseries_graph.mjs";
  * Class to create an instance of a multi areas series chart.
  * @extends MultiLineGraph Class for the multi lines series chart.
  */
-class MultiAreaGraph extends MultiLineGraph {
+export class MultiAreaGraph extends MultiLineGraph {
   /**
    * @typedef {object} margins The margins for the chart. According to the D3.js conventions.
    * @property {number} top The top margin for the chart.

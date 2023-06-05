@@ -1,6 +1,6 @@
-import { select } from "d3";
+const { select } = d3;
 
-"use strict";
+("use strict");
 
 /**
  * Base class to work in a 2D rectangular coordinates chart.

@@ -1,5 +1,5 @@
-import { scaleBand, format, select, selectAll } from "d3";
 import RectangularGraph from "./rectangular_graph.mjs";
+const { scaleBand, format, select, selectAll } = d3;
 
 ("use strict");
 
@@ -7,7 +7,7 @@ import RectangularGraph from "./rectangular_graph.mjs";
  * Class to create an instance of a bar chart.
  * @extends RectangularGraph Class for the 2D in rectangular coordinates chart.
  */
-class BarGraph extends RectangularGraph {
+export class BarGraph extends RectangularGraph {
   /** @type {boolean} */
   #isNormalized;
   /** @type {boolean} */
