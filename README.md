@@ -1,5 +1,4 @@
-
-<h1 style="font-size:2.5rem">common-charts-js</h1>
+# common-charts-js
 
 By José Martínez Santana
 
