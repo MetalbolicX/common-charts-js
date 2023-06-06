@@ -1,5 +1,5 @@
 
-# common-charts-js
+<h1 style="font-size:2.5rem">common-charts-js</h1>
 
 By José Martínez Santana
 
@@ -18,7 +18,7 @@ By José Martínez Santana
 
 **D3**, the short name for <ins>Data-Driven Documents</ins>, is a JavaScript library for manipulating documents based on data. D3 helps to bind data to *HTML*, *SVG* and *CSS*. It provides a wide range of tools and functions that enable developers to create interactive and dynamic data visualizations.
 
-**common-charts-js** solves the problem re write again and again the same code for the common data visualization charts (like line, bar, etc.). This is a library which has prebuild charts using the <ins>Object Oriented Programming</ins> classes of **ECMAScript 6**. The user only needs to import the class chart and provide the parameters to create it. In addition if the user knows `D3`, it is possible to customize more any of the pre build chart.
+**common-charts-js** solves the problem re write again and again the same code for the common data visualization charts (like line, bar, etc.). This is a library which has prebuild charts using the <ins>Object Oriented Programming</ins> classes of **ECMAScript 6**. The user only needs to import the class chart and provide the parameters to create it. In addition if the user knows D3, it is possible to customize more any of the pre build chart.
 
 ## Charts at disposal
 
@@ -32,7 +32,7 @@ The library has the next charts in the current version:
 
 ## Installation
 
-1. Install [Node JS](https://nodejs.org/en/download) on your computer.
+1. Install [NodeJS](https://nodejs.org/en/download) on your computer.
 2. Create a folder for your project.
 3. Execute the next command in the terminal:
 ```npm
@@ -45,9 +45,9 @@ npm i -S common-charts-js
 
 This library do not use the `npm install d3` to avoid the unnecessary loading `js` files of the whole `D3` library.
 
-In order to download `D3` the lastest version and use it in a vanilla HTML in modern browsers, import D3 from [jsDelivr](https://www.jsdelivr.com/package/npm/d3) or [unpkg](https://unpkg.com/d3) or another <u>CDN</u>.
+In order to download `D3` the lastest version and use it in a vanilla HTML in modern browsers, import `D3` from [jsDelivr](https://www.jsdelivr.com/package/npm/d3) or [unpkg](https://unpkg.com/d3) or another <ins>CDN</ins>.
 
-*Example of the import from unpkg*
+*<ins>Example of the import from unpkg</ins>*
 
 ```HTML
 <!DOCTYPE html>
@@ -68,11 +68,11 @@ In order to download `D3` the lastest version and use it in a vanilla HTML in mo
 ## How initialize a chart
 
 1. Create a Javascript file. For example: `firstgraph.js`.
-2. Impor the desired chart to be displayed. The **common-charts.js** library was written using the **ECMACScript 6 modules**. For example the multi line series graph.
+2. Impor the desired chart to be displayed. The **common-charts-js** library was written using the **ECMACScript 6 modules**. For example the multi line series graph.
 ```Javascript
 import { MultiLineGraph }  from "common-charts-js";
 ```
-3. Create or fetch from a data source. **Always use an array of objects** data structure with data for the [independent variable and depend variable(s)](https://en.wikipedia.org/wiki/Dependent_and_independent_variables). The library will take care of creating a detailed data structure for binding the data to the `svg` elements. For example, graph the next mathematical function $y = f(x) = x^2 \{x \in \mathbb{R} | 1 \leq x \leq 10\}$
+3. Create or fetch from a data source. **Always use an array of objects** data structure with data for the [independent variable and depend variable(s)](https://en.wikipedia.org/wiki/Dependent_and_independent_variables). The library will take care of creating a detailed data structure for binding the data to the `svg` elements. For example, graph the next mathematical function $y = f(x) = x^2$ $\{x \in \mathbb{R} | 1 \leq x \leq 10\}$
 ```Javascript
 const data /**@type {Array<{ x: number, y: number }>}*/ = [
     {x: 1, y: 1},
@@ -112,7 +112,7 @@ graph.renderDependentAxis();
 
 Neither the *common-chart-js* and *D3* are libraries for complex data cleaning. The recommended use of them are with **cleaned semi structured data** previously processed with another tool such as [Ms Excel](https://www.microsoft.com/en/microsoft-365/excel) or [Pandas for Python](https://pandas.pydata.org/) or any other software for data manipulation.
 
-The must have some previous knowledge about how to use **D3** in order to select the correct scales and axis to build the chart.
+The user must have some previous knowledge about how to use **D3** in order to select the correct *scales* and *axis* to build the chart.
 
 # Contributing
 Pull requests are welcome. For major changes, please open an issue first
