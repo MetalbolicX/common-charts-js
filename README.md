@@ -44,33 +44,37 @@ npm i -S common-charts-js
 
 This library do not use the `npm install d3` to avoid the unnecessary loading `js` files of the whole `D3` library.
 
-In order to download `D3` the lastest version and use it in a vanilla HTML in modern browsers, import `D3` from [jsDelivr](https://www.jsdelivr.com/package/npm/d3) or [unpkg](https://unpkg.com/d3) or another <ins>CDN</ins>.
+In order to download [`D3` the lastest version](https://github.com/d3/d3/releases/latest) and use it in a vanilla HTML in modern browsers, import `D3` from [jsDelivr](https://www.jsdelivr.com/package/npm/d3) or [unpkg](https://unpkg.com/d3) or another <ins>CDN</ins>.
 
-*<ins>Example of the import from unpkg</ins>*
+*<ins>Example of the import in the HTML `script` tag</ins>*
+```HTML
+<script src="https://d3js.org/d3.v7.js" type="text/javascript" charset="utf-8"></script>
+```
 
+
+
+## How initialize a chart
+
+1. Create a HTML file. Add the `D3` library, add `svg` element where the chart will be contained. Finally at a `script` tag of your code.
 ```HTML
 <!DOCTYPE html>
 <html>
   <head>
     <script src="https://unpkg.com/d3@7.8.5/dist/d3.min.js" type="text/javascript"></script>
-    <title>Import D3</title>
+    <title>Common charts example</title>
   </head>
   <body>
-    <h1>Example of the common-charts-js library</h1>
+    <h1>Example of how to use the common-charts-js library</h1>
     <svg class="chart"></svg>
     <script type="module" src="./firstgraph.js"></script>
   </body>
 </html>
 ```
-
-## How initialize a chart
-
-1. Create a Javascript file. For example: `firstgraph.js`.
-2. Impor the desired chart to be displayed. The **common-charts-js** library was written using the **ECMACScript 6 modules**. For example the multi line series graph.
+2. Create a file called `firstgraph.js`. Inside it, import the desired chart to be displayed. The **common-charts-js** library. They were written using the **ECMACScript 6 modules**. For example the multi line series graph.
 ```Javascript
 import { MultiLineGraph }  from "common-charts-js";
 ```
-3. Create or fetch from a data source. **Always use an array of objects** data structure with data for the [independent variable and depend variable(s)](https://en.wikipedia.org/wiki/Dependent_and_independent_variables). The library will take care of creating a detailed data structure for binding the data to the `svg` elements. For example, graph the next mathematical function $y = f(x) = x^2$.
+3. Create or fetch a data source. Data **always needs to be an array of JSON format** structure with the [independent variable and depend variable(s)](https://en.wikipedia.org/wiki/Dependent_and_independent_variables). The library will take care of creating a detailed data structure for binding the data to the `svg` elements. For example, graph the next mathematical function $y = f(x) = x^2$.
 ```Javascript
 const data /**@type {Array<{ x: number, y: number }>}*/ = [
     {x: 1, y: 1},
@@ -111,6 +115,8 @@ graph.renderDependentAxis();
 Neither the *common-chart-js* and *D3* are libraries for complex data cleaning. The recommended use of them are with **cleaned semi structured data** previously processed with another tool such as [Ms Excel](https://www.microsoft.com/en/microsoft-365/excel) or [Pandas for Python](https://pandas.pydata.org/) or any other software for data manipulation.
 
 The user must have some previous knowledge about how to use **D3** in order to select the correct *scales* and *axis* to build the chart.
+
+The **common-chart-js** code works only in **D3 v4** or above.
 
 # Contributing
 Pull requests are welcome. For major changes, please open an issue first
