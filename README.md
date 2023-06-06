@@ -18,7 +18,7 @@ By José Martínez Santana
 
 **D3**, the short name for <ins>Data-Driven Documents</ins>, is a JavaScript library for manipulating documents based on data. D3 helps to bind data to *HTML*, *SVG* and *CSS*. It provides a wide range of tools and functions that enable developers to create interactive and dynamic data visualizations.
 
-**common-charts-js** solves the problem re write again and again the same code for the common data visualization charts (like line, bar, etc.). This is a library which has prebuild charts using the <ins>Object Oriented Programming</ins> classes of **ECMAScript 6**. The user only needs to import the class chart and provide the parameters to create it. In addition if the user knows D3, it is possible to customize more any of the pre build chart.
+**common-charts-js** solves the problem re write again and again the same code for the common data visualization charts (like line 📈, bar 📊, etc.). This is a library which has prebuild charts using the <ins>Object Oriented Programming</ins> classes of **ECMAScript 6**. The user only needs to import the class chart and provide the parameters to create it. In addition if the user knows D3, it is possible to customize more any of the pre build chart.
 
 ## Charts at disposal
 
