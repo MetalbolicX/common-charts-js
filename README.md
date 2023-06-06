@@ -72,7 +72,7 @@ In order to download [`D3` the lastest version](https://github.com/d3/d3/release
 ```Javascript
 import { MultiLineGraph }  from "common-charts-js";
 ```
-3. Create or fetch a data source. Data **always needs to be an array of JSON format** structure with the [independent variable and depend variable(s)](https://en.wikipedia.org/wiki/Dependent_and_independent_variables). The library will take care of creating a detailed data structure for binding the data to the `svg` elements. For example, graph the next mathematical function $$y = f(x) = x^2$$.
+3. Create or fetch a data source. Data **always needs to be an array of JSON format** structure with the [independent variable and depend variable(s)](https://en.wikipedia.org/wiki/Dependent_and_independent_variables). The library will take care of creating a detailed data structure for binding the data to the `svg` elements. For example, graph the next mathematical function: $$y = f(x) = x^2$$
 ```Javascript
 const data /**@type {Array<{ x: number, y: number }>}*/ = [
     {x: 1, y: 1},
