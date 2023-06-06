@@ -51,8 +51,6 @@ In order to download [`D3` the lastest version](https://github.com/d3/d3/release
 <script src="https://d3js.org/d3.v7.js" type="text/javascript" charset="utf-8"></script>
 ```
 
-
-
 ## How initialize a chart
 
 1. Create a HTML file. Add the `D3` library, add `svg` element where the chart will be contained. Finally at a `script` tag of your code.
@@ -116,7 +114,7 @@ Neither the *common-chart-js* and *D3* are libraries for complex data cleaning. 
 
 The user must have some previous knowledge about how to use **D3** in order to select the correct *scales* and *axis* to build the chart.
 
-The **common-chart-js** code works only in **D3 v4** or above.
+The **common-chart-js** code works only in **D3 version 4** or above.
 
 # Contributing
 Pull requests are welcome. For major changes, please open an issue first
