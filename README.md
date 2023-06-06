@@ -51,14 +51,13 @@ In order to download `D3` the lastest version and use it in a vanilla HTML in mo
 
 ```HTML
 <!DOCTYPE html>
-<html lang="en">
+<html>
   <head>
-    <meta charset="UTF-8" />
     <script src="https://unpkg.com/d3@7.8.5/dist/d3.min.js" type="text/javascript"></script>
     <title>Import D3</title>
   </head>
   <body>
-    <h1>Example of the common-charts.js library</h1>
+    <h1>Example of the common-charts-js library</h1>
     <svg class="chart"></svg>
     <script type="module" src="./firstgraph.js"></script>
   </body>
