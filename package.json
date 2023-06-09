@@ -1,6 +1,6 @@
 {
   "name": "common-charts-js",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "The most common charts in data visualization graphs such as line, bar, pie and more are pre built using D3.js for re usability.",
   "main": "src/index.mjs",
   "type": "module",
