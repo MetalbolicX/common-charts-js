@@ -2,3 +2,5 @@
 .gitignore
 test.html
 test.js
+test.css
+jsconfig.json

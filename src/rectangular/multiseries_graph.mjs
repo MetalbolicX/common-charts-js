@@ -4,7 +4,8 @@ const { extent, select, line, greatestIndex, format, selectAll } = d3;
 ("use strict");
 
 /**
- * Class to create an instance of a multi line series chart.
+ * @description
+ * Class for the creation a multi line series chart.
  * @extends RectangularGraph Class for the 2D in rectangular coordinates chart.
  */
 export class MultiLineGraph extends RectangularGraph {
@@ -58,7 +59,8 @@ export class MultiLineGraph extends RectangularGraph {
    */
 
   /**
-   * Create a new instance of the Multi lines chart class.
+   * @description
+   * Creates a new instance of the Multi lines chart class. By the configuration options.
    * @param {configMultiLinesChartOptions} ConfigMultiLinesChart The options parameters for the new instance.
    */
   constructor({
@@ -112,7 +114,8 @@ export class MultiLineGraph extends RectangularGraph {
   }
 
   /**
-   * The re arranged data
+   * @description
+   * Show the arranged data for the creation of the chart.
    * @returns {rearrangedData}
    */
   get data() {
@@ -120,6 +123,7 @@ export class MultiLineGraph extends RectangularGraph {
   }
 
   /**
+   * @description
    * The percentage of the offset domain limits for the dependent axis dominant.
    * @returns {number}
    */
@@ -128,6 +132,8 @@ export class MultiLineGraph extends RectangularGraph {
   }
 
   /**
+   * @description
+   * Setter for the offset domain limits for the dependent axis dominant.
    * @param {number} value A value between 0 and 1.
    */
   set setOffsetAxis(value) {
@@ -138,8 +144,9 @@ export class MultiLineGraph extends RectangularGraph {
   }
 
   /**
-   * Show the multi series lines in the svg container.
-   * @param {boolean} isStatic Whether the multi line series chart is dynamically interactive or static.
+   * @description
+   * Show the multi series lines in the svg container selected.
+   * @param {boolean} [isStatic=false] Whether the multi line series chart is dynamically interactive or static for printing. By default is false.
    * @param {number} deltaX The x position distance to ajust the text svg elements.
    * @param {number} deltaY The y position distance to ajust the text svg elements
    * @returns {void}
@@ -159,14 +166,16 @@ export class MultiLineGraph extends RectangularGraph {
       .data((datum) => [datum.values])
       .join("path")
       .attr("class", function () {
-        return select(this.parentElement).attr("class");
+        return `${select(this.parentElement).attr("class")} serie`;
       })
       .attr(
         "d",
         line()
           .x((_, index) => this._independentScale(this.data.x.at(index)))
           .y((datum) => this._dependentScale(datum))
-      );
+      )
+      .style("fill", "none")
+      .style("stroke", (d, i) => console.log(i, d));
 
     // Add the name of the category to each line
     // Find the highest position per each category and save x and y positon,
@@ -269,7 +278,8 @@ export class MultiLineGraph extends RectangularGraph {
   }
 
   /**
-   * Show the legend of the color and names of each serie.
+   * @description
+   * Show the legend refering for each color and name a serie.
    * @param {number} squareSize The size width and height to draw an svg square element for the legend.
    * @returns {void}
    */
