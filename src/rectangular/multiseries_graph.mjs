@@ -146,12 +146,9 @@ export class MultiLineGraph extends RectangularGraph {
   /**
    * @description
    * Show the multi series lines in the svg container selected.
-   * @param {boolean} [isStatic=false] Whether the multi line series chart is dynamically interactive or static for printing. By default is false.
-   * @param {number} deltaX The x position distance to ajust the text svg elements.
-   * @param {number} deltaY The y position distance to ajust the text svg elements
    * @returns {void}
    */
-  renderSeries(isStatic = false, deltaX = 5, deltaY = -5) {
+  renderSeries() {
     const gSeries = this.D3Svg.append("g").attr("class", "series");
 
     gSeries
@@ -174,51 +171,24 @@ export class MultiLineGraph extends RectangularGraph {
           .x((_, index) => this._independentScale(this.data.x.at(index)))
           .y((datum) => this._dependentScale(datum))
       )
-      .style("fill", "none")
-      .style("stroke", (d, i) => console.log(i, d));
+      .style("fill", "none");
 
-    // Add the name of the category to each line
-    // Find the highest position per each category and save x and y positon,
-    // so that it the text category label can be positioned
-    const highestPerSerie = this.data.y.map((datum) => {
-      const position = greatestIndex(datum.values);
-      return {
-        x: this.data.x.at(position),
-        y: datum.values.at(position),
-        serie: datum.serie,
-      };
+    // Add the color for each serie
+    gSeries.selectAll("path").each((_, index, paths) => {
+      const currentPath = select(paths[index]);
+      const serie = currentPath.attr("class").split(" ").at(0);
+      currentPath.style("stroke", this._colorScale(serie));
     });
-
-    gSeries
-      .selectAll("g")
-      .selectAll("text")
-      .data(highestPerSerie)
-      .join("text")
-      .attr("class", (datum) => `${datum.serie} hide unselected`)
-      .attr("x", (datum) => this._independentScale(datum.x))
-      .attr("y", (datum) => this._dependentScale(datum.y))
-      .attr("dx", deltaX)
-      .attr("dy", deltaY)
-      .text((datum) => `${datum.serie[0].toUpperCase()}${datum.serie.slice(1)}`)
-      .style("fill", (datum) => this._colorScale(datum.serie));
-
-    // Add the color of each path in case the chart do not want to be interactive
-    if (isStatic) {
-      gSeries.selectAll("path").each((_, index, paths) => {
-        const currentPath = select(paths[index]);
-        const serie = currentPath.attr("class");
-        currentPath.style("stroke", this._colorScale(serie));
-      });
-    }
   }
 
   /**
+   * @description
    * Add the tooltip element to show every datum in the chart.
-   * @param {function} formatFunction The D3.js format function to display the customized datum. The default specifier is to represent a number without the decimal points.
-   * @param {number} radius The size of the radius of the svg circles elements.
+   * @param {number} [radius=1] The size of the radius of each datum point that is displayed in a line serie By default the radius is 1 pixel.
+   * @param {number} [lineWidth=2] The width of the line serie. By default the line stroke width is 2 pixels.
    * @returns {void}
    */
-  addTooltip(formatFunction = format(",.0f"), radius = 1) {
+  addTooltip(radius = 1, lineWidth = 2) {
     const gSeries = this.D3Svg.selectAll(".series > g");
 
     // Add the circles data point
@@ -228,7 +198,7 @@ export class MultiLineGraph extends RectangularGraph {
       .join("circle")
       .attr("class", function () {
         const parentClass = select(this.parentElement).attr("class");
-        return `${parentClass} hide unselected`;
+        return `${parentClass} dot`;
       })
       .attr("cx", (_, index) => this._independentScale(this.data.x.at(index)))
       .attr("cy", (datum) => this._dependentScale(datum))
@@ -236,44 +206,42 @@ export class MultiLineGraph extends RectangularGraph {
 
     // Add the tooltip element
     const tooltip = select("body")
-      .append("span")
+      .insert("div", `${this.svgSelector} + *`)
       .attr("class", "tooltip")
       .style("opacity", 0);
 
     // Add the event for the tooltip
     gSeries
       .on("mouseover", (e, d) => {
-        // Show the hidden elements
-        selectAll(`.${d.serie} .hide`).classed("unselected", false);
-        // Add color to the path and circles
+        // Increade the size of the stroke in the path and circe tags
         select(e.target.parentElement)
-          .selectChildren(":not(text)")
-          .style("stroke", this._colorScale(d.serie));
+          .selectChildren(":is(path, circle)")
+          .style("stroke-width", lineWidth);
 
-        if (e.target.matches("circle")) {
+        if (e.target.matches(".dot")) {
           // Show data point and move tooltip over the circle
+          const valueSelected = select(e.target).datum().toFixed(1);
+
+          select(e.target).attr("r", 3 * radius)
+            .style("stroke-width", lineWidth);
+
           tooltip
-            .text(formatFunction(select(e.target).datum()))
+            .text(`${d.serie}: ${valueSelected}`)
             .style("left", `${e.pageX + 10}px`)
             .style("top", `${e.pageY - 15}px`)
             .style("opacity", 1);
-          // Change the size of the radius
-          select(e.target).attr("r", 3 * radius);
         }
       })
       .on("mouseout", (e, d) => {
-        if (e.target.matches("circle")) {
-          // Hide the tooltip
-          tooltip.transition().duration(200).style("opacity", 0);
-          // Change to original size of radius
+        if (e.target.matches(".dot")) {
+          // Desapear the tooltip
+          tooltip.transition().duration(1000).style("opacity", 0);
           select(e.target).attr("r", radius);
         }
-        // Hide the elements
-        selectAll(`.${d.serie} .hide`).classed("unselected", true);
-        // Remove the color of selected line
+        // Decrease the size of the stroke in the path and circle tag
         select(e.target.parentElement)
-          .selectChildren(":not(text)")
-          .style("stroke", null);
+          .selectChildren(":is(path, circle)")
+          .style("stroke-width", null);
       });
   }
 
@@ -314,6 +282,7 @@ export class MultiLineGraph extends RectangularGraph {
   }
 
   /**
+   * @description
    * Show the grid of the x axis.
    * @returns {void}
    */
@@ -330,6 +299,7 @@ export class MultiLineGraph extends RectangularGraph {
   }
 
   /**
+   * @description
    * Show the grid of the y axis.
    * @returns {void}
    */
@@ -346,6 +316,7 @@ export class MultiLineGraph extends RectangularGraph {
   }
 
   /**
+   * @description
    * Show a pair of arrows at the farthest distance of the axes..
    * @returns {void}
    */
