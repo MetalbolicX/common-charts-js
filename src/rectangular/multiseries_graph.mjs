@@ -155,7 +155,7 @@ export class MultiLineGraph extends RectangularGraph {
       .selectAll("g")
       .data(this.data.y)
       .join("g")
-      .attr("class", (datum) => datum.serie);
+      .attr("class", (_, index) => this.dependentSeriesClass.at(index));
 
     gSeries
       .selectAll("g")
@@ -263,7 +263,7 @@ export class MultiLineGraph extends RectangularGraph {
       .selectAll("rect")
       .data(this.data.y)
       .join("rect")
-      .attr("class", (datum) => datum.serie)
+      .attr("class", (_, index) => this.dependentSeriesClass.at(index))
       .attr("width", squareSize)
       .attr("height", squareSize)
       .attr("y", (_, index) => (squareSize + 5) * index)
@@ -273,11 +273,11 @@ export class MultiLineGraph extends RectangularGraph {
       .selectAll("text")
       .data(this.data.y)
       .join("text")
-      .attr("class", (datum) => datum.serie)
+      .attr("class", (_, index) => this.dependentSeriesClass.at(index))
       .attr("x", squareSize + 5)
       .attr("y", (_, index) => (squareSize + 5) * index)
       .attr("dy", squareSize)
-      .text((datum) => `${datum.serie[0].toUpperCase()}${datum.serie.slice(1)}`)
+      .text((datum) => datum.serie)
       .style("fill", (datum) => this._colorScale(datum.serie));
   }
 

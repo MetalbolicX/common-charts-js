@@ -29,6 +29,7 @@ class RectangularGraph {
   #dependentAxisPosition;
   /** @type {Array<string>} */
   #dependentSeries = [];
+  #dependentSeriesClass = [];
   /**
    * @typedef {Object} margins The margins for the chart. According to the D3.js conventions.
    * @property {number} top The top margin for the chart.
@@ -127,6 +128,7 @@ class RectangularGraph {
     this.setIndependentAxisPosition = independentAxisPosition;
     this.setDependentAxisPosition = dependentAxisPosition;
     this.setDependentSeries = dependentSeries;
+    this.setDependentSeriesClass = dependentSeries;
     this.setMargins = margins;
     this.setFactor = factor;
     this.#svgElement = document.querySelector(this.svgSelector);
@@ -281,7 +283,7 @@ class RectangularGraph {
    * @protected
    */
   set _setColorScale(colorScale) {
-    this.#colorScale = colorScale;
+    this.#colorScale = colorScale.domain(this.dependentSeries);
   }
 
   /**
@@ -342,6 +344,22 @@ class RectangularGraph {
    */
   set setDependentSeries(seriesNames) {
     this.#dependentSeries = [...seriesNames];
+  }
+
+  /**
+   * @returns {Array<string>}
+   */
+  get dependentSeriesClass() {
+    return this.#dependentSeriesClass;
+  }
+
+  /**
+   * @param {Array<string>} classSeries The names for the series to name the css selector.
+   */
+  set setDependentSeriesClass(classSeries) {
+    this.#dependentSeriesClass = [
+      ...classSeries.map((serie) => serie.toLowerCase().replace(" ", "-")),
+    ];
   }
 
   /**
