@@ -151,6 +151,7 @@ class RectangularGraph {
   }
 
   /**
+   * @description
    * The CSS selector to select the svg container for the chart.
    * @returns {string}
    */
@@ -169,6 +170,7 @@ class RectangularGraph {
   }
 
   /**
+   * @description
    * The HTML element of the svg container for the chart.
    * @returns {HTMLElement | null}
    */
@@ -177,6 +179,7 @@ class RectangularGraph {
   }
 
   /**
+   * @description
    * The factor to positioning the legend label in the chart.
    * @returns {number}
    */
@@ -196,6 +199,7 @@ class RectangularGraph {
   }
 
   /**
+   * @description
    * The width of the svg element container.
    * @returns {number}
    */
@@ -204,6 +208,7 @@ class RectangularGraph {
   }
 
   /**
+   * @description
    * The height of the svg element container.
    * @returns {number}
    */
@@ -212,6 +217,7 @@ class RectangularGraph {
   }
 
   /**
+   * @description
    * The margins for the chart. According to the D3.js conventions.
    * @returns {margins}
    */
@@ -236,6 +242,7 @@ class RectangularGraph {
   }
 
   /**
+   * @description
    * The D3.js generator scale object to draw the values of the independent variable.
    * @returns {D3Scale}
    * @protected
@@ -253,6 +260,7 @@ class RectangularGraph {
   }
 
   /**
+   * @description
    * The D3.js generator object to draw the values of the dependent variable.
    * @returns {D3Scale}
    * @protected
@@ -270,6 +278,7 @@ class RectangularGraph {
   }
 
   /**
+   * @description
    * The D3.js scale for the colors to apply per each data serie.
    * @returns {D3Scale}
    * @protected
@@ -287,6 +296,7 @@ class RectangularGraph {
   }
 
   /**
+   * @description
    * The D3.js object that creates the independent axis elements in a chart.
    * @returns {D3Axis}
    * @protected
@@ -296,6 +306,7 @@ class RectangularGraph {
   }
 
   /**
+   * @description
    * The D3.js object that creates the dependent axis elements in a chart.
    * @returns {D3Axis}
    * @protected
@@ -305,6 +316,7 @@ class RectangularGraph {
   }
 
   /**
+   * @description
    * The D3.js selection object selected by the svgSelector.
    * @returns {any}
    * @protected
@@ -314,6 +326,7 @@ class RectangularGraph {
   }
 
   /**
+   * @description
    * The name of independent variable serie for the chart.
    * @returns {string}
    */
@@ -332,6 +345,7 @@ class RectangularGraph {
   }
 
   /**
+   * @description
    * The names of dependent series for the chart.
    * @returns {Array<string>}
    */
@@ -347,6 +361,7 @@ class RectangularGraph {
   }
 
   /**
+   * @description
    * @returns {Array<string>}
    */
   get dependentSeriesClass() {
@@ -363,6 +378,7 @@ class RectangularGraph {
   }
 
   /**
+   * @description
    * The position of the independent axis variable.
    * @returns {string}
    */
@@ -381,6 +397,7 @@ class RectangularGraph {
   }
 
   /**
+   * @description
    * The position of the dependent axis variable.
    * @returns {string}
    */
@@ -399,6 +416,7 @@ class RectangularGraph {
   }
 
   /**
+   * @description
    * The positions available for horizontal.
    * @returns {Array<string>}
    */
@@ -406,7 +424,7 @@ class RectangularGraph {
     return this.#horizontalPositions;
   }
 
-  /**
+  /**@description
    * The positions available for vertical.
    * @returns {Array<string>}
    */
@@ -415,6 +433,7 @@ class RectangularGraph {
   }
 
   /**
+   * @description
    * The set margins positioning of the chart.
    * @param {string} position The position of the axis.
    * @returns {number} By default it is the bottom position.
@@ -430,6 +449,7 @@ class RectangularGraph {
   }
 
   /**
+   * @description
    * The translate string to move the svg g element.
    * @param {number} offsetMargin The quantity of the margin positioning.
    * @param {string} position The positioning of the axis.
@@ -446,6 +466,7 @@ class RectangularGraph {
   }
 
   /**
+   * @description
    * Show the independent axis variable in the svg container.
    * @returns {void}
    */
@@ -468,6 +489,7 @@ class RectangularGraph {
   }
 
   /**
+   * @description
    * Show the dependent axis variable in the svg container.
    * @returns {void}
    */
@@ -493,28 +515,35 @@ class RectangularGraph {
    * @typedef {Object} labelInfo The label information to set the axes names.
    * @property {string} position The position of the axis label.
    * @property {string} title The title of the axis to be shown.
-   * @property {number} delta The delta offset of the axis label.
+   * @property {number} deltaX The delta offset of the x axis label.
+   * @property {number} deltaY The delta offset of the y axis label.
+   * @property {number} rotation The degrees to rotate the axis label.
    */
 
   /**
+   * @description
    * Show the axes labels at the farthest positions.
-   * @param {labelInfo} independentAxisLabelInfo Data for the independent axis label.
    * @param {labelInfo} dependentAxisLabelInfo Data for the dependent axis label.
+   * @param {labelInfo} independentAxisLabelInfo Data for the independent axis label.
    * @returns {void}
    */
   renderAxesLabels(
-    independentAxisLabelInfo = {
-      position: "bottom",
-      title: "[x axis]",
-      delta: 4,
-    },
     dependentAxisLabelInfo = {
       position: "left",
       title: "[y axis]",
-      delta: 4,
+      deltaX: 4,
+      deltaY: 4,
+      rotation: 90
+    },
+    independentAxisLabelInfo = {
+      position: "bottom",
+      title: "[x axis]",
+      deltaX: 4,
+      deltaY: 0,
+      rotation: 0
     }
   ) {
-    const gLabels = this.D3Svg.append("g").attr("class", "labels");
+    const gLabels = this.D3Svg.append("g").attr("class", "axis-labels");
     gLabels
       .append("text")
       .attr("class", "x axis label")
@@ -530,7 +559,9 @@ class RectangularGraph {
           ? this.height - this.margins.bottom
           : this.margins.top
       )
-      .attr("dx", independentAxisLabelInfo.delta)
+      .attr("dx", independentAxisLabelInfo.deltaX)
+      .attr("dy", independentAxisLabelInfo.deltaY)
+      .attr("transform", `rotate(${independentAxisLabelInfo.rotation})`)
       .text(independentAxisLabelInfo.title);
 
     gLabels
@@ -548,26 +579,31 @@ class RectangularGraph {
           ? this.margins.top
           : this.height - this.margins.bottom
       )
-      .attr("dy", -dependentAxisLabelInfo.delta)
+      .attr("dx", dependentAxisLabelInfo.deltaX)
+      .attr("dy", -dependentAxisLabelInfo.deltaY)
+      .attr("transform", `rotate(${dependentAxisLabelInfo.rotation})`)
       .text(dependentAxisLabelInfo.title);
   }
 
   /**
+   * @description
    * Show the title of the chart in the svg container.
    * @param {string} title The title to be displayed in the chart.
+   * @param {number} [percentage=0.5] The percentage of the svg width in which the title will be placed in the chart. By default it will be 0.5 (50%).
    * @returns {void}
    */
-  renderTitle(title) {
-    const gTitle = this.D3Svg.append("g").attr("class", "title");
+  renderTitle(title, percentage = 0.5) {
+    const gTitle = this.D3Svg.append("g").attr("class", "main-title");
     gTitle
       .append("text")
-      .attr("x", this.width / 2)
+      .attr("x", percentage * this.width)
       .attr("y", this.margins.top)
       .text(title)
       .style("text-anchor", "middle");
   }
 
   /**
+   * @description
    * Show a pair of arrows at the farthest points of each axis.
    * @returns {void}
    */
