@@ -183,7 +183,7 @@ export class MultiLineGraph extends RectangularGraph {
 
   /**
    * @description
-   * Add the tooltip element to show every datum in the chart.
+   * Add the tooltip element to see a datum. The tooltip uses a HTML table, so it can be styled with CSS.
    * @param {number} [radius=1] The size of the radius of each datum point that is displayed in a line serie By default the radius is 1 pixel.
    * @param {number} [lineWidth=2] The width of the line serie. By default the line stroke width is 2 pixels.
    * @returns {void}
@@ -231,14 +231,29 @@ export class MultiLineGraph extends RectangularGraph {
             .attr("r", 3 * radius)
             .style("stroke-width", lineWidth);
 
+          // Add a HTML table for the data selected
           tooltip
-            .text(`${d.serie}: (${dataValues.x}, ${dataValues.y})`)
             .style("left", `${e.pageX + 10}px`)
             .style("top", `${e.pageY - 15}px`)
-            .style("opacity", 1);
+            .style("opacity", 1)
+            .html(/*html*/`
+              <table class="tooltip-table">
+                <caption>${d.serie}</caption>
+                <thead>
+                  <tr>
+                    <th>${dataValues.x}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>${dataValues.y}</td>
+                  </tr>
+                </tbody>
+              </table>
+            `);
         }
       })
-      .on("mouseout", (e, d) => {
+      .on("mouseout", (e, _) => {
         if (e.target.matches(".dot")) {
           // Desapear the tooltip
           tooltip.transition().duration(1000).style("opacity", 0);

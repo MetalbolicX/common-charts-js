@@ -526,12 +526,15 @@ class RectangularGraph {
    * @param {labelOptions} [labelOptions={ postion: "bottom", offset: 0.5, deltaX: 0, deltaY: 0 }] Data for the dependent axis label.
    * @returns {void}
    * @example
+   * ```JavaScript
+   * // Show a axis label at the bottom axis and offset at the middlw.
    * graph.renderAxisLabel("Temperature", {
    *  position: "bottom",
    *  offset: 0.5
    *  deltaX: 5,
    *  deltaY: 0,
    * });
+   * ```
    */
   renderAxisLabel(
     title,
