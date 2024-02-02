@@ -550,7 +550,7 @@ class RectangularGraph {
     if (labelOptions.position === "bottom" || labelOptions.position === "top") {
       gLabel
         .append("text")
-        .attr("class", "x axis label")
+        .attr("class", "x axis-label")
         .attr("x", labelOptions.offset * this.width)
         .attr(
           "y",
@@ -564,7 +564,7 @@ class RectangularGraph {
     } else {
       gLabel
         .append("text")
-        .attr("class", "y axis label")
+        .attr("class", "y axis-label")
         .attr("transform", `rotate(-90)`)
         .attr("x", -this.height * labelOptions.offset)
         .attr("y", 30)
