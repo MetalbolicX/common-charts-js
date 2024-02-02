@@ -512,77 +512,66 @@ class RectangularGraph {
   }
 
   /**
-   * @typedef {Object} labelInfo The label information to set the axes names.
+   * @typedef {Object} labelOptions The label information to set the axes names.
    * @property {string} position The position of the axis label.
-   * @property {string} title The title of the axis to be shown.
+   * @property {number} offset The offset of the axis label from the width or height at 0 level. By default 0.5 (50%).
    * @property {number} deltaX The delta offset of the x axis label.
    * @property {number} deltaY The delta offset of the y axis label.
-   * @property {number} rotation The degrees to rotate the axis label.
    */
 
   /**
    * @description
-   * Show the axes labels at the farthest positions.
-   * @param {labelInfo} dependentAxisLabelInfo Data for the dependent axis label.
-   * @param {labelInfo} independentAxisLabelInfo Data for the independent axis label.
+   * Show an axis label at the farthest positions.
+   * @param {string} title Title to name the axis.
+   * @param {labelOptions} [labelOptions={ postion: "bottom", offset: 0.5, deltaX: 0, deltaY: 0 }] Data for the dependent axis label.
    * @returns {void}
+   * @example
+   * graph.renderAxisLabel("Temperature", {
+   *  position: "bottom",
+   *  offset: 0.5
+   *  deltaX: 5,
+   *  deltaY: 0,
+   * });
    */
-  renderAxesLabels(
-    dependentAxisLabelInfo = {
-      position: "left",
-      title: "[y axis]",
-      deltaX: 4,
-      deltaY: 4,
-      rotation: 90
-    },
-    independentAxisLabelInfo = {
+  renderAxisLabel(
+    title,
+    labelOptions = {
       position: "bottom",
-      title: "[x axis]",
-      deltaX: 4,
-      deltaY: 0,
-      rotation: 0
+      offset: 0.5,
+      deltaX: 0,
+      deltaY: this.margins.bottom,
     }
   ) {
-    const gLabels = this.D3Svg.append("g").attr("class", "axis-labels");
-    gLabels
-      .append("text")
-      .attr("class", "x axis label")
-      .attr(
-        "x",
-        independentAxisLabelInfo.position === "bottom"
-          ? this.width - this.margins.right
-          : this.margins.left
-      )
-      .attr(
-        "y",
-        independentAxisLabelInfo.position === "bottom"
-          ? this.height - this.margins.bottom
-          : this.margins.top
-      )
-      .attr("dx", independentAxisLabelInfo.deltaX)
-      .attr("dy", independentAxisLabelInfo.deltaY)
-      .attr("transform", `rotate(${independentAxisLabelInfo.rotation})`)
-      .text(independentAxisLabelInfo.title);
+    const gLabel = this.D3Svg.append("g").attr(
+      "class",
+      `axis-label ${labelOptions.position}`
+    );
 
-    gLabels
-      .append("text")
-      .attr("class", "y axis label")
-      .attr(
-        "x",
-        dependentAxisLabelInfo.position === "left"
-          ? this.margins.left
-          : this.width - this.margins.right
-      )
-      .attr(
-        "y",
-        dependentAxisLabelInfo.position === "left"
-          ? this.margins.top
-          : this.height - this.margins.bottom
-      )
-      .attr("dx", dependentAxisLabelInfo.deltaX)
-      .attr("dy", -dependentAxisLabelInfo.deltaY)
-      .attr("transform", `rotate(${dependentAxisLabelInfo.rotation})`)
-      .text(dependentAxisLabelInfo.title);
+    if (labelOptions.position === "bottom" || labelOptions.position === "top") {
+      gLabel
+        .append("text")
+        .attr("class", "x axis label")
+        .attr("x", labelOptions.offset * this.width)
+        .attr(
+          "y",
+          labelOptions.position === "bottom"
+            ? this.height - this.margins.bottom
+            : this.margins.top
+        )
+        .attr("dx", labelOptions.deltaX)
+        .attr("dy", labelOptions.deltaY)
+        .text(title);
+    } else {
+      gLabel
+        .append("text")
+        .attr("class", "y axis label")
+        .attr("transform", `rotate(-90)`)
+        .attr("x", -this.height * labelOptions.offset)
+        .attr("y", 30)
+        .attr("dx", labelOptions.deltaX)
+        .attr("dy", labelOptions.deltaY)
+        .text(title);
+    }
   }
 
   /**
