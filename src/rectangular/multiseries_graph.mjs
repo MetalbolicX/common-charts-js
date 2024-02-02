@@ -202,7 +202,8 @@ export class MultiLineGraph extends RectangularGraph {
       })
       .attr("cx", (_, index) => this._independentScale(this.data.x.at(index)))
       .attr("cy", (datum) => this._dependentScale(datum))
-      .attr("r", radius);
+      .attr("r", radius)
+      .attr("data-position", (_, index) => this.data.x.at(index));
 
     // Add the tooltip element
     const tooltip = select("body")
@@ -219,14 +220,19 @@ export class MultiLineGraph extends RectangularGraph {
           .style("stroke-width", lineWidth);
 
         if (e.target.matches(".dot")) {
-          // Show data point and move tooltip over the circle
-          const valueSelected = select(e.target).datum().toFixed(1);
+          // Show data point x and y value in the tooltp
+          const pointSelected = select(e.target);
+          const dataValues = {
+            x: pointSelected.attr("data-position"),
+            y: pointSelected.datum().toFixed(1),
+          };
 
-          select(e.target).attr("r", 3 * radius)
+          pointSelected
+            .attr("r", 3 * radius)
             .style("stroke-width", lineWidth);
 
           tooltip
-            .text(`${d.serie}: ${valueSelected}`)
+            .text(`${d.serie}: (${dataValues.x}, ${dataValues.y})`)
             .style("left", `${e.pageX + 10}px`)
             .style("top", `${e.pageY - 15}px`)
             .style("opacity", 1);
@@ -248,7 +254,7 @@ export class MultiLineGraph extends RectangularGraph {
   /**
    * @description
    * Show the legend refering for each color and name a serie.
-   * @param {number} squareSize The size width and height to draw an svg square element for the legend.
+   * @param {number} [squareSize=10] The size width and height to draw an svg square element for the legend. By default the size is 10 pixels.
    * @returns {void}
    */
   renderLegend(squareSize = 10) {
