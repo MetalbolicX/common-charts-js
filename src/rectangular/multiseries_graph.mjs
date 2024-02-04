@@ -1,5 +1,5 @@
 import RectangularGraph from "./rectangular_graph.mjs";
-const { extent, select, line, greatestIndex, format, selectAll } = d3;
+const { extent, select, line, greatestIndex, selectAll, leastIndex } = d3;
 
 ("use strict");
 
@@ -91,21 +91,21 @@ export class MultiLineGraph extends RectangularGraph {
     });
     this.setOffsetAxis = offsetAxis;
     this.#data = {
-      x: rawData.map((datum) => datum[this.independentSerie]),
+      x: rawData.map((d) => d[this.independentSerie]),
       y: this.dependentSeries.map((serie) => ({
         serie,
-        values: rawData.map((datum) => datum[serie]),
+        values: rawData.map((d) => d[serie]),
       })),
     };
     this._setIndependentScale = independentScale.domain(extent(this.data.x));
     this._setDependentScale = dependentScale.domain([
       (1 - this.offsetAxis) *
         this.data.y
-          .map((datum) => Math.min(...datum.values))
+          .map((d) => Math.min(...d.values))
           .reduce((lowestMin, lowest) => Math.min(lowestMin, lowest), Infinity),
       (1 + this.offsetAxis) *
         this.data.y
-          .map((datum) => Math.max(...datum.values))
+          .map((d) => Math.max(...d.values))
           .reduce(
             (highestMax, highest) => Math.max(highestMax, highest),
             Number.NEGATIVE_INFINITY
@@ -155,12 +155,12 @@ export class MultiLineGraph extends RectangularGraph {
       .selectAll("g")
       .data(this.data.y)
       .join("g")
-      .attr("class", (_, index) => this.dependentSeriesClass.at(index));
+      .attr("class", (_, i) => this.dependentSeriesClass.at(i));
 
     gSeries
       .selectAll("g")
       .selectAll("path")
-      .data((datum) => [datum.values])
+      .data((d) => [d.values])
       .join("path")
       .attr("class", function () {
         return `${select(this.parentElement).attr("class")} serie`;
@@ -168,16 +168,88 @@ export class MultiLineGraph extends RectangularGraph {
       .attr(
         "d",
         line()
-          .x((_, index) => this._independentScale(this.data.x.at(index)))
-          .y((datum) => this._dependentScale(datum))
+          .x((_, i) => this._independentScale(this.data.x.at(i)))
+          .y((d) => this._dependentScale(d))
       )
       .style("fill", "none");
 
     // Add the color for each serie
-    gSeries.selectAll("path").each((_, index, paths) => {
-      const currentPath = select(paths[index]);
+    gSeries.selectAll("path").each((_, i, paths) => {
+      const currentPath = select(paths[i]);
       const serie = currentPath.attr("class").split(" ").at(0);
       currentPath.style("stroke", this._colorScale(serie));
+    });
+  }
+
+  /**
+   * @description
+   * Draw a data point and the value of the maximum and minimum points of the series.
+   * @param {number} [radius=10] The radius size of the data point to draw for the critical points. By default the radius is 10 pixels.
+   * @returns {void}
+   */
+  renderCriticalPoints(radius = 10) {
+    // Find the point and the coordinate od the critical points
+    const criticalPoints = this.data.y.map((serie, i) => {
+      const maxIndex = greatestIndex(serie.values);
+      const minIndex = leastIndex(serie.values);
+      return {
+        serieName: serie.serie,
+        serieClass: this.dependentSeriesClass.at(i),
+        maxXValue: this.data.x.at(maxIndex),
+        maxYValue: serie.values.at(maxIndex),
+        minXValue: this.data.x.at(minIndex),
+        minYValue: serie.values.at(minIndex),
+      };
+    });
+
+    selectAll(".series > g").each((_, i, n) => {
+      const gSerie = select(n[i]);
+
+      const gMaxGroup = gSerie
+        .append("g")
+        .attr("class", "group critical maximum")
+        .attr(
+          "transform",
+          `translate(${this._independentScale(
+            criticalPoints.at(i).maxXValue
+          )}, ${this._dependentScale(criticalPoints.at(i).maxYValue)})`
+        );
+
+      gMaxGroup
+        .append("circle")
+        .attr("class", "maximum critical point")
+        .attr("r", radius);
+
+      gMaxGroup
+        .append("text")
+        .attr("class", "maximum critical label")
+        .text(criticalPoints.at(i).maxYValue)
+        .attr("dy", 4)
+        .style("alignment-baseline", "middle")
+        .style("text-anchor", "middle");
+
+      const gMinGroup = gSerie
+        .append("g")
+        .attr("class", "group critical minimum")
+        .attr(
+          "transform",
+          `translate(${this._independentScale(
+            criticalPoints.at(i).minXValue
+          )}, ${this._dependentScale(criticalPoints.at(i).minYValue)})`
+        );
+
+      gMinGroup
+        .append("circle")
+        .attr("class", "minimum critical point")
+        .attr("r", radius);
+
+      gMinGroup
+        .append("text")
+        .attr("class", "minimum critical label")
+        .text(criticalPoints.at(i).minYValue)
+        .attr("dy", 4)
+        .style("alignment-baseline", "middle")
+        .style("text-anchor", "middle");
     });
   }
 
@@ -194,16 +266,16 @@ export class MultiLineGraph extends RectangularGraph {
     // Add the circles data point
     gSeries
       .selectAll("circle")
-      .data((datum) => datum.values)
+      .data((d) => d.values)
       .join("circle")
       .attr("class", function () {
         const parentClass = select(this.parentElement).attr("class");
         return `${parentClass} dot`;
       })
-      .attr("cx", (_, index) => this._independentScale(this.data.x.at(index)))
-      .attr("cy", (datum) => this._dependentScale(datum))
+      .attr("cx", (_, i) => this._independentScale(this.data.x.at(i)))
+      .attr("cy", (d) => this._dependentScale(d))
       .attr("r", radius)
-      .attr("data-position", (_, index) => this.data.x.at(index));
+      .attr("data-position", (_, i) => this.data.x.at(i));
 
     // Add the tooltip element
     const tooltip = select("body")
@@ -227,16 +299,13 @@ export class MultiLineGraph extends RectangularGraph {
             y: pointSelected.datum().toFixed(1),
           };
 
-          pointSelected
-            .attr("r", 3 * radius)
-            .style("stroke-width", lineWidth);
+          pointSelected.attr("r", 3 * radius).style("stroke-width", lineWidth);
 
           // Add a HTML table for the data selected
           tooltip
             .style("left", `${e.pageX + 10}px`)
             .style("top", `${e.pageY - 15}px`)
-            .style("opacity", 1)
-            .html(/*html*/`
+            .style("opacity", 1).html(/*html*/ `
               <table class="tooltip-table">
                 <caption>${d.serie}</caption>
                 <thead>
@@ -284,22 +353,22 @@ export class MultiLineGraph extends RectangularGraph {
       .selectAll("rect")
       .data(this.data.y)
       .join("rect")
-      .attr("class", (_, index) => this.dependentSeriesClass.at(index))
+      .attr("class", (_, i) => this.dependentSeriesClass.at(i))
       .attr("width", squareSize)
       .attr("height", squareSize)
-      .attr("y", (_, index) => (squareSize + 5) * index)
-      .style("fill", (datum) => this._colorScale(datum.serie));
+      .attr("y", (_, i) => (squareSize + 5) * i)
+      .style("fill", (d) => this._colorScale(d.serie));
 
     gLegends
       .selectAll("text")
       .data(this.data.y)
       .join("text")
-      .attr("class", (_, index) => this.dependentSeriesClass.at(index))
+      .attr("class", (_, i) => this.dependentSeriesClass.at(i))
       .attr("x", squareSize + 5)
-      .attr("y", (_, index) => (squareSize + 5) * index)
+      .attr("y", (_, i) => (squareSize + 5) * i)
       .attr("dy", squareSize)
-      .text((datum) => datum.serie)
-      .style("fill", (datum) => this._colorScale(datum.serie));
+      .text((d) => d.serie)
+      .style("fill", (d) => this._colorScale(d.serie));
   }
 
   /**
@@ -313,9 +382,9 @@ export class MultiLineGraph extends RectangularGraph {
       .selectAll("line")
       .data(this._independentScale.ticks())
       .join("line")
-      .attr("x1", (datum) => this._independentScale(datum))
+      .attr("x1", (d) => this._independentScale(d))
       .attr("y1", this._dependentScale(this._dependentScale.domain().at(0)))
-      .attr("x2", (datum) => this._independentScale(datum))
+      .attr("x2", (d) => this._independentScale(d))
       .attr("y2", this._dependentScale(this._dependentScale.domain().at(1)));
   }
 
@@ -331,9 +400,9 @@ export class MultiLineGraph extends RectangularGraph {
       .data(this._dependentScale.ticks())
       .join("line")
       .attr("x1", this._independentScale(this._independentScale.domain().at(0)))
-      .attr("y1", (datum) => this._dependentScale(datum))
+      .attr("y1", (d) => this._dependentScale(d))
       .attr("x2", this._independentScale(this._independentScale.domain().at(1)))
-      .attr("y2", (datum) => this._dependentScale(datum));
+      .attr("y2", (d) => this._dependentScale(d));
   }
 
   /**

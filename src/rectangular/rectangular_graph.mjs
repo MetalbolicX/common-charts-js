@@ -439,6 +439,7 @@ class RectangularGraph {
    * @returns {number} By default it is the bottom position.
    */
   #axisPosition(position) {
+    /** @enum {number} */
     const positions = {
       top: this.margins.top,
       right: this.width - this.margins.right,
@@ -456,6 +457,7 @@ class RectangularGraph {
    * @returns {string} By default is the horizontal positioning.
    */
   #translateAxis(offsetMargin, position) {
+    /** @enum {string} */
     const translations = {
       top: `translate(0, ${offsetMargin})`,
       right: `translate(${offsetMargin}, 0)`,
