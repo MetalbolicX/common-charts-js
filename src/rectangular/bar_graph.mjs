@@ -121,12 +121,12 @@ export class BarGraph extends RectangularGraph {
     this.setIsPercentage = isPercentage;
     this.setOffsetAxis = offsetAxis;
     this.#grandTotal = rawData
-      .map((datum) =>
-        this.dependentSeries.reduce((total, serie) => total + datum[serie], 0)
+      .map((d) =>
+        this.dependentSeries.reduce((total, serie) => total + d[serie], 0)
       )
       .reduce((allTotal, total) => allTotal + total, 0);
     this.#data = rawData
-      .map((datum) => {
+      .map((d) => {
         /**
          * Accumulator variable to know the previous value in current iteration.
          * @type {number}
@@ -137,11 +137,11 @@ export class BarGraph extends RectangularGraph {
          * @type {number}
          */
         const totalPerCategory = this.dependentSeries.reduce(
-          (total, serie) => total + datum[serie],
+          (total, serie) => total + d[serie],
           0
         );
         return {
-          x: datum[this.independentSerie],
+          x: d[this.independentSerie],
           y: this.dependentSeries
             .map((serie) => {
               /**
@@ -159,13 +159,13 @@ export class BarGraph extends RectangularGraph {
               /** @type {ySeries} */
               const info = {
                 category: serie,
-                value: datum[serie] / (percentageFactor * normalizationFactor),
+                value: d[serie] / (percentageFactor * normalizationFactor),
                 previous: before / (percentageFactor * normalizationFactor),
                 next:
                   (1 / (percentageFactor * normalizationFactor)) *
-                  (datum[serie] + before),
+                  (d[serie] + before),
               };
-              before += datum[serie];
+              before += d[serie];
               return info;
             })
             .sort((a, b) => b.value - a.value),
@@ -174,23 +174,23 @@ export class BarGraph extends RectangularGraph {
       })
       .sort((a, b) => b.total - a.total);
     this._setIndependentScale = independentScale.domain(
-      this.data.map((datum) => datum.x)
+      this.data.map((d) => d.x)
     );
     this._setDependentScale = dependentScale.domain([
       0,
       (1 + this.offsetAxis) *
         (this.isStacked
           ? this.data
-              .map((datum) =>
-                datum.y.reduce((total, serie) => total + serie.value, 0)
+              .map((d) =>
+                d.y.reduce((total, serie) => total + serie.value, 0)
               )
               .reduce(
                 (highestTotal, total) => Math.max(highestTotal, total),
                 Number.NEGATIVE_INFINITY
               )
           : this.data
-              .map((datum) =>
-                datum.y.reduce(
+              .map((d) =>
+                d.y.reduce(
                   (highest, serie) => Math.max(highest, serie.value),
                   Number.NEGATIVE_INFINITY
                 )
@@ -303,12 +303,14 @@ export class BarGraph extends RectangularGraph {
   }
 
   /**
+   * @description
    * Selects the translate string for the g svg element according to positions of the bar chart (horizontal or vertical).
    * @param {number} offsetMargin The amount of margin to positioning the group svg element.
    * @param {string} position The positioning of the independent axis.
    * @returns {string} The translate string for the group svg element to move it.
    */
   #translateElement(offsetMargin, position) {
+    /** @enum {string} */
     const translations = {
       top: `translate(${offsetMargin}, 0)`,
       right: `translate(0, ${offsetMargin})`,
@@ -327,6 +329,7 @@ export class BarGraph extends RectangularGraph {
    */
 
   /**
+   * @description
    * Evaluate the whether the bar chart is in horizontal or vertical position.
    * @returns {barsConfig}
    */
@@ -349,6 +352,7 @@ export class BarGraph extends RectangularGraph {
   }
 
   /**
+   * @description
    * Render the bars of the bars chart in the svg container.
    * @param {function} formatFunction The D3.js format function to appropiate format the value to show any datum. The default specifier is a value without decimal points.
    * @param {boolean} isStatic The optional parameter to decide if the bar chart has weather any interaction or it will be statically displayed. Bye default is false or interactive.
@@ -361,10 +365,10 @@ export class BarGraph extends RectangularGraph {
       .selectAll("g")
       .data(this.data)
       .join("g")
-      .attr("class", (datum) => datum.x.replace(" ", "-").toLowerCase())
-      .attr("transform", (datum) =>
+      .attr("class", (_, i) => this.dependentSeriesClass.at(i))
+      .attr("transform", (d) =>
         this.#translateElement(
-          this._independentScale(datum.x),
+          this._independentScale(d.x),
           this.independentAxisPosition
         )
       );
@@ -375,13 +379,11 @@ export class BarGraph extends RectangularGraph {
     gBars
       .selectAll("g")
       .selectAll("rect")
-      .data((datum) => datum.y)
+      .data((d) => d.y)
       .join("rect")
       .attr(
         "class",
-        (datum) =>
-          `${datum.category.toLowerCase().replace(" ", "-")} hide unselected`
-      )
+        (_, i) => this.dependentSeriesClass.at(i))
       .attr(
         positioning.fixedSize,
         this.isStacked
@@ -390,30 +392,30 @@ export class BarGraph extends RectangularGraph {
       )
       .attr(
         positioning.variableSize,
-        (datum) =>
+        (d) =>
           (this.horizontalPositions.includes(this.independentAxisPosition)
             ? 1
             : -1) *
           (this._dependentScale(this._dependentScale.domain().at(0)) -
-            this._dependentScale(datum.value))
+            this._dependentScale(d.value))
       )
-      .attr(positioning.useIndex, (_, index) =>
-        this.isStacked ? 0 : this._secondScale.bandwidth() * index
+      .attr(positioning.useIndex, (_, i) =>
+        this.isStacked ? 0 : this._secondScale.bandwidth() * i
       )
-      .attr(positioning.usePrevious, (datum) =>
+      .attr(positioning.usePrevious, (d) =>
         this.isStacked
           ? this._dependentScale(
               this.verticalPositions.includes(this.dependentAxisPosition)
-                ? datum.next
-                : datum.previous
+                ? d.next
+                : d.previous
             )
           : this._dependentScale(
               this.verticalPositions.includes(this.dependentAxisPosition)
-                ? datum.value
+                ? d.value
                 : this._dependentScale.domain().at(0)
             )
       )
-      .style("fill", (datum) => this._colorScale(datum.category));
+      .style("fill", (d) => this._colorScale(d.category));
 
     if (!isStatic) {
       return;
@@ -424,20 +426,16 @@ export class BarGraph extends RectangularGraph {
       .selectAll("text")
       .data((datum) => datum.y)
       .join("text")
-      .attr(
-        "class",
-        (datum) =>
-          `${datum.category.toLowerCase().replace(" ", "-")} hide unselected`
-      )
-      .attr(positioning.useIndex, (_, index) =>
+      .attr("class", (_, i) => this.dependentSeriesClass.at(i))
+      .attr(positioning.useIndex, (_, i) =>
         this.isStacked
           ? this._independentScale.bandwidth() / 2
-          : this._secondScale.bandwidth() * index
+          : this._secondScale.bandwidth() * i
       )
-      .attr(positioning.usePrevious, (datum) =>
+      .attr(positioning.usePrevious, (d) =>
         this.isStacked
-          ? this._dependentScale(datum.next)
-          : this._dependentScale(datum.value)
+          ? this._dependentScale(d.next)
+          : this._dependentScale(d.value)
       )
       .attr(
         this.verticalPositions.includes(this.dependentAxisPosition)
@@ -451,7 +449,7 @@ export class BarGraph extends RectangularGraph {
           : "dy",
         this.verticalPositions.includes(this.independentAxisPosition) ? -15 : 15
       )
-      .text((datum) => formatFunction(datum.value))
+      .text((d) => formatFunction(d.value))
       .style("text-anchor", "middle");
   }
 
@@ -474,7 +472,7 @@ export class BarGraph extends RectangularGraph {
         if (e.target.matches("rect")) {
           // Make solid the color of each category group
           /** @type {string} */
-          const category = e.target.classList[0];
+          const category = e.target.classList.at(0);
           selectAll(`.${category}`).style("opacity", 1);
 
           // Move the tooltip and show it
@@ -488,7 +486,7 @@ export class BarGraph extends RectangularGraph {
       .on("mouseout", (e) => {
         if (e.target.matches("rect")) {
           /** @type {string} */
-          const category = e.target.classList[0];
+          const category = e.target.classList.at(0);
           // Let CSS change the transparency
           selectAll(`.${category}`).style("opacity", null);
           // Hide the tooltip
@@ -514,21 +512,21 @@ export class BarGraph extends RectangularGraph {
       .selectAll("rect")
       .data(this.dependentSeries)
       .join("rect")
-      .attr("class", (datum) => datum)
+      .attr("class", (d) => d)
       .attr("width", squareSize)
       .attr("height", squareSize)
-      .attr("y", (_, index) => (squareSize + 5) * index)
-      .style("fill", (datum) => this._colorScale(datum));
+      .attr("y", (_, i) => (squareSize + 5) * i)
+      .style("fill", (d) => this._colorScale(d));
 
     gLegends
       .selectAll("text")
       .data(this.dependentSeries)
       .join("text")
       .attr("x", squareSize + 5)
-      .attr("y", (_, index) => (squareSize + 5) * index)
+      .attr("y", (_, i) => (squareSize + 5) * i)
       .attr("dy", squareSize)
-      .text((datum) => `${datum[0].toUpperCase()}${datum.slice(1)}`)
-      .style("fill", (datum) => this._colorScale(datum));
+      .text((d) => d)
+      .style("fill", (d) => this._colorScale(d));
   }
 
   /**
@@ -580,13 +578,13 @@ export class BarGraph extends RectangularGraph {
       .data(this._dependentScale.ticks())
       .join("line")
       .attr("x1", this._independentScale(this._independentScale.domain().at(0)))
-      .attr("y1", (datum) => this._dependentScale(datum))
+      .attr("y1", (d) => this._dependentScale(d))
       .attr(
         "x2",
         this._independentScale(this._independentScale.domain().at(-1)) +
           this._independentScale.bandwidth()
       )
-      .attr("y2", (datum) => this._dependentScale(datum));
+      .attr("y2", (d) => this._dependentScale(d));
   }
 }
 

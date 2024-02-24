@@ -62,6 +62,32 @@ export class MultiLineGraph extends RectangularGraph {
    * @description
    * Creates a new instance of the Multi lines chart class. By the configuration options.
    * @param {configMultiLinesChartOptions} ConfigMultiLinesChart The options parameters for the new instance.
+   * @example
+   * ```JavaScript
+   *
+   * const data = [
+   *    { year: 2014, temperature: 15, pressure: 0 },
+   *    { year: 2015, temperature: 20, pressure: 50}
+   * ];
+   *
+   * // Set the suffix of data of the left axis
+   * const customUnits = d3.formatLocale({
+   *  currency: ["", "°C"],
+   * });
+   *
+   * const graph = new MultiLineGraph({
+   *  rawData: data,
+   *  svgSelector: "svg.chart",
+   *  independentSerie: "year",
+   *  dependentSeries: ["temperature", "pressure"],
+   *  independentScale: d3.scaleLinear(),
+   *  dependentScale: d3.scaleLinear(),
+   *  colorScale: d3.scaleOrdinal().range(["red", "blue"]),
+   *  independentAxis: d3.axisBottom().tickFormat(d3.format(".0f")),
+   *  dependentAxis: d3.axisLeft().tickFormat(customUnits.format("$,.1f")),
+   *  margins: { top: 50, right: 30, bottom: 50, left: 30},
+   * });
+   * ```
    */
   constructor({
     rawData,
