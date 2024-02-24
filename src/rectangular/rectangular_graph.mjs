@@ -90,24 +90,21 @@ class RectangularGraph {
   #D3Svg;
 
   /**
-   * @typedef {object} configRectangularOptions The config for the 2D rectangular coordinates chart.
-   * @property {string} [svgSelector="svg"] The CSS selector for the SVG container. By default select the first svg element.
-   * @property {string} independentSerie The name of independent variable serie for the chart.
-   * @property {Array<string>} dependentSeries The names of dependent series for the chart.
-   * @property {D3Scale} independentScale The D3.js scale object to apply for the independent variable data.
-   * @property {D3Scale} dependentScale The D3.js scale object to apply for the dependent variable data.
-   * @property {D3Scale} colorScale The D3.js scale object for the colors to apply per each data serie.
-   * @property {D3Axis} independentAxis The D3.js object for the independent axis variable.
-   * @property {D3Axis} dependentAxis The D3.js object for the dependent axis variable.
-   * @property {string} [independentAxisPosition="bottom"] The position of the independent axis. The positions of the axis are: "top", "right", "bottom" and "left". By default the independent axis position is "bottom".
-   * @property {string} [dependentAxisPosition="left"] The position of the dependent axis. The positions of the axis are: "top", "right", "bottom" and "left". By default the independent axis position is "left".
-   * @property {margins} [margins={ top: 30, right: 50, bottom: 30, left: 50 }] The margins to apply in the chart. It's the convenstion by D3.js community. By default the margins applied are: { top: 30, right: 50, bottom: 30, left: 50 }.
-   * @property {number} [factor=0.8] The factor value to position the legend for the chart. By default the factor is 0.8.
-   */
-
-  /**
+   * @description
    * Create a new instance of the 2D Rectangular coordinates chart class.
-   * @param {configRectangularOptions} ConfigRectangularChart The options parameters for the new instance.
+   * @param {Object} configChart The configuration options to set the 2D rectangular chart.
+   * @param {string} [configChart.svgSelector="svg"] The CSS selector for the SVG container. By default select the first svg element.
+   * @param {string} configChart.independentSerie The name of independent variable serie for the chart.
+   * @param {Array<string>} configChart.dependentSeries The names of dependent series for the chart.
+   * @param {D3Scale} configChart.independentScale The D3.js scale object to apply for the independent variable data.
+   * @param {D3Scale} configChart.dependentScale The D3.js scale object to apply for the dependent variable data.
+   * @param {D3Scale} configChart.colorScale The D3.js scale object for the colors to apply per each data serie.
+   * @param {D3Axis} configChart.independentAxis The D3.js object for the independent axis variable.
+   * @param {D3Axis} configChart.dependentAxis The D3.js object for the dependent axis variable.
+   * @param {string} [configChart.independentAxisPosition="bottom"] The position of the independent axis. The positions of the axis are: "top", "right", "bottom" and "left". By default the independent axis position is "bottom".
+   * @param {string} [configChart.dependentAxisPosition="left"] The position of the dependent axis. The positions of the axis are: "top", "right", "bottom" and "left". By default the independent axis position is "left".
+   * @param {{top: number, right: number, bottom: number, left: number}} [configChart.margins={ top: 30, right: 50, bottom: 30, left: 50 }] The margins to apply in the chart. It's the convenstion by D3.js community. By default the margins applied are: { top: 30, right: 50, bottom: 30, left: 50 }.
+   * @param {number} [configChart.factor=0.8] The factor value to position the legend for the chart. By default the factor is 0.8.
    */
   constructor({
     svgSelector = "svg",
@@ -514,18 +511,14 @@ class RectangularGraph {
   }
 
   /**
-   * @typedef {Object} labelOptions The label information to set the axes names.
-   * @property {string} position The position of the axis label.
-   * @property {number} offset The offset of the axis label from the width or height at 0 level. By default 0.5 (50%).
-   * @property {number} deltaX The delta offset of the x axis label.
-   * @property {number} deltaY The delta offset of the y axis label.
-   */
-
-  /**
    * @description
    * Show an axis label at the farthest positions.
    * @param {string} title Title to name the axis.
-   * @param {labelOptions} [labelOptions={ postion: "bottom", offset: 0.5, deltaX: 0, deltaY: 0 }] Data for the dependent axis label.
+   * @param {Object} [labelOptions={position: "bottom", offset: 0.5, deltaX: 0, deltaY: 0}] The label configuration to set an axis name.
+   * @param {string} [labelOptions.position="bottom"] The position of the axis to set the label. The default value is "bottom".
+   * @param {number} [labelOptions.offset=0.5] The offset of the axis label from the width or height at 0 level. By default 0.5 (50%).
+   * @param {number} [labelOptions.deltaX=0] The delta offset of the x axis label. The default value is 0.
+   * @param {number} [labelOptions.deltaY=0] The delta offset of the y axis label. The default value is 0.
    * @returns {void}
    * @example
    * ```JavaScript

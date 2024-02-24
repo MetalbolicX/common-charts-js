@@ -183,8 +183,8 @@ export class MultiLineGraph extends RectangularGraph {
       .style("fill", "none");
 
     // Add the color for each serie
-    gSeries.selectAll("path").each((_, i, paths) => {
-      const currentPath = select(paths[i]);
+    gSeries.selectAll("path").each((_, i, ns) => {
+      const currentPath = select(ns[i]);
       const serie = currentPath.attr("class").split(" ").at(0);
       currentPath.style("stroke", this._colorScale(serie));
     });
@@ -211,8 +211,8 @@ export class MultiLineGraph extends RectangularGraph {
       };
     });
 
-    selectAll(".series > g").each((_, i, n) => {
-      const gSerie = select(n[i]);
+    selectAll(".series > g").each((_, i, ns) => {
+      const gSerie = select(ns[i]);
 
       const gMaxGroup = gSerie
         .append("g")
