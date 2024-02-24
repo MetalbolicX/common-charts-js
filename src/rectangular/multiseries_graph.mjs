@@ -30,38 +30,21 @@ export class MultiLineGraph extends RectangularGraph {
   #offsetAxis;
 
   /**
-   * @typedef {object} margins The margins for the chart. According to the D3.js conventions.
-   * @property {number} top The top margin for the chart.
-   * @property {number} right The right margin for the chart.
-   * @property {number} bottom The bottom margin for the chart.
-   * @property {number} left The left margin for the chart.
-   */
-
-  /**
-   * @typedef {import("d3").Scale<Domain, Range>} D3Scale
-   * @typedef {import("d3").Axis<Domain>} D3Axis
-   */
-
-  /**
-   * @typedef {object} configMultiLinesChartOptions The config for the multi lines chart.
-   * @property {Array<any>} rawData The raw data for the chart.
-   * @property {string} [svgSelector="svg"] The CSS selector for the SVG container. By default select the first svg element.
-   * @property {string} independentSerie The name of independent variable serie for the chart.
-   * @property {Array<string>} dependentSeries The names of dependent series for the chart.
-   * @property {D3Scale} independentScale The D3.js scale to apply for the independent variable data.
-   * @property {D3Scale} dependentScale The D3.js scale to apply for the dependent variable data.
-   * @property {D3Scale} colorScale The D3.js scale for the colors to apply per each data serie.
-   * @property {D3Axis} independentAxis The D3.js object generator for the independent axis variable.
-   * @property {D3Axis} dependentAxis The D3.js object generator for the dependent axis variable.
-   * @property {margins} [margins={ top: 30, right: 50, bottom: 30, left: 50 }] The margins to apply in the chart. It's the convenstion by D3.js community. By default the margins applied are: { top: 30, right: 50, bottom: 30, left: 50 }.
-   * @property {number} [factor=0.8] The factor value to position the legend for the chart. By default the factor is 0.8.
-   * @property {number} [offsetAxis=0.05] The offset limits for the domain of the dependent variable for better visualization. By default the axis offset is 0.05.
-   */
-
-  /**
    * @description
-   * Creates a new instance of the Multi lines chart class. By the configuration options.
-   * @param {configMultiLinesChartOptions} ConfigMultiLinesChart The options parameters for the new instance.
+   * Creates a new instance of the Multi lines chart class. By the configuration object.
+   * @param {Object} chartConfig The configuration object for the chart.
+   * @param {Array.<Object>} chartConfig.rawData The raw data for the chart.
+   * @param {string} [chartConfig.svgSelector="svg"] The CSS selector for the SVG container. By default select the first svg element.
+   * @param {string} chartConfig.independentSerie The name of independent variable serie for the chart.
+   * @param {Array<string>} chartConfig.dependentSeries The names of dependent series for the chart.
+   * @param {D3Scale} chartConfig.independentScale The D3.js scale to apply for the independent variable data.
+   * @param {D3Scale} chartConfig.dependentScale The D3.js scale to apply for the dependent variable data.
+   * @param {D3Scale} chartConfig.colorScale The D3.js scale for the colors to apply per each data serie.
+   * @param {D3Axis} chartConfig.independentAxis The D3.js object generator for the independent axis variable.
+   * @param {D3Axis} chartConfig.dependentAxis The D3.js object generator for the dependent axis variable.
+   * @param {{top: number, right: number, bottom: number, left: number}} [chartConfig.margins={top: 30, right: 50, bottom: 30, left: 50}] The margins to apply in the chart. It's the convenstion by D3.js community. By default the margins applied are: { top: 30, right: 50, bottom: 30, left: 50 }.
+   * @param {number} [chartConfig.factor=0.8] The factor value to position the legend for the chart. By default the factor is 0.8.
+   * @param {number} [chartConfig.offsetAxis=0.05] The offset limits for the domain of the dependent variable for better visualization. By default the axis offset is 0.05.
    * @example
    * ```JavaScript
    *
