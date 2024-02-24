@@ -3,6 +3,7 @@ const { select } = d3;
 ("use strict");
 
 /**
+ * @description
  * Base class to work in a 2D rectangular coordinates chart.
  */
 class RectangularGraph {
@@ -185,8 +186,10 @@ class RectangularGraph {
   }
 
   /**
+   * @description
    * The factor to positioning the legend label in the chart.
    * @param {number} factor The factor value must be between 0 and 1.
+   * @throws {Error} If the factor is not between 0 and 1.
    */
   set setFactor(factor) {
     if (factor <= 0 || factor >= 1) {
@@ -216,7 +219,7 @@ class RectangularGraph {
   /**
    * @description
    * The margins for the chart. According to the D3.js conventions.
-   * @returns {margins}
+   * @returns {{top: number, right: number, bottom: number, left: number}}
    */
   get margins() {
     return this.#margins;
@@ -224,7 +227,8 @@ class RectangularGraph {
 
   /**
    * The margins for the chart. According to the D3.js conventions.
-   * @param {margins} margins
+   * @param {{top: number, right: number, bottom: number, left: number}} margins The margins object literal to set the space at top, right, bottom and left in the chart.
+   * @throws {Error} If the margins object does not have the key of: top, right, bottom and left.
    */
   set setMargins(margins) {
     const positions = Object.keys(margins);
@@ -332,7 +336,10 @@ class RectangularGraph {
   }
 
   /**
+   * @description
+   * Set the name of the independent variable serie for the chart.
    * @param {string} serieName The name of independent variable serie for the chart.
+   * @throws {Error} If the name is not and string.
    */
   set setIndependentSerie(serieName) {
     if (typeof serieName !== "string") {
@@ -522,7 +529,7 @@ class RectangularGraph {
    * @returns {void}
    * @example
    * ```JavaScript
-   * // Show a axis label at the bottom axis and offset at the middlw.
+   * // Show a axis label at the bottom axis and offset at the middle.
    * graph.renderAxisLabel("Temperature", {
    *  position: "bottom",
    *  offset: 0.5
