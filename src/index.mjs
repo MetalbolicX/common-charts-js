@@ -1,15 +1,17 @@
-import RadarGraph from "./polar/radar_graph.mjs";
-import MultiLineGraph from "./rectangular/multiseries_graph.mjs";
-import BarGraph from "./rectangular/bar_graph.mjs";
-import SlopeGraph from "./rectangular/slope_graph.mjs";
-import MultiAreaGraph from "./rectangular/area_graph.mjs";
+import MultiLineChart from "./charts/multiline-chart.mjs";
+import MultiAreaChart from "./charts/multiarea-chart.mjs";
+import VBarChart from "./charts/vertical-bar-chart.mjs";
+import SlopeChart from "./charts/slope-chart.mjs";
+import HBarChart from "./charts/horizontal-bar-chart.mjs";
+import RadarChart from "./charts/radar-chart.mjs";
 
 export {
-  RadarGraph,
-  MultiLineGraph,
-  BarGraph,
-  SlopeGraph,
-  MultiAreaGraph,
+  MultiLineChart,
+  MultiAreaChart,
+  VBarChart,
+  SlopeChart,
+  HBarChart,
+  RadarChart,
 };
 
 console.log("Common charts of data visualizations created with D3.js!!");
