@@ -76,27 +76,26 @@ import { SlopeChart }  from "common-charts-js";
 ```
 3. Create of fetch a dataset as an array of objects. For example:
 ```Javascript
-const data /**@type {{answer: string, last_year: number, this_year: number}[]}*/ = [
-	{
-		answer: "Strongly agree",
-		last_year: 0.26,
-		this_year: 0.33
-	},
-	{
-		answer: "Agree",
-		last_year: 0.5,
-		this_year: 0.51
-	},
-	{
-		answer: "Disagree",
-		last_year: 0.22,
-		this_year: 0.14
-	},
-	{
-		answer: "Strongly disagree",
-		last_year: 0.02,
-		this_year: 0.02
-	}
+const data /**@type {{answer: string, last_year: number, this_year: number}[]}*/ = [{
+    answer: "Strongly agree",
+    last_year: 0.26,
+    this_year: 0.33
+  },
+  {
+    answer: "Agree",
+    last_year: 0.5,
+    this_year: 0.51
+  },
+  {
+    answer: "Disagree",
+    last_year: 0.22,
+    this_year: 0.14
+  },
+  {
+    answer: "Strongly disagree",
+    last_year: 0.02,
+    this_year: 0.02
+  }
 ];
 ```
 4. Initalize the chart. For more details, see the documentation.
@@ -106,30 +105,30 @@ const width = chartContainer.clientWidth;
 const height = chartContainer.clientHeight;
 
 const slopeChart = new SlopeChart()
-	.bindTo("svg.chart")
-	.width(width)
-	.height(height)
-	.margin({
-		top: 50,
-		right: 30,
-		bottom: 50,
-		left: 30,
-	})
-	.data(data)
-	.xSerie((d) => d.answer)
-	.ySeries((d) => ({
+  .bindTo("svg.chart")
+  .width(width)
+  .height(height)
+  .margin({
+    top: 50,
+    right: 30,
+    bottom: 50,
+    left: 30,
+  })
+  .data(data)
+  .xSerie((d) => d.answer)
+  .ySeries((d) => ({
     "Last year": d.last_year,
     "This year": d.this_year
-    }))
-	.xScale(d3.scaleOrdinal())
-	.yScale(d3.scaleLinear())
-	.xAxisPosition("bottom")
-	.yAxisPosition("left")
-	.yAxisOffset(0.03)
-	.colorScale(
-      d3.scaleOrdinal()
-        .range(["black", "green", "blue", "orange"])
-    );
+  }))
+  .xScale(d3.scaleOrdinal())
+  .yScale(d3.scaleLinear())
+  .xAxisPosition("bottom")
+  .yAxisPosition("left")
+  .yAxisOffset(0.03)
+  .colorScale(
+    d3.scaleOrdinal()
+    .range(["black", "green", "blue", "orange"])
+  );
 ```
 5. Always start with the `init()` method to set all the D3 js scales, formatting, etc.
 ```Javascript
@@ -187,7 +186,9 @@ To transform the dataset use the [Data Forge](https://www.npmjs.com/package/data
 #### JavaScript code
 
 ```JavaScript
-import { MultiLineChart } from "./src/index.mjs";
+import {
+  MultiLineChart
+} from "./src/index.mjs";
 
 const response = await fetch(
   [
@@ -203,7 +204,9 @@ const csvText = await response.text();
 
 // Transdorm the data to a dataframe using the Data Forge library
 const newYorkClimate = dataForge
-  .fromCSV(csvText, { dynamicTyping: true })
+  .fromCSV(csvText, {
+    dynamicTyping: true
+  })
   .select((row) => ({
     ...row,
     date: new Date(row.Year, row.Month - 1, row.Day),
@@ -255,8 +258,12 @@ const chart = new MultiLineChart()
   .xAxisPosition("bottom")
   .yAxisPosition("left")
   .yAxisOffset(0.05)
-  .xAxisCustomizations({ tickFormat: d3.format(".0f") })
-  .yAxisCustomizations({ tickFormat: customUnits.format("$.1f") })
+  .xAxisCustomizations({
+    tickFormat: d3.format(".0f")
+  })
+  .yAxisCustomizations({
+    tickFormat: customUnits.format("$.1f")
+  })
   .colorScale(d3.scaleOrdinal().range(["black", "green", "blue"]))
   .radius(4);
 
