@@ -1,5 +1,7 @@
 import Chart from "./chart.mjs";
 
+const { format } = d3;
+
 ("use strict");
 
 export default class SlopeChart extends Chart {
@@ -153,7 +155,9 @@ export default class SlopeChart extends Chart {
    * @description
    * Add the data label to each point the chart.
    * @param {number} [deltaY=-5] The number of pixels to move vertically the text. By default is -5.
+   * @param {callback} [fnFormat=d3.format(".1f")] The D3 js format function to format the data displayed in the label. By default the function is d3.format(".1f"). See the link for more details.
    * @returns {void}
+   * @see {@link https://d3js.org/d3-format}
    * @example
    * ```JavaScript
    * // Set all the parameters of the chart
@@ -161,10 +165,10 @@ export default class SlopeChart extends Chart {
    *  ...;
    *
    * chart.init();
-   * char.addLabels(-10);
+   * char.addLabels(-10, d3.format(".2f"));
    * ```
    */
-  addLabels(deltaY = -5) {
+  addLabels(deltaY = -5, fnFormat = format(".1f")) {
     const groupSeries = this._svg.select(".series");
 
     groupSeries
@@ -176,7 +180,7 @@ export default class SlopeChart extends Chart {
       .attr("x", (d) => this.x(d.serie))
       .attr("y", (d) => this.y(d.value))
       .attr("dy", deltaY)
-      .text((d) => d.value.toFixed(1))
+      .text((d) => fnFormat(d.value))
       .style("fill", (d) => this.colorScale()(d.type))
       .style("text-anchor", "middle");
   }

@@ -1,6 +1,6 @@
 import Chart from "./chart.mjs";
 
-const { line, select, greatestIndex, leastIndex } = d3;
+const { line, select, greatestIndex, leastIndex, format } = d3;
 
 /**
  * @description
@@ -316,18 +316,24 @@ export default class MultiLineChart extends Chart {
   /**
    * @description
    * Add the data label to each point the chart.
+   * @param {callback} [fnFormat=d3.format(".1f")] The D3 js format function to format the data displayed in the label. By default the function is d3.format(".1f"). See the link for more details.
    * @returns {void}
+   * @see {@link https://d3js.org/d3-format}
    * @example
    * ```JavaScript
    * // Set all the parameters of the chart
    * const chart = new MultiLineChart()
    *  ...;
+   * // Set a custom format for the postfix in a number
+   * const customUnits = d3.formatLocale({
+   *  currency: ["", "°C"],
+   * });
    *
    * chart.init();
-   * char.addLabels();
+   * char.addLabels(customUnits.format("$.1f"));
    * ```
    */
-  addLabels() {
+  addLabels(fnFormat = format(".1f")) {
     const seriesGroup = this._svg.selectAll(".series > g");
     seriesGroup
       .selectAll("text")
@@ -343,6 +349,6 @@ export default class MultiLineChart extends Chart {
       .attr("class", (d) => `${d.serie} label`)
       .attr("x", (d) => this.x(d.category))
       .attr("y", (d) => this.y(d.value))
-      .text((d) => d.value.toFixed(1));
+      .text((d) => fnFormat(d.value));
   }
 }

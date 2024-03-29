@@ -317,7 +317,9 @@ export default class VBarChart extends Chart {
    * @description
    * Add the text labels of data of each bar.
    * @param {number} [deltaY=-5] The extra positioning of the text element in the y direction in pixels. By default is -5.
+   * @param {callback} [fnFormat=d3.format(".1f")] The D3 js format function to format the data displayed in the label. By default the function is d3.format(".1f"). See the link for more details.
    * @return {void}
+   * @see {@link https://d3js.org/d3-format}
    * @example
    * ```JavaScript
    * // Set all the parameters of the chart
@@ -325,10 +327,10 @@ export default class VBarChart extends Chart {
    *  ...;
    *
    * chart.init();
-   * chart.addLabels(-10);
+   * chart.addLabels(-10, d3.format(".0f"));
    * ```
    */
-  addLabels(deltaY = -5) {
+  addLabels(deltaY = -5, fnFormat = format(".1f")) {
     const bars = this._svg.select(".bars");
     bars
       .selectAll("g")
@@ -348,7 +350,7 @@ export default class VBarChart extends Chart {
         this.isStacked() ? this.y(d.previous + d.value) : this.y(d.value)
       )
       .attr("dy", deltaY)
-      .text((d) => d.value.toFixed(2))
+      .text((d) => fnFormat(d.value))
       .style("text-anchor", "middle");
   }
 

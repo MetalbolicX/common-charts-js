@@ -1,6 +1,6 @@
 import VBarChart from "./vertical-bar-chart.mjs";
 
-const { scaleBand } = d3;
+const { scaleBand, format } = d3;
 ("use strict");
 
 export default class HBarChart extends VBarChart {
@@ -148,7 +148,9 @@ export default class HBarChart extends VBarChart {
    * Add the labels with the values of each bar.
    * @param {number} [deltaX=-5] The quantity of pixels to move the label horizontally. By default is -5.
    * @param {number} [deltaY=5]  The quantity of pixels to move the label vertically. By default is 5.
+   * @param {callback} [fnFormat=d3.format(".1f")] The D3 js format function to format the data displayed in the label. By default the function is d3.format(".1f"). See the link for more details.
    * @returns {void}
+   * @see {@link https://d3js.org/d3-format}
    * @example
    * ```JavaScript
    * // Set all the parameters of the chart
@@ -156,10 +158,10 @@ export default class HBarChart extends VBarChart {
    *  ...;
    *
    * chart.init();
-   * chart.addLabels(-10, 6);
+   * chart.addLabels(-10, 6, d3.format(".0f"));
    * ```
    */
-  addLabels(deltaX = -5, deltaY = 5) {
+  addLabels(deltaX = -5, deltaY = 5, fnFormat = format(".1f")) {
     const bars = this._svg.select(".bars");
     bars
       .selectAll("g")
@@ -174,13 +176,11 @@ export default class HBarChart extends VBarChart {
         this.isStacked() ? this.y(d.previous) : this.y(d.value)
       )
       .attr("y", (d) =>
-        this.isStacked()
-          ? this.x.bandwidth() / 2
-          : this.x1(d.serie)
+        this.isStacked() ? this.x.bandwidth() / 2 : this.x1(d.serie)
       )
       .attr("dx", deltaX)
       .attr("dy", this.x1.bandwidth() / 2 + deltaY)
-      .text((d) => d.value.toFixed(2));
+      .text((d) => fnFormat(d.value));
   }
 
   /**

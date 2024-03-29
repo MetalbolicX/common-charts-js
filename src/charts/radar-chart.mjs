@@ -1,4 +1,4 @@
-const { select, lineRadial, curveLinearClosed } = d3;
+const { select, lineRadial, curveLinearClosed, format } = d3;
 
 ("use strict");
 
@@ -409,18 +409,25 @@ export default class RadarChart {
   /**
    * @description
    * Add circles of axis for the radar chart.
-   * @return {void}
+   * @param {callback} [fnFormat=d3.format(".1f")] The D3 js format function to format the data displayed in the label. By default the function is d3.format(".1f"). See the link for more details.
+   * @returns {void}
+   * @see {@link https://d3js.org/d3-format}
    * @example
    * ```JavaScript
    * // Set all the parameters of the chart
    * const chart = new RadarChart()
    *  ...;
    *
+   * // Set a custom format for the postfix in a number
+   * const customUnits = d3.formatLocale({
+   *  currency: ["", "°C"],
+   * });
+   *
    * chart.init();
-   * chart.addAxis();
+   * chart.addAxis(customUnits.format("$.1f"));
    * ```
    */
-  addAxis() {
+  addAxis(fnFormat = format(".1f")) {
     const ticks = Array.from({ length: this.axisTicks() }).map(
       (_, i) => (this.y.domain().at(-1) * i) / this.axisTicks()
     );
@@ -445,7 +452,7 @@ export default class RadarChart {
       .append("text")
       .attr("class", "x axis size")
       .attr("dy", (d) => this.y(d))
-      .text((d) => d.toFixed(1))
+      .text((d) => fnFormat(d))
       .style("text-anchor", "middle");
   }
 
@@ -537,18 +544,24 @@ export default class RadarChart {
   /**
    * @description
    * Add the text labels of data of each serie.
-   * @return {void}
+   * @param {callback} [fnFormat=d3.format(".1f")] The D3 js format function to format the data displayed in the label. By default the function is d3.format(".1f"). See the link for more details.
+   * @returns {void}
+   * @see {@link https://d3js.org/d3-format}
    * @example
    * ```JavaScript
    * // Set all the parameters of the chart
    * const chart = new RadarChart()
    *  ...;
+   * // Set a custom format for the postfix in a number
+   * const customUnits = d3.formatLocale({
+   *  currency: ["", "°C"],
+   * });
    *
    * chart.init();
-   * chart.addLabels();
+   * chart.addLabels(customUnits.format("$.1f"));
    * ```
    */
-  addLabels() {
+  addLabels(fnFormat = format(".1f")) {
     const pathsSeries = this._svg.selectAll(".series > g path");
 
     pathsSeries.each((d, i, ns) => {
@@ -568,7 +581,7 @@ export default class RadarChart {
         .attr("class", (_, i) => `${d} ${this.xValues.at(i)} label`)
         .attr("x", (r) => r.x)
         .attr("y", (r) => r.y)
-        .text((r) => r.value);
+        .text((r) => fnFormat(r.value));
     });
   }
 
