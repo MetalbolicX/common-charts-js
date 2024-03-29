@@ -262,18 +262,24 @@ export default class MultiLineChart extends Chart {
   /**
    * @description
    * Add the text elements for the critical points (min and max) to each series.
+   * @param {callback} [fnFormat=d3.format(".1f")] The D3 js format function to format the data displayed in the label. By default the function is d3.format(".1f"). See the link for more details.
    * @returns {void}
+   * @see {@link https://d3js.org/d3-format}
    * @example
    * ```JavaScript
    * // Set all the parameters of the chart
    * const chart = new MultiLineChart()
    *  ...;
+   * // Set a custom format for the postfix in a number
+   * const customUnits = d3.formatLocale({
+   *  currency: ["", "°C"],
+   * });
    *
    * chart.init();
-   * char.addCriticalPoints();
+   * char.addCriticalPoints(customUnits.Format("$.2f"));
    * ```
    */
-  addCriticalPoints() {
+  addCriticalPoints(fnFormat = format(".1f")) {
     // What are the max and min point in each series and its x position
     const criticalPoints = this._ySeriesNames.reduce((acc, serie) => {
       const currentSerie = this.yValues.map((d) => d[serie]);
@@ -300,7 +306,7 @@ export default class MultiLineChart extends Chart {
         .attr("class", `${key} max`)
         .attr("x", this.x(criticalPoints[key].maxPosition))
         .attr("y", this.y(criticalPoints[key].max))
-        .text(criticalPoints[key].max)
+        .text(fnFormat(criticalPoints[key].max))
         .style("text-anchor", "middle");
 
       groupCritical
@@ -308,7 +314,7 @@ export default class MultiLineChart extends Chart {
         .attr("class", `${key} min`)
         .attr("x", this.x(criticalPoints[key].minPosition))
         .attr("y", this.y(criticalPoints[key].min))
-        .text(criticalPoints[key].min)
+        .text(fnFormat(criticalPoints[key].min))
         .style("text-anchor", "middle");
     }
   }
