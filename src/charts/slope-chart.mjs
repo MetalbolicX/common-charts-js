@@ -56,7 +56,7 @@ export default class SlopeChart extends Chart {
     // Set the color schema
     this.colorScale().domain(this.xValues);
     // Set the the x axis customizations of format
-    if (this.xAxisCustomizations) {
+    if (this.xAxisCustomizations()) {
       for (const [xFormat, customFormat] of Object.entries(
         this.xAxisCustomizations()
       )) {
@@ -64,7 +64,7 @@ export default class SlopeChart extends Chart {
       }
     }
     // Set the y axis customizations of the y axis.
-    if (this.yAxisCustomizations) {
+    if (this.yAxisCustomizations()) {
       for (const [yFormat, customFormat] of Object.entries(
         this.yAxisCustomizations()
       )) {
@@ -168,7 +168,7 @@ export default class SlopeChart extends Chart {
    */
   addLabels(deltaY = -5) {
     const groupSeries = this._svg.select(".series");
-
+console.log("Hola", this.yAxis.tickFormat())
     groupSeries
       .selectAll("g")
       .selectAll("text")

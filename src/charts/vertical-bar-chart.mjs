@@ -226,16 +226,15 @@ export default class VBarChart extends Chart {
       .range([0, this.x.bandwidth()]);
 
     // Set the the x axis customizations of format
-    if (this.xAxisCustomizations) {
+    if (this.xAxisCustomizations()) {
       for (const [xFormat, customFormat] of Object.entries(
         this.xAxisCustomizations()
       )) {
         this.xAxis[xFormat](customFormat);
       }
     }
-
     // Set the y axis customizations of the y axis.
-    if (this.yAxisCustomizations) {
+    if (this.yAxisCustomizations()) {
       for (const [yFormat, customFormat] of Object.entries(
         this.yAxisCustomizations()
       )) {

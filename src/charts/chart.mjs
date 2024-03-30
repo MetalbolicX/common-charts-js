@@ -1,4 +1,4 @@
-const { axisTop, axisRight, axisBottom, axisLeft, select } = d3;
+const { axisTop, axisRight, axisBottom, axisLeft, select, format } = d3;
 
 ("use strict");
 
@@ -53,8 +53,8 @@ export default class Chart {
     this.#xAxisPosition = "bottom";
     this.#yAxisPosition = "left";
     this.#colorScale = undefined;
-    this.#xAxisCustomizations = undefined;
-    this.#yAxisCustomizations = undefined;
+    this.#xAxisCustomizations = { tickFormat: format(".1f") };
+    this.#yAxisCustomizations = { tickFormat: format(".1f") };
     this.#yAxisOffset = 0.05;
   }
 
