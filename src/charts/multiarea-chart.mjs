@@ -1,8 +1,8 @@
 import MultiLineChart from "./multiline-chart.mjs";
 
-("use strict");
-
 const { area } = d3;
+
+("use strict");
 
 export default class MultiAreaChart extends MultiLineChart {
 
