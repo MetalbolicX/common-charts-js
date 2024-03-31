@@ -38,7 +38,7 @@ export default class DonutChart extends CircleChart {
               inner: this.donutSpacing() * (2 * i + 1) * this.mainRadius,
               outer: this.donutSpacing() * (2 * (i + 1)) * this.mainRadius,
             },
-          }))
+          })).sort((a, b) => b.datum - a.datum)
         )
       )
       .join("g")
