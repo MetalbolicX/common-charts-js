@@ -4,10 +4,18 @@ import CircleChart from "./circle-chart.mjs";
 
 const { pie, arc, format } = d3;
 
-export default class PieChart extends CircleChart {
+export default class DonutChart extends CircleChart {
+  #donutSpacing;
 
   constructor() {
     super();
+    this.#donutSpacing = 0.2;
+  }
+
+  donutSpacing(value) {
+    return arguments.length
+      ? ((this.#donutSpacing = +value), this)
+      : this.#donutSpacing;
   }
 
   addSeries(fnFormat = format(".1f")) {
@@ -20,12 +28,16 @@ export default class PieChart extends CircleChart {
 
     const groupSlices = groupSeries
       .selectAll(".arc")
-      .data((d) =>
+      .data((d, i) =>
         // Process each serie of data to get the values for the arc path generator
         pie().value((t) => t.datum)(
-          this.yValues.map((r, i) => ({
-            category: this.xValues.at(i),
+          this.yValues.map((r, j) => ({
+            category: this.xValues.at(j),
             datum: r[d],
+            radius: {
+              inner: this.donutSpacing() * (2 * i + 1) * this.mainRadius,
+              outer: this.donutSpacing() * (2 * (i + 1)) * this.mainRadius,
+            },
           }))
         )
       )
@@ -35,24 +47,17 @@ export default class PieChart extends CircleChart {
         (d) => `${d.data.category.toLowerCase().replace(" ", "-")} arc`
       );
 
-    const arcGenerator = arc().innerRadius(0).outerRadius(this.mainRadius);
     groupSlices
       .append("path")
-      .attr("d", arcGenerator)
+      .attr("d", (d) =>
+        arc().innerRadius(d.data.radius.inner).outerRadius(d.data.radius.outer)(
+          d
+        )
+      )
       .attr(
         "class",
         (d) => `${d.data.category.toLowerCase().replace(" ", "-")} slice`
       )
       .style("fill", (d) => this.colorScale()(d.data.category));
-
-    groupSlices
-      .append("text")
-      .attr("transform", (d) => `translate(${arcGenerator.centroid(d)})`)
-      .attr(
-        "class",
-        (d) => `${d.data.category.toLowerCase().replace(" ", "-")} label`
-      )
-      .text((d) => `${d.data.category}: ${fnFormat(d.value)}`)
-      .style("text-anchor", "middle");
   }
 }

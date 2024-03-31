@@ -365,9 +365,9 @@ export default class CircleChart {
 
     this.xValues = this.data().map((d) => this.xSerie()(d));
     this.yValues = this.data().map((d) => this.ySeries()(d));
-    const ySerieRange = this._serieRange(
-      this.yValues.map((d) => Object.values(d)).flat()
-    );
+    // const ySerieRange = this._serieRange(
+    //   this.yValues.map((d) => Object.values(d)).flat()
+    // );
     // Set the column names of the y series
     this._ySeriesNames = Object.keys(this.yValues.at(0));
     // Set the svg container of the chart
