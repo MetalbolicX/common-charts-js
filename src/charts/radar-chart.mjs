@@ -612,7 +612,7 @@ export default class RadarChart {
 
   /**
    * @description
-   * Render the legenf of the series to explain the color  of each element.
+   * Render the legend of the series to explain the color  of each element.
    * @param {object} [config={widthOffset: 0.8, heightOffset: 0.1, size: 5, spacing: 5}] The object configuration to set the square of the legend, spacing and position.
    * @param {number} config.widthOffset The offset in percentage to position the legend group in horizontal position. Zero means closest to left of the screen. The value must be between 0 and 1.
    * @param {number} config.heightOffset The offset in percentage to position the legend group in vertical position. Zero means closest to top of the screen. The value must be between 0 and 1.

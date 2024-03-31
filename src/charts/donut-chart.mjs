@@ -1,10 +1,10 @@
-import CircleChart from "./circle-chart.mjs";
+import PieChart from "./pie-chart.mjs";
 
 ("use strict");
 
-const { pie, arc, format } = d3;
+const { pie, arc } = d3;
 
-export default class DonutChart extends CircleChart {
+export default class DonutChart extends PieChart {
   #donutSpacing;
 
   constructor() {
@@ -12,13 +12,47 @@ export default class DonutChart extends CircleChart {
     this.#donutSpacing = 0.2;
   }
 
+  /**
+   * @description
+   * Add a space between the rings series of the donut chart.
+   * @param {number} value The rational number to space the rings of the donut chart. The value must be between 0 and 1.
+   * @returns {number|this}
+   * @example
+   * ```JavaScript
+   * const chart = new DonutChart()
+   *  .donutSpacing(0.3);
+   * ```
+   */
   donutSpacing(value) {
-    return arguments.length
-      ? ((this.#donutSpacing = +value), this)
-      : this.#donutSpacing;
+    if (!arguments.length) {
+      return this.#donutSpacing;
+    }
+    // Check the range of the percentage number
+    if (value >= 0 && value <= 1) {
+      this.#donutSpacing = +value;
+    } else {
+      console.error(
+        "Invalid number. The only value allowed is between 0 and 1"
+      );
+    }
+    return this;
   }
 
-  addSeries(fnFormat = format(".1f")) {
+  /**
+   * @description
+   * Add the slices to create the chart.
+   * @returns {void}
+   * @example
+   * ```JavaScript
+   * // Set all the parameters of the chart
+   * const chart = new DonutChart()
+   *  ...;
+   *
+   * chart.init();
+   * chart.addSeries();
+   * ```
+   */
+  addSeries() {
     const mainGroup = this._svg.select(".main");
     const groupSeries = mainGroup
       .selectAll(".serie")
@@ -31,14 +65,16 @@ export default class DonutChart extends CircleChart {
       .data((d, i) =>
         // Process each serie of data to get the values for the arc path generator
         pie().value((t) => t.datum)(
-          this.yValues.map((r, j) => ({
-            category: this.xValues.at(j),
-            datum: r[d],
-            radius: {
-              inner: this.donutSpacing() * (2 * i + 1) * this.mainRadius,
-              outer: this.donutSpacing() * (2 * (i + 1)) * this.mainRadius,
-            },
-          })).sort((a, b) => b.datum - a.datum)
+          this.yValues
+            .map((r, j) => ({
+              category: this.xValues.at(j),
+              datum: r[d],
+              radius: {
+                inner: this.donutSpacing() * (2 * i + 1) * this.mainRadius,
+                outer: this.donutSpacing() * (2 * (i + 1)) * this.mainRadius,
+              },
+            }))
+            .sort((a, b) => b.datum - a.datum)
         )
       )
       .join("g")

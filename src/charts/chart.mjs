@@ -263,7 +263,6 @@ export default class Chart {
     if (!arguments.length) {
       return this.#yAxisOffset;
     }
-
     // Check the range of the percentage number
     if (percentage >= 0 && percentage <= 1) {
       this.#yAxisOffset = +percentage;
