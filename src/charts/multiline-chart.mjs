@@ -20,7 +20,7 @@ export default class MultiLineChart extends Chart {
   /**
    * @description
    * Getter and setter for the radius property of the circles of the data points of the series.
-   * @param {number|string} value The size of the radius in pixels for the circles in the series.
+   * @param {number} value The size of the radius in pixels for the circles in the series.
    * @returns {number|this}
    * @example
    * ```JavaScript
@@ -29,7 +29,9 @@ export default class MultiLineChart extends Chart {
    * ```
    */
   radius(value) {
-    return arguments.length ? ((this.#radius = +value), this) : this.#radius;
+    return arguments.length && value >= 0
+      ? ((this.#radius = +value), this)
+      : this.#radius;
   }
 
   /**

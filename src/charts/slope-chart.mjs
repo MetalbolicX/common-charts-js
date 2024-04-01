@@ -1,7 +1,5 @@
 import Chart from "./chart.mjs";
 
-const { format } = d3;
-
 ("use strict");
 
 export default class SlopeChart extends Chart {
@@ -14,7 +12,7 @@ export default class SlopeChart extends Chart {
   /**
    * @description
    * Getter and setter for the radius property of the circles of the data points of the series.
-   * @param {number|string} value The size of the radius in pixels for the circles in the series.
+   * @param {number} value The size of the radius in pixels for the circles in the series.
    * @returns {number|this}
    * @example
    * ```JavaScript
@@ -23,7 +21,9 @@ export default class SlopeChart extends Chart {
    * ```
    */
   radius(value) {
-    return arguments.length ? ((this.#radius = +value), this) : this.#radius;
+    return arguments.length && value >= 0
+      ? ((this.#radius = +value), this)
+      : this.#radius;
   }
 
   /**
@@ -168,7 +168,7 @@ export default class SlopeChart extends Chart {
    */
   addLabels(deltaY = -5) {
     const groupSeries = this._svg.select(".series");
-console.log("Hola", this.yAxis.tickFormat())
+    console.log("Hola", this.yAxis.tickFormat());
     groupSeries
       .selectAll("g")
       .selectAll("text")

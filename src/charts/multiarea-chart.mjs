@@ -6,6 +6,9 @@ const { area } = d3;
 
 export default class MultiAreaChart extends MultiLineChart {
 
+  constructor() {
+    super();
+  }
     /**
    * @description
    * Create the multiline series graph.

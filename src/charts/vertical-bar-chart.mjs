@@ -27,7 +27,7 @@ export default class VBarChart extends Chart {
   /**
    * @description
    * Getter and setter for the inner padding space between bars.
-   * @param {number|string} value The space of the inner padding.
+   * @param {number} value The space of the inner padding.
    * @returns {number|this}
    * @see {@link https://d3js.org/d3-scale/band}
    * @example
@@ -37,7 +37,7 @@ export default class VBarChart extends Chart {
    * ```
    */
   innerPadding(value) {
-    return arguments.length
+    return arguments.length && value >= 0 && value <= 1
       ? ((this.#innerPadding = +value), this)
       : this.#innerPadding;
   }
@@ -54,8 +54,8 @@ export default class VBarChart extends Chart {
    * ```
    */
   sortAscending(value) {
-    return arguments.length
-      ? ((this.#sortAscending = +value), this)
+    return arguments.length && typeof value === "boolean"
+      ? ((this.#sortAscending = value), this)
       : this.#sortAscending;
   }
 
@@ -71,8 +71,8 @@ export default class VBarChart extends Chart {
    * ```
    */
   isStacked(value) {
-    return arguments.length
-      ? ((this.#isStacked = +value), this)
+    return arguments.length && typeof value === "boolean"
+      ? ((this.#isStacked = value), this)
       : this.#isStacked;
   }
 
@@ -83,8 +83,8 @@ export default class VBarChart extends Chart {
    * @returns {boolean|this}
    */
   isPercentage(value) {
-    return arguments.length
-      ? ((this.#isPercentage = +value), this)
+    return arguments.length && typeof value === "boolean"
+      ? ((this.#isPercentage = value), this)
       : this.#isPercentage;
   }
 
@@ -95,8 +95,8 @@ export default class VBarChart extends Chart {
    * @returns {boolean|this}
    */
   isNormalized(value) {
-    return arguments.length
-      ? ((this.#isNormalized = +value), this)
+    return arguments.length && typeof value === "boolean"
+      ? ((this.#isNormalized = value), this)
       : this.#isNormalized;
   }
 
@@ -328,7 +328,7 @@ export default class VBarChart extends Chart {
    * chart.addLabels(-10);
    * ```
    */
-  addLabels(deltaY = -5,) {
+  addLabels(deltaY = -5) {
     const bars = this._svg.select(".bars");
     bars
       .selectAll("g")

@@ -6,6 +6,7 @@ import HBarChart from "./charts/horizontal-bar-chart.mjs";
 import RadarChart from "./charts/radar-chart.mjs";
 import PieChart from "./charts/pie-chart.mjs";
 import DonutChart from "./charts/donut-chart.mjs";
+import PolarChart from "./charts/polar-chart.mjs";
 
 export {
   MultiLineChart,
@@ -16,6 +17,7 @@ export {
   RadarChart,
   PieChart,
   DonutChart,
+  PolarChart
 };
 
 console.log("Common charts of data visualizations created with D3.js!!");

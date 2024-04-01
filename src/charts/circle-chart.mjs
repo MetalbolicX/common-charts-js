@@ -1,6 +1,6 @@
 const { select } = d3;
 
-"use strict";
+("use strict");
 
 export default class CircleChart {
   #bindTo;
@@ -54,13 +54,15 @@ export default class CircleChart {
    * ```
    */
   bindTo(selector) {
-    return arguments.length ? ((this.#bindTo = selector), this) : this.#bindTo;
+    return arguments.length && typeof selector === "string"
+      ? ((this.#bindTo = selector), this)
+      : this.#bindTo;
   }
 
   /**
    * @description
    * Getter and setter for the height property.
-   * @param {number|string} value The value of the height of the chart.
+   * @param {number} value The value of the height of the chart.
    * @returns {number|this}
    * @example
    * ```JavaScript
@@ -69,13 +71,15 @@ export default class CircleChart {
    * ```
    */
   height(value) {
-    return arguments.length ? ((this.#height = +value), this) : this.#height;
+    return arguments.length && value > 0
+      ? ((this.#height = +value), this)
+      : this.#height;
   }
 
   /**
    * @description
    * Getter and setter for the width property.
-   * @param {number|string} value The value of the width of the chart.
+   * @param {number} value The value of the width of the chart.
    * @returns {number|this}
    * @example
    * ```JavaScript
@@ -84,7 +88,9 @@ export default class CircleChart {
    * ```
    */
   width(value) {
-    return arguments.length ? ((this.#width = +value), this) : this.#width;
+    return arguments.length && value > 0
+      ? ((this.#width = +value), this)
+      : this.#width;
   }
 
   /**
@@ -132,7 +138,7 @@ export default class CircleChart {
   /**
    * @description
    * Getter and setter for the data to draw the chart.
-   * @param {object[]} dataSet The dataset to draw the chart as an array of objects.
+   * @param {object[]} dataset The dataset to draw the chart as an array of objects.
    * @returns {object[]|this}
    * @example
    * ```JavaScript
@@ -143,15 +149,15 @@ export default class CircleChart {
    *  ]);
    * ```
    */
-  data(dataSet) {
+  data(dataset) {
     if (!arguments.length) {
       return this.#data;
     }
     if (
-      Array.isArray(dataSet) &&
-      dataSet.every((obj) => typeof obj === "object")
+      Array.isArray(dataset) &&
+      dataset.every((obj) => typeof obj === "object")
     ) {
-      this.#data = [...dataSet];
+      this.#data = [...dataset];
     } else {
       throw new Error("The only dataset allowed is an array of objects");
     }
@@ -247,7 +253,6 @@ export default class CircleChart {
     if (!arguments.length) {
       return this.#yAxisOffset;
     }
-
     // Check the range of the percentage number
     if (percentage >= 0 && percentage <= 1) {
       this.#yAxisOffset = +percentage;
@@ -354,20 +359,28 @@ export default class CircleChart {
       : this.#yValues;
   }
 
+  /**
+   * @description
+   * Getter of the maximum size of the radius in the chart.
+   * @returns {number}
+   */
   get mainRadius() {
     return this.#mainRadius;
   }
 
+  /**
+   * @description
+   * Start and set all the values for the D3 Scales, axis data rearranged data. Before creating the chart.
+   * @returns {void}
+   */
   init() {
+    // What is the least size (width or height) that limits the space of the chart
     const w = this.width() - (this.margin().right + this.margin().left);
     const h = this.height() - (this.margin().top + this.margin().bottom);
     this.#mainRadius = Math.min(w, h) / 2;
-
+    // Separate the values of the dataset
     this.xValues = this.data().map((d) => this.xSerie()(d));
     this.yValues = this.data().map((d) => this.ySeries()(d));
-    // const ySerieRange = this._serieRange(
-    //   this.yValues.map((d) => Object.values(d)).flat()
-    // );
     // Set the column names of the y series
     this._ySeriesNames = Object.keys(this.yValues.at(0));
     // Set the svg container of the chart

@@ -70,13 +70,15 @@ export default class Chart {
    * ```
    */
   bindTo(selector) {
-    return arguments.length ? ((this.#bindTo = selector), this) : this.#bindTo;
+    return arguments.length && typeof selector === "string"
+      ? ((this.#bindTo = selector), this)
+      : this.#bindTo;
   }
 
   /**
    * @description
    * Getter and setter for the height property.
-   * @param {number|string} value The value of the height of the chart.
+   * @param {number} value The value of the height of the chart.
    * @returns {number|this}
    * @example
    * ```JavaScript
@@ -85,13 +87,15 @@ export default class Chart {
    * ```
    */
   height(value) {
-    return arguments.length ? ((this.#height = +value), this) : this.#height;
+    return arguments.length && value > 0
+      ? ((this.#height = +value), this)
+      : this.#height;
   }
 
   /**
    * @description
    * Getter and setter for the width property.
-   * @param {number|string} value The value of the width of the chart.
+   * @param {number} value The value of the width of the chart.
    * @returns {number|this}
    * @example
    * ```JavaScript
@@ -100,7 +104,9 @@ export default class Chart {
    * ```
    */
   width(value) {
-    return arguments.length ? ((this.#width = +value), this) : this.#width;
+    return arguments.length && value > 0
+      ? ((this.#width = +value), this)
+      : this.#width;
   }
 
   /**
@@ -148,7 +154,7 @@ export default class Chart {
   /**
    * @description
    * Getter and setter for the data to draw the chart.
-   * @param {object[]} dataSet The dataset to draw the chart as an array of objects.
+   * @param {object[]} dataset The dataset to draw the chart as an array of objects.
    * @returns {object[]|this}
    * @example
    * ```JavaScript
@@ -159,15 +165,15 @@ export default class Chart {
    *  ]);
    * ```
    */
-  data(dataSet) {
+  data(dataset) {
     if (!arguments.length) {
       return this.#data;
     }
     if (
-      Array.isArray(dataSet) &&
-      dataSet.every((obj) => typeof obj === "object")
+      Array.isArray(dataset) &&
+      dataset.every((obj) => typeof obj === "object")
     ) {
-      this.#data = [...dataSet];
+      this.#data = [...dataset];
     } else {
       throw new Error("The only dataset allowed is an array of objects");
     }
