@@ -175,7 +175,7 @@ export default class ScattePlot extends RectangularChart {
    * @example
    * ```JavaScript
    * // Set all the parameters of the chart
-   * const chart = new Chart()
+   * const chart = new ScatterPlot()
    *  ...;
    *
    * chart.init();

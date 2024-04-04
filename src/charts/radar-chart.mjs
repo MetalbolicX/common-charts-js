@@ -32,7 +32,7 @@ export default class RadarChart extends CircleChart {
   init() {
     const w = this.width() - this.margin().left - this.margin().right;
     const h = this.height() - this.margin().top - this.margin().bottom;
-    const circleConstraint = Math.min(w, h);
+    this._circleRadius = Math.min(w, h) / 2;
 
     this._ySeriesNames = Object.keys(this.ySeries()(this.data().at(0)));
     // Set the color schema
@@ -53,9 +53,7 @@ export default class RadarChart extends CircleChart {
     // Set the scale of the radius
     this.y = this.yScale()
       .domain([0, (1 + this.yAxisOffset()) * ySerieRange.max])
-      .range([0, circleConstraint / 2]);
-    // Set the size of the circle radius
-    this._circleRadius = this.y.range().at(-1);
+      .range([0, this._circleRadius]);
     // Select the svg element to bind chart
     this._setSvg();
     // Set the g element for centered
