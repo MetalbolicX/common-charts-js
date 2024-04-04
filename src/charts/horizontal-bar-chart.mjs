@@ -5,6 +5,10 @@ const { scaleBand } = d3;
 ("use strict");
 
 export default class HBarChart extends VBarChart {
+
+  constructor() {
+    super();
+  }
   /**
    * @description
    * Start and set all the values for the D3 Scales, axis data rearranged data. Before creating the chart.

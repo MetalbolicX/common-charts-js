@@ -11,6 +11,35 @@ export default class PieChart extends CircleChart {
 
     /**
    * @description
+   * Start and set all the values for the D3 Scales, axis data rearranged data. Before creating the chart.
+   * @returns {void}
+   */
+    init() {
+      // What is the least size (width or height) that limits the space of the chart
+      const w = this.width() - (this.margin().right + this.margin().left);
+      const h = this.height() - (this.margin().top + this.margin().bottom);
+      this._circleRadius = Math.min(w, h) / 2;
+      // Separate the values of the dataset
+      this.xValues = this.data().map((d) => this.xSerie()(d));
+      this.yValues = this.data().map((d) => this.ySeries()(d));
+      // Set the column names of the y series
+      this._ySeriesNames = Object.keys(this.yValues.at(0));
+      // Set the svg container of the chart
+      this._setSvg();
+      // Set the color schema
+      this.colorScale().domain(this._ySeriesNames);
+      // Set the g element for centered
+      this._svg
+        .append("g")
+        .attr("class", "main")
+        .attr(
+          "transform",
+          `translate(${w / 2 + this.margin().left}, ${h / 2 + this.margin().top})`
+        );
+    }
+
+    /**
+   * @description
    * Add the slices to create the chart.
    * @returns {void}
    * @example

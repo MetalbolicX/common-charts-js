@@ -1,16 +1,10 @@
-import Chart from "./chart.mjs";
+import RectangularChart from "./rectangular-chart.mjs";
 
 const { line, select, greatestIndex, leastIndex } = d3;
 
 ("use strict");
 
-/**
- * @description
- * MultiLineChart is a class to create an instance of a multi series chart using D3 js.
- * @class
- * @extends Chart
- */
-export default class MultiLineChart extends Chart {
+export default class MultiLineChart extends RectangularChart {
   #radius;
   constructor() {
     super();

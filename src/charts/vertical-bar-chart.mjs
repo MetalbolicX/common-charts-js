@@ -1,10 +1,10 @@
-import Chart from "./chart.mjs";
+import RectangularChart from "./rectangular-chart.mjs";
 
 const { scaleBand } = d3;
 
 ("use strict");
 
-export default class VBarChart extends Chart {
+export default class VBarChart extends RectangularChart {
   #x1;
   #innerPadding;
   #sortAscending;
@@ -201,38 +201,24 @@ export default class VBarChart extends Chart {
         ? this.yValues.map((d) => d.total)
         : this.yValues.map((d) => d.values.map((r) => r.value)).flat()
     );
-
     // Set the band scale for the nain categories
     this.x = this.xScale()
       .domain(this.xValues.map((d) => d.category))
       .range([this.margin().right, this.width()])
       .paddingInner(this.innerPadding());
-
     // Set the bar chart horizontally
     this.y = this.yScale()
       .domain([0, (1 + this.yAxisOffset()) * ySerieRange.max])
       .range([this.height() - this.margin().bottom, this.margin().top]);
-
     // Set the color schema
     this.colorScale().domain(this._ySeriesNames);
-
     // Set the axes
     this.xAxis = this._D3Axis(this.xAxisPosition()).scale(this.x);
     this.yAxis = this._D3Axis(this.yAxisPosition()).scale(this.y);
-
     // Set the second scale for the grouped bar chart if the graph is not stacked
     this.x1 = scaleBand()
       .domain(this._ySeriesNames)
       .range([0, this.x.bandwidth()]);
-
-    // Set the the x axis customizations of format
-    if (this.xAxisCustomizations()) {
-      for (const [xFormat, customFormat] of Object.entries(
-        this.xAxisCustomizations()
-      )) {
-        this.xAxis[xFormat](customFormat);
-      }
-    }
     // Set the y axis customizations of the y axis.
     if (this.yAxisCustomizations()) {
       for (const [yFormat, customFormat] of Object.entries(
