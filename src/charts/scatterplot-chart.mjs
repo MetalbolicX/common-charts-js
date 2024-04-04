@@ -54,7 +54,7 @@ export default class ScattePlot extends RectangularChart {
    * Getter and setter for the categories in the dataset.
    * @param {any[]} values The array of values for categories in the dataset.
    * @returns {any[]}
-   * @protected
+   * @access @protected
    */
   categoriesValues(values) {
     return arguments.length
@@ -122,6 +122,20 @@ export default class ScattePlot extends RectangularChart {
     }
   }
 
+  /**
+   * @description
+   * Creates the data points in the chart.
+   * @returns {void}
+   * @example
+   * ```JavaScript
+   * // Set all the parameters of the chart
+   * const chart = new ScatterPlot()
+   *  ...;
+   *
+   * chart.init();
+   * char.addSeries();
+   * ```
+   */
   addSeries() {
     const seriesGroup = this._svg.append("g").attr("class", "series");
     seriesGroup

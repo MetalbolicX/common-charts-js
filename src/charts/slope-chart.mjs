@@ -1,8 +1,8 @@
-import Chart from "./chart.mjs";
+import RectangularChart from "./rectangular-chart.mjs";
 
 ("use strict");
 
-export default class SlopeChart extends Chart {
+export default class SlopeChart extends RectangularChart {
   #radius;
   constructor() {
     super();
@@ -55,14 +55,6 @@ export default class SlopeChart extends Chart {
     this.yAxis = this._D3Axis(this.yAxisPosition()).scale(this.y);
     // Set the color schema
     this.colorScale().domain(this.xValues);
-    // Set the the x axis customizations of format
-    if (this.xAxisCustomizations()) {
-      for (const [xFormat, customFormat] of Object.entries(
-        this.xAxisCustomizations()
-      )) {
-        this.xAxis[xFormat](customFormat);
-      }
-    }
     // Set the y axis customizations of the y axis.
     if (this.yAxisCustomizations()) {
       for (const [yFormat, customFormat] of Object.entries(

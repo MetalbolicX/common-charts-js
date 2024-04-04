@@ -71,7 +71,7 @@ export default class PieChart extends CircleChart {
               datum: r[d],
               radius: {
                 inner: 0,
-                outer: this.mainRadius,
+                outer: this._circleRadius,
               },
             }))
             .sort((a, b) => b.datum - a.datum)
@@ -167,8 +167,8 @@ export default class PieChart extends CircleChart {
         .attr("class", "legends")
         .attr(
           "transform",
-          `translate(${config.widthOffset * this.mainRadius}, ${
-            config.heightOffset * this.mainRadius
+          `translate(${config.widthOffset * this._circleRadius}, ${
+            config.heightOffset * this._circleRadius
           })`
         );
 
