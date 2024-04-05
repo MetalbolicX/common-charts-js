@@ -2,7 +2,7 @@ import RectangularChart from "./rectangular-chart.mjs";
 
 ("use strict");
 
-export default class ScattePlot extends RectangularChart {
+export default class ScatterPlot extends RectangularChart {
   #radius;
   #categoriesSeries;
   #categoriesValues;
@@ -56,7 +56,7 @@ export default class ScattePlot extends RectangularChart {
    * @access @protected
    */
   set _categoriesValues(values) {
-    if (this.constructor === ScattePlot) {
+    if (this.constructor !== ScatterPlot) {
       this.#categoriesValues = [...values];
     } else {
       console.error(

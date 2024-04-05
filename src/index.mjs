@@ -7,7 +7,8 @@ import RadarChart from "./charts/radar-chart.mjs";
 import PieChart from "./charts/pie-chart.mjs";
 import DonutChart from "./charts/donut-chart.mjs";
 import PolarChart from "./charts/polar-chart.mjs";
-import ScattePlot from "./charts/scatterplot-chart.mjs";
+import ScatterPlot from "./charts/scatterplot-chart.mjs";
+import ScatterPlotMarker from "./charts/scatterplot-marker.mjs";
 
 export {
   MultiLineChart,
@@ -19,7 +20,8 @@ export {
   PieChart,
   DonutChart,
   PolarChart,
-  ScattePlot,
+  ScatterPlot,
+  ScatterPlotMarker,
 };
 
 console.log("Common charts of data visualizations created with D3.js!!");
