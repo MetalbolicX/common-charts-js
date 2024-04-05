@@ -24,8 +24,8 @@ export default class HBarChart extends VBarChart {
     // Rearrange the dataset
     this._reestructureData();
     // Set the x and y values
-    this.xValues = this.data().map((d) => ({ category: d.category }));
-    this.yValues = this.data().map((d) => ({
+    this._xValues = this.data().map((d) => ({ category: d.category }));
+    this._yValues = this.data().map((d) => ({
       values: d.values,
       total: d.total,
     }));
@@ -37,13 +37,13 @@ export default class HBarChart extends VBarChart {
     );
 
     // Set the band scale for the nain categories
-    this.x = this.xScale()
+    this._x = this.xScale()
       .domain(this.xValues.map((d) => d.category))
       .range([this.margin().top, this.height() - this.margin().bottom])
       .paddingInner(this.innerPadding());
 
     // Set the bar chart horizontally
-    this.y = this.yScale()
+    this._y = this.yScale()
       .domain([0, (1 + this.yAxisOffset()) * ySerieRange.max])
       .range([this.margin().left, this.width() - this.margin().right]);
 
@@ -51,22 +51,13 @@ export default class HBarChart extends VBarChart {
     this.colorScale().domain(this._ySeriesNames);
 
     // Set the axes
-    this.xAxis = this._D3Axis(this.xAxisPosition()).scale(this.x);
-    this.yAxis = this._D3Axis(this.yAxisPosition()).scale(this.y);
+    this._xAxis = this._D3Axis(this.xAxisPosition()).scale(this.x);
+    this._yAxis = this._D3Axis(this.yAxisPosition()).scale(this.y);
 
     // Set the second scale for the grouped bar chart if the graph is not stacked
-    this.x1 = scaleBand()
+    this._x1 = scaleBand()
       .domain(this._ySeriesNames)
       .range([0, this.x.bandwidth()]);
-
-    // Set the the x axis customizations of format
-    if (this.xAxisCustomizations()) {
-      for (const [xFormat, customFormat] of Object.entries(
-        this.xAxisCustomizations()
-      )) {
-        this.xAxis[xFormat](customFormat);
-      }
-    }
     // Set the y axis customizations of the y axis.
     if (this.yAxisCustomizations()) {
       for (const [yFormat, customFormat] of Object.entries(

@@ -51,15 +51,27 @@ export default class ScattePlot extends RectangularChart {
 
   /**
    * @description
-   * Getter and setter for the categories in the dataset.
+   * Setter for the categories in the dataset.
    * @param {any[]} values The array of values for categories in the dataset.
-   * @returns {any[]}
    * @access @protected
    */
-  categoriesValues(values) {
-    return arguments.length
-      ? ((this.#categoriesValues = [...values]), this)
-      : this.#categoriesValues;
+  set _categoriesValues(values) {
+    if (this.constructor === ScattePlot) {
+      this.#categoriesValues = [...values];
+    } else {
+      console.error(
+        "Cannot modify protected property outside the class hierarchy"
+      );
+    }
+  }
+
+  /**
+   * @description
+   * Getter for the categories values in the dataset.
+   * @return {any[]}
+   */
+  get categoriesValues() {
+    return this.#categoriesValues;
   }
 
   /**
@@ -68,21 +80,21 @@ export default class ScattePlot extends RectangularChart {
    * @returns {void}
    */
   init() {
-    this.xValues = this.data().map((d) => this.xSerie()(d));
+    this._xValues = this.data().map((d) => this.xSerie()(d));
     const xSerieRange = this._serieRange(this.xValues);
 
     // Set the scale for the values in the bottom position of the x axis
-    this.x = this.xScale()
+    this._x = this.xScale()
       .domain(Object.values(xSerieRange))
       .range([this.margin().left, this.width() - this.margin().right]);
 
-    this.yValues = this.data().map((d) => this.ySeries()(d));
+    this._yValues = this.data().map((d) => this.ySeries()(d));
     const ySerieRange = this._serieRange(
       this.yValues.map((d) => Object.values(d)).flat()
     );
 
     // Set the scale for the values in the left position of the y series
-    this.y = this.yScale()
+    this._y = this.yScale()
       .domain([
         (1 - this.yAxisOffset()) * ySerieRange.min,
         (1 + this.yAxisOffset()) * ySerieRange.max,
@@ -90,15 +102,15 @@ export default class ScattePlot extends RectangularChart {
       .range([this.height() - this.margin().bottom, this.margin().top]);
 
     // Set the axes
-    this.xAxis = this._D3Axis(this.xAxisPosition()).scale(this.x);
-    this.yAxis = this._D3Axis(this.yAxisPosition()).scale(this.y);
+    this._xAxis = this._D3Axis(this.xAxisPosition()).scale(this.x);
+    this._yAxis = this._D3Axis(this.yAxisPosition()).scale(this.y);
 
     // Set the column names of the y series
     this._ySeriesNames = Object.keys(this.yValues.at(0));
     // Set the svg container of the chart
     this._setSvg();
     // Set the categories of the dataset
-    this.categoriesValues = this.data().map((d) => this.categoriesSeries()(d));
+    this._categoriesValues = this.data().map((d) => this.categoriesSeries()(d));
     // Set the color schema
     this.colorScale().domain(
       // Unique values of the categories

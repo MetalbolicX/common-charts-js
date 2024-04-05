@@ -32,14 +32,26 @@ export default class CircleChart extends Chart {
 
   /**
    * @description
-   * Getter and setter for the maximum si<e radius in the chart.
+   * Setter for the maximum si<e radius in the chart.
    * @param {number} radius The size of the maximum radius of the chart.
-   * @returns {number|this}
    * @access @protected
    */
-  _circleRadius(radius) {
-    return arguments.length && radius > 0
-      ? ((this.#circleRadius = +radius), this)
-      : this.#circleRadius;
+  set _circleRadius(radius) {
+    if (this.constructor !== CircleChart && radius > 0) {
+      this.#circleRadius = +radius;
+    } else {
+      console.error(
+        "Cannot modify protected property outside the class hierarchy"
+      );
+    }
+  }
+
+  /**
+   * @description
+   * Getter of the maximum si<e radius in the chart.
+   * @returns {number}
+   */
+  get circleRadius() {
+    return this.#circleRadius;
   }
 }

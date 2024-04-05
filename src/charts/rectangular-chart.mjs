@@ -68,7 +68,7 @@ export default class RectangularChart extends Chart {
    * Set the D3 axis function according to its position.
    * @param {string} position The position of the axis.
    * @returns {D3Axis}
-   * @protected
+   * @access @protected
    */
   _D3Axis(position) {
     /** @enum {D3Axis} */
@@ -83,13 +83,27 @@ export default class RectangularChart extends Chart {
 
   /**
    * @description
-   * Getter and setter of the D3 axis generator.
+   * Setter of the D3 axis generator.
    * @param {D3Axis} axis The D3 js axis generator.
-   * @returns {D3Axis}
-   * @protected
+   * @access @protected
    */
-  xAxis(axis) {
-    return arguments.length ? ((this.#xAxis = axis), this) : this.#xAxis;
+  set _xAxis(axis) {
+    if (this.constructor !== RectangularChart) {
+      this.#xAxis = axis;
+    } else {
+      console.error(
+        "Cannot modify protected property outside the class hierarchy"
+      );
+    }
+  }
+
+  /**
+   * @description
+   * Getter of the D3 axis generator of x axis.
+   * @return {D3Axis}
+   */
+  get xAxis() {
+    return this.#xAxis;
   }
 
   /**
@@ -99,7 +113,7 @@ export default class RectangularChart extends Chart {
    * @returns {string|this}
    * @example
    * ```JavaScript
-   * const chart = new Chart()
+   * const chart = new RectangularChart()
    *  .xAxisPosition("bottom");
    * ```
    */
@@ -129,7 +143,7 @@ export default class RectangularChart extends Chart {
    * @see {@link https://d3js.org/d3-axis}
    * @example
    * ```JavaScript
-   * const chart = new Chart()
+   * const chart = new RectangularChart()
    *  .xAxisCustomizations({
    *    tickFormat: d3.format(",.0f"),
    *    tickValues: [1, 2, 3, 5, 8, 13, 21]
@@ -150,7 +164,7 @@ export default class RectangularChart extends Chart {
    * @see {@link https://d3js.org/d3-axis}
    * @example
    * ```JavaScript
-   * const chart = new Chart()
+   * const chart = new RectangularChart()
    *  .yAxisCustomizations({
    *    tickFormat: d3.format(",.0f"),
    *    tickValues: [1, 2, 3, 5, 8, 13, 21]
@@ -170,7 +184,7 @@ export default class RectangularChart extends Chart {
    * @returns {string|this}
    * @example
    * ```JavaScript
-   * const chart = new Chart()
+   * const chart = new RectangularChart()
    *  .yAxisPositiont("height");
    * ```
    */
@@ -194,24 +208,52 @@ export default class RectangularChart extends Chart {
 
   /**
    * @description
-   * Getter and setter of the D3 axis generator.
+   * Setter of the D3 axis generator.
    * @param {D3Axis} axis The D3 js axis generator.
-   * @returns {D3Axis}
-   * @protected
+   * @access @protected
    */
-  yAxis(axis) {
-    return arguments.length ? ((this.#yAxis = axis), this) : this.#yAxis;
+  set _yAxis(axis) {
+    if (this.constructor !== RectangularChart) {
+      this.#yAxis = axis;
+    } else {
+      console.error(
+        "Cannot modify protected property outside the class hierarchy"
+      );
+    }
   }
 
   /**
    * @description
-   * Getter and setter of the D3 js x scale to transform data in pixels size.
-   * @param {D3Scale} scale The D3 js scale for the x serie.
-   * @returns {D3Scale}
-   * @protected
+   * Getter of the D3 axis generator.
+   * @return {D3Axis}
    */
-  x(scale) {
-    return arguments.length ? ((this.#x = scale), this) : this.#x;
+  get yAxis() {
+    return this.#yAxis;
+  }
+
+  /**
+   * @description
+   * Setter of the D3 js x scale to transform data in pixels size.
+   * @param {D3Scale} scale The D3 js scale for the x serie.
+   * @access @protected
+   */
+  set _x(scale) {
+    if (this.constructor !== RectangularChart) {
+      this.#x = scale;
+    } else {
+      console.error(
+        "Cannot modify protected property outside the class hierarchy"
+      );
+    }
+  }
+
+  /**
+   * @description
+   * Getter of the D3 js y scale to transform data in pixels size.
+   * @returns {D3Scale}
+   */
+  get x() {
+    return this.#x;
   }
 
   /**
@@ -241,7 +283,7 @@ export default class RectangularChart extends Chart {
    * @example
    * ```JavaScript
    * // Set all the parameters of the chart
-   * const chart = new Chart()
+   * const chart = new RectangularChart()
    *  ...;
    *
    * chart.init();
@@ -264,7 +306,7 @@ export default class RectangularChart extends Chart {
    * @example
    * ```JavaScript
    * // Set all the parameters of the chart
-   * const chart = new Chart()
+   * const chart = new RectangularChart()
    *  ...;
    *
    * chart.init();
@@ -287,7 +329,7 @@ export default class RectangularChart extends Chart {
    * @example
    * ```JavaScript
    * // Set all the parameters of the chart
-   * const chart = new Chart()
+   * const chart = new RectangularChart()
    *  ...;
    *
    * chart.init();
@@ -313,7 +355,7 @@ export default class RectangularChart extends Chart {
    * @example
    * ```JavaScript
    * // Set all the parameters of the chart
-   * const chart = new Chart()
+   * const chart = new RectangularChart()
    *  ...;
    *
    * chart.init();
@@ -339,7 +381,7 @@ export default class RectangularChart extends Chart {
    * @example
    * ```JavaScript
    * // Set all the parameters of the chart
-   * const chart = new Chart()
+   * const chart = new RectangularChart()
    *  ...;
    *
    * chart.init();
@@ -373,7 +415,7 @@ export default class RectangularChart extends Chart {
    * @example
    * ```JavaScript
    * // Set all the parameters of the chart
-   * const chart = new Chart()
+   * const chart = new RectangularChart()
    *  ...;
    *
    * chart.init();
@@ -412,7 +454,7 @@ export default class RectangularChart extends Chart {
    * @example
    * ```JavaScript
    * // Set all the parameters of the chart
-   * const chart = new Chart()
+   * const chart = new RectangularChart()
    *  ...;
    *
    * chart.init();
@@ -465,7 +507,7 @@ export default class RectangularChart extends Chart {
    * @example
    * ```JavaScript
    * // Set all the parameters of the chart
-   * const chart = new Chart()
+   * const chart = new RectangularChart()
    *  ...;
    *
    * chart.init();
@@ -512,7 +554,7 @@ export default class RectangularChart extends Chart {
    * @example
    * ```JavaScript
    * // Set all the parameters of the chart
-   * const chart = new Chart()
+   * const chart = new RectangularChart()
    *  ...;
    *
    * chart.init();
@@ -545,7 +587,7 @@ export default class RectangularChart extends Chart {
    * @example
    * ```JavaScript
    * // Set all the parameters of the chart
-   * const chart = new Chart()
+   * const chart = new RectangularChart()
    *  ...;
    *
    * chart.init();

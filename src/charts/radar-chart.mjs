@@ -38,8 +38,8 @@ export default class RadarChart extends CircleChart {
     // Set the color schema
     this.colorScale().domain(this._ySeriesNames);
     // Separate the values of categories and the numeric series
-    this.xValues = this.data().map((d) => this.xSerie()(d));
-    this.yValues = this.data().map((d) => this.ySeries()(d));
+    this._xValues = this.data().map((d) => this.xSerie()(d));
+    this._yValues = this.data().map((d) => this.ySeries()(d));
     // Find the highest value of all series
     const ySerieRange = this._serieRange(
       this.yValues.map((d) => Object.values(d)).flat()
@@ -49,11 +49,11 @@ export default class RadarChart extends CircleChart {
       ...d,
       radians: ((2 * Math.PI) / ns.length) * i,
     }));
-    this.yValues = addRadians;
+    this._yValues = addRadians;
     // Set the scale of the radius
-    this.y = this.yScale()
+    this._y = this.yScale()
       .domain([0, (1 + this.yAxisOffset()) * ySerieRange.max])
-      .range([0, this._circleRadius]);
+      .range([0, this.circleRadius]);
     // Select the svg element to bind chart
     this._setSvg();
     // Set the g element for centered
@@ -141,16 +141,16 @@ export default class RadarChart extends CircleChart {
       .data(this.yValues)
       .join("line")
       .attr("class", (_, i) => `${this.xValues.at(i)} axis`)
-      .attr("x2", (d) => this._circleRadius * Math.sin(d.radians))
-      .attr("y2", (d) => this._circleRadius * Math.cos(d.radians));
+      .attr("x2", (d) => this.circleRadius * Math.sin(d.radians))
+      .attr("y2", (d) => this.circleRadius * Math.cos(d.radians));
 
     groupAxes
       .selectAll("text")
       .data(this.yValues)
       .join("text")
       .attr("class", (_, i) => `${this.xValues.at(i)} label`)
-      .attr("x", (d) => this._circleRadius * Math.sin(d.radians))
-      .attr("y", (d) => -this._circleRadius * Math.cos(d.radians))
+      .attr("x", (d) => this.circleRadius * Math.sin(d.radians))
+      .attr("y", (d) => -this.circleRadius * Math.cos(d.radians))
       .text((_, i) => this.xValues.at(i))
       .style("text-anchor", "middle");
   }
@@ -307,8 +307,8 @@ export default class RadarChart extends CircleChart {
       .attr("class", "legends")
       .attr(
         "transform",
-        `translate(${config.widthOffset * this._circleRadius}, ${
-          config.heightOffset * this._circleRadius
+        `translate(${config.widthOffset * this.circleRadius}, ${
+          config.heightOffset * this.circleRadius
         })`
       );
 

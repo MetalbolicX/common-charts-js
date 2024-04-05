@@ -70,8 +70,8 @@ export default class DonutChart extends PieChart {
               category: this.xValues.at(j),
               datum: r[d],
               radius: {
-                inner: this.donutSpacing() * (2 * i + 1) * this.mainRadius,
-                outer: this.donutSpacing() * (2 * (i + 1)) * this.mainRadius,
+                inner: this.donutSpacing() * (2 * i + 1) * this.circleRadius,
+                outer: this.donutSpacing() * (2 * (i + 1)) * this.circleRadius,
               },
             }))
             .sort((a, b) => b.datum - a.datum)

@@ -249,9 +249,13 @@ export default class Chart {
    * @description
    * Set the svg element container for the chart.
    * @returns {void}
-   * @protected
+   * @access @protected
    */
   _setSvg() {
+    if (this.constructor === Chart) {
+      console.error("Not access allowed");
+      return;
+    }
     const svgContainer = document.querySelector(this.bindTo());
     if (!svgContainer) {
       throw new Error("Cannot find SVG element container for the chart");
@@ -263,7 +267,7 @@ export default class Chart {
    * @description
    * Getter for the svg container of the chart.
    * @returns {D3Selection}
-   * @protected
+   * @access @protected
    */
   get _svg() {
     return this.#svg;
@@ -274,9 +278,13 @@ export default class Chart {
    * Obtain an object literat with the minimum and maximum values of the serie.
    * @param {number[]} serie Serie of values of the dataset.
    * @returns {{min: number, max: number}}
-   * @protected
+   * @access @protected
    */
   _serieRange(serie) {
+    if (this.constructor === Chart) {
+      console.error("Not access allowed");
+      return;
+    }
     return {
       min: Math.min(...serie),
       max: Math.max(...serie),
@@ -287,49 +295,99 @@ export default class Chart {
    * @description
    * Show the array of names of all numeric series for the chart.
    * @param {string[]} names The array of names of all numeric series.
+   * @access @protected
+   */
+  set _ySeriesNames(names) {
+    if (this.constructor !== Chart) {
+      this.#ySeriesNames = [...names];
+    } else {
+      console.error(
+        "Cannot modify protected property outside the class hierarchy"
+      );
+    }
+  }
+
+  /**
+   * @description
+   * Getter of the names of all numeric series for the chart.
    * @returns {string[]}
-   * @protected
    */
-  _ySeriesNames(names) {
-    return arguments.length
-      ? ((this.#ySeriesNames = [...names]), this)
-      : this.#ySeriesNames;
+  get _ySeriesNames() {
+    return this.#ySeriesNames;
   }
 
   /**
    * @description
-   * Getter and setter of the D3 js y scale to transform data in pixels size.
+   * Setter of the D3 js scale function generator for the y to transform data.
    * @param {D3Scale} scale The D3 js scale for the y series.
+   * @access @protected
+   */
+  set _y(scale) {
+    if (this.constructor !== Chart) {
+      this.#y = scale;
+    } else {
+      console.error(
+        "Cannot modify protected property outside the class hierarchy"
+      );
+    }
+  }
+
+  /**
+   * @description
+   * Getter of the y scale generator of the chart.
    * @returns {D3Scale}
-   * @protected
    */
-  y(scale) {
-    return arguments.length ? ((this.#y = scale), this) : this.#y;
+  get y() {
+    return this.#y;
   }
 
   /**
    * @description
-   * Getter and setter for the array of the x serie data.
+   * Setter for the array of the x serie of data.
    * @param {any[]} values The array of the x serie data.
-   * @returns {any[]}
-   * @protected
+   * @access @protected
    */
-  xValues(values) {
-    return arguments.length
-      ? ((this.#xValues = [...values]), this)
-      : this.#xValues;
+  set _xValues(values) {
+    if (this.constructor !== Chart) {
+      this.#xValues = [...values];
+    } else {
+      console.error(
+        "Cannot modify protected property outside the class hierarchy"
+      );
+    }
   }
 
   /**
    * @description
-   * Getter and setter of data that forms y series to render in the chart.
-   * @param {object[]} values The array of the y series data.
-   * @returns {object[]}
-   * @protected
+   * Getter for the array of the x serie of data.
+   * @returns {any[]}
    */
-  yValues(values) {
-    return arguments.length
-      ? ((this.#yValues = [...values]), this)
-      : this.#yValues;
+  get xValues() {
+    return this.#xValues;
+  }
+
+  /**
+   * @description
+   * Setter of data that forms y series to render in the chart.
+   * @param {object[]} values The array of the y series data.
+   * @access @protected
+   */
+  set _yValues(values) {
+    if (this.constructor !== Chart) {
+      this.#yValues = [...values];
+    } else {
+      console.error(
+        "Cannot modify protected property outside the class hierarchy"
+      );
+    }
+  }
+
+  /**
+   * @description
+   * Getter for the array of the y values of data.
+   * @returns {object[]}
+   */
+  get yValues() {
+    return this.#yValues;
   }
 }

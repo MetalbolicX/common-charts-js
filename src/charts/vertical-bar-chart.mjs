@@ -102,20 +102,34 @@ export default class VBarChart extends RectangularChart {
 
   /**
    * @description
-   * Getter and setter for the second scale if the chart is grouped.
+   * Setter for the second scale if the chart is grouped.
    * @param {D3Scale} scale D3 js scale generator function scale.
-   * @returns {D3Scale|this}
-   * @protected
+   * @access @protected
    */
-  x1(scale) {
-    return arguments.length ? ((this.#x1 = scale), this) : this.#x1;
+  set _x1(scale) {
+    if (this.constructor !== VBarChart) {
+      this.#x1 = scale;
+    } else {
+      console.error(
+        "Cannot modify protected property outside the class hierarchy"
+      );
+    }
+  }
+
+  /**
+   * @description
+   * Getter for the second scale if the chart is grouped.
+   * @returns {D3Scale}
+   */
+  get x1() {
+    return this.#x1;
   }
 
   /**
    * @description
    * Calculate the grant total of each numeric series.
    * @returns {void}
-   * @protected
+   * @access @protected
    */
   _setGrantTotal() {
     this.#granTotal = this.data()
@@ -137,7 +151,7 @@ export default class VBarChart extends RectangularChart {
    * @description
    * Rearrange the dataset to draw the bar chart.
    * @returns {void}
-   * @protected
+   * @access @protected
    */
   _reestructureData() {
     const records = this.data()
@@ -190,8 +204,8 @@ export default class VBarChart extends RectangularChart {
     // Rearrange the dataset
     this._reestructureData();
     // Set the x and y values
-    this.xValues = this.data().map((d) => ({ category: d.category }));
-    this.yValues = this.data().map((d) => ({
+    this._xValues = this.data().map((d) => ({ category: d.category }));
+    this._yValues = this.data().map((d) => ({
       values: d.values,
       total: d.total,
     }));
@@ -202,21 +216,21 @@ export default class VBarChart extends RectangularChart {
         : this.yValues.map((d) => d.values.map((r) => r.value)).flat()
     );
     // Set the band scale for the nain categories
-    this.x = this.xScale()
+    this._x = this.xScale()
       .domain(this.xValues.map((d) => d.category))
       .range([this.margin().right, this.width()])
       .paddingInner(this.innerPadding());
     // Set the bar chart horizontally
-    this.y = this.yScale()
+    this._y = this.yScale()
       .domain([0, (1 + this.yAxisOffset()) * ySerieRange.max])
       .range([this.height() - this.margin().bottom, this.margin().top]);
     // Set the color schema
     this.colorScale().domain(this._ySeriesNames);
     // Set the axes
-    this.xAxis = this._D3Axis(this.xAxisPosition()).scale(this.x);
-    this.yAxis = this._D3Axis(this.yAxisPosition()).scale(this.y);
+    this._xAxis = this._D3Axis(this.xAxisPosition()).scale(this.x);
+    this._yAxis = this._D3Axis(this.yAxisPosition()).scale(this.y);
     // Set the second scale for the grouped bar chart if the graph is not stacked
-    this.x1 = scaleBand()
+    this._x1 = scaleBand()
       .domain(this._ySeriesNames)
       .range([0, this.x.bandwidth()]);
     // Set the y axis customizations of the y axis.

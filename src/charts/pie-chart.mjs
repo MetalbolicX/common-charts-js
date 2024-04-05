@@ -20,8 +20,8 @@ export default class PieChart extends CircleChart {
       const h = this.height() - (this.margin().top + this.margin().bottom);
       this._circleRadius = Math.min(w, h) / 2;
       // Separate the values of the dataset
-      this.xValues = this.data().map((d) => this.xSerie()(d));
-      this.yValues = this.data().map((d) => this.ySeries()(d));
+      this._xValues = this.data().map((d) => this.xSerie()(d));
+      this._yValues = this.data().map((d) => this.ySeries()(d));
       // Set the column names of the y series
       this._ySeriesNames = Object.keys(this.yValues.at(0));
       // Set the svg container of the chart
@@ -71,7 +71,7 @@ export default class PieChart extends CircleChart {
               datum: r[d],
               radius: {
                 inner: 0,
-                outer: this._circleRadius,
+                outer: this.circleRadius,
               },
             }))
             .sort((a, b) => b.datum - a.datum)
@@ -167,8 +167,8 @@ export default class PieChart extends CircleChart {
         .attr("class", "legends")
         .attr(
           "transform",
-          `translate(${config.widthOffset * this._circleRadius}, ${
-            config.heightOffset * this._circleRadius
+          `translate(${config.widthOffset * this.circleRadius}, ${
+            config.heightOffset * this.circleRadius
           })`
         );
 

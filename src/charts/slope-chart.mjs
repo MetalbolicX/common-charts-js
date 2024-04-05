@@ -36,23 +36,23 @@ export default class SlopeChart extends RectangularChart {
     this._setSvg();
     // Set the column names of the y series
     this._ySeriesNames = Object.keys(this.ySeries()(this.data().at(0)));
-    this.xValues = this.data().map((d) => this.xSerie()(d));
+    this._xValues = this.data().map((d) => this.xSerie()(d));
     // Set the horizontal values of the x axis
-    this.x = this.xScale()
+    this._x = this.xScale()
       .domain(this._ySeriesNames)
       .range([this.margin().left, this.width() - this.margin().right]);
 
-    this.yValues = this.data().map((d) => this.ySeries()(d));
+    this._yValues = this.data().map((d) => this.ySeries()(d));
     const ySerieRange = this._serieRange(
       this.yValues.map((d) => Object.values(d)).flat()
     );
     // Set the scale for the values in the left position of the y series
-    this.y = this.yScale()
+    this._y = this.yScale()
       .domain([0, (1 + this.yAxisOffset()) * ySerieRange.max])
       .range([this.height() - this.margin().bottom, this.margin().top]);
     // Set the axes
-    this.xAxis = this._D3Axis(this.xAxisPosition()).scale(this.x);
-    this.yAxis = this._D3Axis(this.yAxisPosition()).scale(this.y);
+    this._xAxis = this._D3Axis(this.xAxisPosition()).scale(this.x);
+    this._yAxis = this._D3Axis(this.yAxisPosition()).scale(this.y);
     // Set the color schema
     this.colorScale().domain(this.xValues);
     // Set the y axis customizations of the y axis.
