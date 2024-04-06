@@ -107,13 +107,7 @@ export default class VBarChart extends RectangularChart {
    * @access @protected
    */
   set _x1(scale) {
-    if (this.constructor !== VBarChart) {
-      this.#x1 = scale;
-    } else {
-      console.error(
-        "Cannot modify protected property outside the class hierarchy"
-      );
-    }
+    this.#x1 = scale;
   }
 
   /**

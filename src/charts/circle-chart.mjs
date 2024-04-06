@@ -37,12 +37,10 @@ export default class CircleChart extends Chart {
    * @access @protected
    */
   set _circleRadius(radius) {
-    if (this.constructor !== CircleChart && radius > 0) {
+    if (radius > 0) {
       this.#circleRadius = +radius;
     } else {
-      console.error(
-        "Cannot modify protected property outside the class hierarchy"
-      );
+      console.error("The radius value must be greater than zero");
     }
   }
 

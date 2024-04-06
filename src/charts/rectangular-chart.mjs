@@ -88,13 +88,7 @@ export default class RectangularChart extends Chart {
    * @access @protected
    */
   set _xAxis(axis) {
-    if (this.constructor !== RectangularChart) {
-      this.#xAxis = axis;
-    } else {
-      console.error(
-        "Cannot modify protected property outside the class hierarchy"
-      );
-    }
+    this.#xAxis = axis;
   }
 
   /**
@@ -213,13 +207,7 @@ export default class RectangularChart extends Chart {
    * @access @protected
    */
   set _yAxis(axis) {
-    if (this.constructor !== RectangularChart) {
-      this.#yAxis = axis;
-    } else {
-      console.error(
-        "Cannot modify protected property outside the class hierarchy"
-      );
-    }
+    this.#yAxis = axis;
   }
 
   /**
@@ -238,13 +226,7 @@ export default class RectangularChart extends Chart {
    * @access @protected
    */
   set _x(scale) {
-    if (this.constructor !== RectangularChart) {
-      this.#x = scale;
-    } else {
-      console.error(
-        "Cannot modify protected property outside the class hierarchy"
-      );
-    }
+    this.#x = scale;
   }
 
   /**

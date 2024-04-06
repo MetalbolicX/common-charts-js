@@ -56,12 +56,10 @@ export default class ScatterPlot extends RectangularChart {
    * @access @protected
    */
   set _categoriesValues(values) {
-    if (this.constructor !== ScatterPlot) {
+    if (Array.isArray(values) && values.every((d) => typeof d === "string")) {
       this.#categoriesValues = [...values];
     } else {
-      console.error(
-        "Cannot modify protected property outside the class hierarchy"
-      );
+      console.error("Invalid input values. It must be an array of strings");
     }
   }
 
