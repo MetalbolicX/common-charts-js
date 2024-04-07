@@ -4,8 +4,9 @@ import RectangularChart from "./rectangular-chart.mjs";
 
 export default class ScatterPlot extends RectangularChart {
   #radius;
-  #categoriesSeries;
-  #categoriesValues;
+  #categorySerie;
+  #categoryValues;
+  #serieToShow;
   constructor() {
     super();
     this.#radius = 1;
@@ -30,6 +31,23 @@ export default class ScatterPlot extends RectangularChart {
 
   /**
    * @description
+   * Getter and setter for the series to be rendered in the chart.
+   * @param {string} serieName Name of the serie in the dateset to show the slices in the chart.
+   * @returns {string|this}
+   * @example
+   * ```JavaScript
+   * const chart = new ScatterPlot()
+   *  .serieToShow("income");
+   * ```
+   */
+  serieToShow(serieName) {
+    return arguments.length && typeof serieName === "string"
+      ? ((this.#serieToShow = serieName), this)
+      : this.#serieToShow;
+  }
+
+  /**
+   * @description
    * Getter and setter a callback to iterate in series with has statistical category data type.
    * @param {(d: object) => any} fn The callback function to deal with some series in the dataset.
    * @returns {(d: object) => any|this}
@@ -40,13 +58,13 @@ export default class ScatterPlot extends RectangularChart {
    *    { month: "February", department: "Sales", europe: 52, asia: 40, america: 65 },
    *    { month: "March", department: "Sales", europe: 56, asia: 35, america: 70 }
    *  ])
-   *  .categoriesSeries((d) => department: d.department); // An anonymous function that returns an object with the series of categories in the dataset
+   *  .categorySerie((d) => department: d.department); // An anonymous function that returns an object with the series of categories in the dataset
    * ```
    */
-  categoriesSeries(fn) {
+  categorySerie(fn) {
     return arguments.length
-      ? ((this.#categoriesSeries = fn), this)
-      : this.#categoriesSeries;
+      ? ((this.#categorySerie = fn), this)
+      : this.#categorySerie;
   }
 
   /**
@@ -55,9 +73,9 @@ export default class ScatterPlot extends RectangularChart {
    * @param {any[]} values The array of values for categories in the dataset.
    * @access @protected
    */
-  set _categoriesValues(values) {
+  set _categoryValues(values) {
     if (Array.isArray(values) && values.every((d) => typeof d === "string")) {
-      this.#categoriesValues = [...values];
+      this.#categoryValues = [...values];
     } else {
       console.error("Invalid input values. It must be an array of strings");
     }
@@ -68,8 +86,8 @@ export default class ScatterPlot extends RectangularChart {
    * Getter for the categories values in the dataset.
    * @return {any[]}
    */
-  get categoriesValues() {
-    return this.#categoriesValues;
+  get categoryValues() {
+    return this.#categoryValues;
   }
 
   /**
@@ -108,11 +126,11 @@ export default class ScatterPlot extends RectangularChart {
     // Set the svg container of the chart
     this._setSvg();
     // Set the categories of the dataset
-    this._categoriesValues = this.data().map((d) => this.categoriesSeries()(d));
+    this._categoryValues = this.data().map((d) => this.categorySerie()(d));
     // Set the color schema
     this.colorScale().domain(
       // Unique values of the categories
-      this.categoriesValues.filter((d, i, ns) => ns.indexOf(d) == i)
+      this.categoryValues.filter((d, i, ns) => ns.indexOf(d) == i)
     );
     // Set the the x axis customizations of format
     if (this.xAxisCustomizations()) {
@@ -162,7 +180,7 @@ export default class ScatterPlot extends RectangularChart {
           serie: d,
           x: this.xValues.at(i),
           y: r[d],
-          category: this.categoriesValues.at(i),
+          category: this.categoryValues.at(i),
         }))
       )
       .join("circle")
@@ -230,5 +248,84 @@ export default class ScatterPlot extends RectangularChart {
       .attr("dy", config.size)
       .text((d) => d)
       .style("fill", (d) => this.colorScale()(d));
+  }
+
+  addTrendingLine() {
+    /**
+     * @description
+     * Dataset rearranged using group by style
+     * @type {{[key: string]: any[]}}
+     */
+    const categories = this.data().reduce(
+      (group, d) => ({
+        ...group,
+        [this.categorySerie()(d)]: (
+          group[this.categorySerie()(d)] ?? []
+        ).concat(d),
+      }),
+      {}
+    );
+
+    const leastSquares = Object.keys(categories).map((key) => ({
+      category: key,
+      totals: {
+        x: categories[key].reduce((acc, d) => acc + this.xSerie()(d), 0),
+        xSquare: categories[key].reduce(
+          (acc, d) => acc + this.xSerie()(d) ** 2,
+          0
+        ),
+        y: categories[key]
+          .map((d) => d[this.serieToShow()])
+          .reduce((acc, d) => acc + d, 0),
+        xy: categories[key]
+          .map((d) => d[this.serieToShow()] * this.xSerie()(d))
+          .reduce((acc, d, i) => acc + d, 0),
+        n: categories[key].length,
+        xMin: categories[key].reduce(
+          (acc, d) => Math.min(acc, this.xSerie()(d)),
+          Infinity
+        ),
+        xMax: categories[key].reduce(
+          (acc, d) => Math.max(acc, this.xSerie()(d)),
+          Number.NEGATIVE_INFINITY
+        ),
+      },
+    }));
+    const slopes = leastSquares.map((d) => {
+      const slope =
+        (d.totals.xy - (d.totals.x * d.totals.y) / d.totals.n) /
+        (d.totals.xSquare - d.totals.x ** 2 / d.totals.n);
+      return {
+        category: d.category,
+        xMax: d.totals.xMax,
+        xMin: d.totals.xMin,
+        slope,
+        b: (d.totals.y - slope * d.totals.x) / d.totals.n,
+      };
+    });
+
+    const coordinates = slopes.map((d) => ({
+      category: d.category,
+      xMin: d.xMin,
+      xMax: d.xMax,
+      yMin: d.slope * d.xMin + d.b,
+      yMax: d.slope * d.xMax + d.b,
+    }));
+
+    const seriesGroup = this._svg.select(".series");
+    seriesGroup
+      .selectAll("g")
+      .selectAll("line")
+      .data(coordinates)
+      .join("line")
+      .attr(
+        "class",
+        (d) => `${d.category.toLowerCase().replace(" ", "-")} tendency`
+      )
+      .attr("x1", (d) => this.x(d.xMin))
+      .attr("y1", (d) => this.y(d.yMin))
+      .attr("x2", (d) => this.x(d.xMax))
+      .attr("y2", (d) => this.y(d.yMax))
+      .style("stroke", (d) => this.colorScale()(d.category));
   }
 }
