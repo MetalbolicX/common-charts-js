@@ -165,8 +165,8 @@ export default class Chart {
   /**
    * @description
    * Getter and setter a callback to iterate the y series in the dataset.
-   * @param {(d: object) => object} fn The callback function to deal with the y series.
-   * @returns {(d: object) => object|this}
+   * @param {(d: object) => any} fn The callback function to deal with the y series.
+   * @returns {(d: object) => any|this}
    * @example
    * ```JavaScript
    * const chart = new Chart()

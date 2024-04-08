@@ -105,9 +105,7 @@ export default class ScatterPlot extends RectangularChart {
       .range([this.margin().left, this.width() - this.margin().right]);
 
     this._yValues = this.data().map((d) => this.ySeries()(d));
-    const ySerieRange = this._serieRange(
-      this.yValues.map((d) => Object.values(d)).flat()
-    );
+    const ySerieRange = this._serieRange(this.yValues);
 
     // Set the scale for the values in the left position of the y series
     this._y = this.yScale()
@@ -122,7 +120,7 @@ export default class ScatterPlot extends RectangularChart {
     this._yAxis = this._D3Axis(this.yAxisPosition()).scale(this.y);
 
     // Set the column names of the y series
-    this._ySeriesNames = Object.keys(this.yValues.at(0));
+    this._ySeriesNames = [this.serieToShow()];
     // Set the svg container of the chart
     this._setSvg();
     // Set the categories of the dataset
@@ -179,7 +177,7 @@ export default class ScatterPlot extends RectangularChart {
         this.yValues.map((r, i) => ({
           serie: d,
           x: this.xValues.at(i),
-          y: r[d],
+          y: r,
           category: this.categoryValues.at(i),
         }))
       )
@@ -250,22 +248,50 @@ export default class ScatterPlot extends RectangularChart {
       .style("fill", (d) => this.colorScale()(d));
   }
 
-  addTrendingLine() {
+  /**
+   * @description
+   * Group the dataset as and object of arrays.
+   * @param {any[]} dataset A dataset of data as list of object.
+   * @param {(d: object) => any} fn A callback function with the field name to iterate through the dataset.
+   * @returns {object}
+   */
+  groupBy(dataset, fn) {
+    return dataset.reduce(
+      (group, d) => ({
+        ...group,
+        [fn(d)]: (group[fn(d)] ?? []).concat(d),
+      }),
+      {}
+    );
+  }
+
+    /**
+   * @description
+   * Adds a trending line from the calculations of the least squares per category.
+   * @returns {void}
+   * @example
+   * ```JavaScript
+   * // Set all the parameters of the chart
+   * const chart = new ScatterPlot()
+   *  ...;
+   *
+   * chart.init();
+   * char.addTrendingLines();
+   * ```
+   */
+  addTrendingLines() {
     /**
      * @description
      * Dataset rearranged using group by style
      * @type {{[key: string]: any[]}}
      */
-    const categories = this.data().reduce(
-      (group, d) => ({
-        ...group,
-        [this.categorySerie()(d)]: (
-          group[this.categorySerie()(d)] ?? []
-        ).concat(d),
-      }),
-      {}
-    );
+    const categories = this.groupBy(this.data(), this.categorySerie());
 
+    /**
+     * @description
+     * The calculations of least squares sum in a dataset per category.
+     * @type {{category: string, totals: {x: number, xSquare: number, y: number, xy: number, n: number, xMin: number, xMax: number}}[]}
+     */
     const leastSquares = Object.keys(categories).map((key) => ({
       category: key,
       totals: {
@@ -275,10 +301,10 @@ export default class ScatterPlot extends RectangularChart {
           0
         ),
         y: categories[key]
-          .map((d) => d[this.serieToShow()])
+          .map((d) => this.ySeries()(d))
           .reduce((acc, d) => acc + d, 0),
         xy: categories[key]
-          .map((d) => d[this.serieToShow()] * this.xSerie()(d))
+          .map((d) => this.xSerie()(d) * this.ySeries()(d))
           .reduce((acc, d, i) => acc + d, 0),
         n: categories[key].length,
         xMin: categories[key].reduce(
@@ -291,6 +317,12 @@ export default class ScatterPlot extends RectangularChart {
         ),
       },
     }));
+
+    /**
+     * @description
+     * An array with parameters to calculate the slope linear function between two points per category.
+     * @type {{category: string, xMax: number, xMin: number, slope: number, b: number}[]}
+     */
     const slopes = leastSquares.map((d) => {
       const slope =
         (d.totals.xy - (d.totals.x * d.totals.y) / d.totals.n) /
@@ -304,6 +336,11 @@ export default class ScatterPlot extends RectangularChart {
       };
     });
 
+    /**
+     * @description
+     * The array of coordinates to draw a line per category.
+     * @type {{category: string, xMin: number, xMax: number, yMax: number, yMin: number}[]}
+     */
     const coordinates = slopes.map((d) => ({
       category: d.category,
       xMin: d.xMin,
