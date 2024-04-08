@@ -7,9 +7,16 @@ export default class ScatterPlot extends RectangularChart {
   #categorySerie;
   #categoryValues;
   #serieToShow;
+  /**
+   * @description
+   * The array of objects with the parameters to calculate the line equation between two points.
+   * @type {{category: string, xMax: number, xMin: number, slope: number, b: number}[]}
+   */
+  #slopes;
   constructor() {
     super();
     this.#radius = 1;
+    this.#slopes = undefined;
   }
 
   /**
@@ -84,10 +91,19 @@ export default class ScatterPlot extends RectangularChart {
   /**
    * @description
    * Getter for the categories values in the dataset.
-   * @return {any[]}
+   * @returns {any[]}
    */
   get categoryValues() {
     return this.#categoryValues;
+  }
+
+  /**
+   * @description
+   * Getter of the slopes parameters for the line equation of the least squares method.
+   * @returns {{category: string, xMax: number, xMin: number, slope: number, b: number}[]}
+   */
+  get slopes() {
+    return this.#slopes;
   }
 
   /**
@@ -253,7 +269,7 @@ export default class ScatterPlot extends RectangularChart {
    * Group the dataset as and object of arrays.
    * @param {any[]} dataset A dataset of data as list of object.
    * @param {(d: object) => any} fn A callback function with the field name to iterate through the dataset.
-   * @returns {object}
+   * @returns {{[key: string]: any[]}}
    */
   groupBy(dataset, fn) {
     return dataset.reduce(
@@ -265,7 +281,82 @@ export default class ScatterPlot extends RectangularChart {
     );
   }
 
-    /**
+  /**
+   * @description
+   * The calculations of least squares sum in a dataset per category.
+   * @param {{[key: string]: any[]}} group A grouped dataset by a categorical data as keys and values are the tuples of each category.
+   * @returns {{category: string, totals: {x: number, xSquare: number, y: number, xy: number, n: number, xMin: number, xMax: number}}[]}
+   * @see {@link https://www.varsitytutors.com/hotmath/hotmath_help/spanish/topics/line-of-best-fit}
+   *
+   */
+  leastSquares(group) {
+    return Object.keys(group).map((key) => ({
+      category: key,
+      totals: {
+        x: group[key].reduce((acc, d) => acc + this.xSerie()(d), 0),
+        xSquare: group[key].reduce((acc, d) => acc + this.xSerie()(d) ** 2, 0),
+        y: group[key]
+          .map((d) => this.ySeries()(d))
+          .reduce((acc, d) => acc + d, 0),
+        xy: group[key]
+          .map((d) => this.xSerie()(d) * this.ySeries()(d))
+          .reduce((acc, d, i) => acc + d, 0),
+        n: group[key].length,
+        xMin: group[key].reduce(
+          (acc, d) => Math.min(acc, this.xSerie()(d)),
+          Infinity
+        ),
+        xMax: group[key].reduce(
+          (acc, d) => Math.max(acc, this.xSerie()(d)),
+          Number.NEGATIVE_INFINITY
+        ),
+      },
+    }));
+  }
+
+  /**
+   * @description
+   * Calculate the terms of the line equation between two points. Using the data of least square method.
+   * @param {{category: string, totals: {x: number, xSquare: number, y: number, xy: number, n: number, xMin: number, xMax: number}}[]} leastSquare The calculations of the sums for the least square method per category.
+   * @returns {{category: string, xMax: number, xMin: number, slope: number, b: number}[]}
+   */
+  calculateSlopes(leastSquare) {
+    return leastSquare.map((d) => {
+      /**
+       * @description
+       * The calculation of the slope for the line equation.
+       * @type {number}
+       */
+      const slope =
+        (d.totals.xy - (d.totals.x * d.totals.y) / d.totals.n) /
+        (d.totals.xSquare - d.totals.x ** 2 / d.totals.n);
+      return {
+        category: d.category,
+        xMax: d.totals.xMax,
+        xMin: d.totals.xMin,
+        slope,
+        b: (d.totals.y - slope * d.totals.x) / d.totals.n,
+      };
+    });
+  }
+
+  /**
+   * @description
+   * Compute the coordinates of the line equation between two points of the line created from the least squares.
+   * @param {{category: string, xMax: number, xMin: number, slope: number, b: number}[]} slopes The array of coordinates to draw a line per category.
+   * @returns {{category: string, xMin: number, xMax: number, yMax: number, yMin: number}[]}
+   */
+  calculateCoordinates(slopes) {
+    return slopes.map((d) => ({
+      category: d.category,
+      xMin: d.xMin,
+      xMax: d.xMax,
+      yMin: d.slope * d.xMin + d.b,
+      yMax: d.slope * d.xMax + d.b,
+    }));
+  }
+
+  /**
    * @description
    * Adds a trending line from the calculations of the least squares per category.
    * @returns {void}
@@ -280,75 +371,10 @@ export default class ScatterPlot extends RectangularChart {
    * ```
    */
   addTrendingLines() {
-    /**
-     * @description
-     * Dataset rearranged using group by style
-     * @type {{[key: string]: any[]}}
-     */
     const categories = this.groupBy(this.data(), this.categorySerie());
-
-    /**
-     * @description
-     * The calculations of least squares sum in a dataset per category.
-     * @type {{category: string, totals: {x: number, xSquare: number, y: number, xy: number, n: number, xMin: number, xMax: number}}[]}
-     * @see {@link https://www.varsitytutors.com/hotmath/hotmath_help/spanish/topics/line-of-best-fit}
-     */
-    const leastSquares = Object.keys(categories).map((key) => ({
-      category: key,
-      totals: {
-        x: categories[key].reduce((acc, d) => acc + this.xSerie()(d), 0),
-        xSquare: categories[key].reduce(
-          (acc, d) => acc + this.xSerie()(d) ** 2,
-          0
-        ),
-        y: categories[key]
-          .map((d) => this.ySeries()(d))
-          .reduce((acc, d) => acc + d, 0),
-        xy: categories[key]
-          .map((d) => this.xSerie()(d) * this.ySeries()(d))
-          .reduce((acc, d, i) => acc + d, 0),
-        n: categories[key].length,
-        xMin: categories[key].reduce(
-          (acc, d) => Math.min(acc, this.xSerie()(d)),
-          Infinity
-        ),
-        xMax: categories[key].reduce(
-          (acc, d) => Math.max(acc, this.xSerie()(d)),
-          Number.NEGATIVE_INFINITY
-        ),
-      },
-    }));
-
-    /**
-     * @description
-     * An array with parameters to calculate the slope linear function between two points per category.
-     * @type {{category: string, xMax: number, xMin: number, slope: number, b: number}[]}
-     */
-    const slopes = leastSquares.map((d) => {
-      const slope =
-        (d.totals.xy - (d.totals.x * d.totals.y) / d.totals.n) /
-        (d.totals.xSquare - d.totals.x ** 2 / d.totals.n);
-      return {
-        category: d.category,
-        xMax: d.totals.xMax,
-        xMin: d.totals.xMin,
-        slope,
-        b: (d.totals.y - slope * d.totals.x) / d.totals.n,
-      };
-    });
-
-    /**
-     * @description
-     * The array of coordinates to draw a line per category.
-     * @type {{category: string, xMin: number, xMax: number, yMax: number, yMin: number}[]}
-     */
-    const coordinates = slopes.map((d) => ({
-      category: d.category,
-      xMin: d.xMin,
-      xMax: d.xMax,
-      yMin: d.slope * d.xMin + d.b,
-      yMax: d.slope * d.xMax + d.b,
-    }));
+    const leastSquaresCalcs = this.leastSquares(categories);
+    this.#slopes = this.calculateSlopes(leastSquaresCalcs);
+    const coordinates = this.calculateCoordinates(this.slopes);
 
     const seriesGroup = this._svg.select(".series");
     seriesGroup

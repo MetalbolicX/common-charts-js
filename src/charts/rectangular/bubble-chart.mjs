@@ -145,7 +145,7 @@ export default class BubbleChart extends ScatterPlot {
    * @example
    * ```JavaScript
    * // Set all the parameters of the chart
-   * const chart = new ScatterPlot()
+   * const chart = new BubbleChart()
    *  ...;
    *
    * chart.init();
