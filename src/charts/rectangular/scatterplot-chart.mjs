@@ -58,7 +58,7 @@ export default class ScatterPlot extends RectangularChart {
    *    { month: "February", department: "Sales", europe: 52, asia: 40, america: 65 },
    *    { month: "March", department: "Sales", europe: 56, asia: 35, america: 70 }
    *  ])
-   *  .categorySerie((d) => department: d.department); // An anonymous function that returns an object with the series of categories in the dataset
+   *  .categorySerie((d) => d.department);
    * ```
    */
   categorySerie(fn) {
@@ -70,7 +70,7 @@ export default class ScatterPlot extends RectangularChart {
   /**
    * @description
    * Setter for the categories in the dataset.
-   * @param {any[]} values The array of values for categories in the dataset.
+   * @param {string[]} values The array of values for categories in the dataset.
    * @access @protected
    */
   set _categoryValues(values) {
@@ -291,6 +291,7 @@ export default class ScatterPlot extends RectangularChart {
      * @description
      * The calculations of least squares sum in a dataset per category.
      * @type {{category: string, totals: {x: number, xSquare: number, y: number, xy: number, n: number, xMin: number, xMax: number}}[]}
+     * @see {@link https://www.varsitytutors.com/hotmath/hotmath_help/spanish/topics/line-of-best-fit}
      */
     const leastSquares = Object.keys(categories).map((key) => ({
       category: key,

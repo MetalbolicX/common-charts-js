@@ -1,14 +1,15 @@
-import MultiLineChart from "./charts/multiline-chart.mjs";
-import MultiAreaChart from "./charts/multiarea-chart.mjs";
-import VBarChart from "./charts/vertical-bar-chart.mjs";
-import SlopeChart from "./charts/slope-chart.mjs";
-import HBarChart from "./charts/horizontal-bar-chart.mjs";
-import RadarChart from "./charts/radar-chart.mjs";
-import PieChart from "./charts/pie-chart.mjs";
-import DonutChart from "./charts/donut-chart.mjs";
-import PolarChart from "./charts/polar-chart.mjs";
-import ScatterPlot from "./charts/scatterplot-chart.mjs";
-import ScatterPlotMarker from "./charts/scatterplot-marker.mjs";
+import MultiLineChart from "./charts/rectangular/multiline-chart.mjs";
+import MultiAreaChart from "./charts/rectangular/multiarea-chart.mjs";
+import VBarChart from "./charts/rectangular/vertical-bar-chart.mjs";
+import SlopeChart from "./charts/rectangular/slope-chart.mjs";
+import HBarChart from "./charts/rectangular/horizontal-bar-chart.mjs";
+import RadarChart from "./charts/circular/radar-chart.mjs";
+import PieChart from "./charts/circular/pie-chart.mjs";
+import DonutChart from "./charts/circular/donut-chart.mjs";
+import PolarChart from "./charts/circular/polar-chart.mjs";
+import ScatterPlot from "./charts/rectangular/scatterplot-chart.mjs";
+import ScatterPlotMarker from "./charts/rectangular/scatterplot-marker.mjs";
+import BubbleChart from "./charts/rectangular/bubble-chart.mjs"
 
 export {
   MultiLineChart,
@@ -22,6 +23,7 @@ export {
   PolarChart,
   ScatterPlot,
   ScatterPlotMarker,
+  BubbleChart
 };
 
 console.log("Common charts of data visualizations created with D3.js!!");

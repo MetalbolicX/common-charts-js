@@ -1,4 +1,4 @@
-import Chart from "./chart.mjs";
+import Chart from "../chart.mjs";
 
 ("use strict");
 
