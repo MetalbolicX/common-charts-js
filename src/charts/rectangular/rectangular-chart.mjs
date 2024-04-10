@@ -32,14 +32,14 @@ export default class RectangularChart extends Chart {
    * @description
    * Getter and setter of the configuration of the x values to draw in the chart.
    * @param {object} config The configuration to give to the x values series.
-   * @param {string} config.serieName The names of the serie for the x axis.
+   * @param {string} config.serie The name of the serie for the x axis.
    * @param {D3Scale} config.scale The D3 js function to process the x data.
    * @returns {{serieName: string, scale: () => any}|this}
    * @example
    * ```JavaScript
    * const chart = new RectangularChart()
    *  .xConfiguration({
-   *    serieName: "date",
+   *    serie: "date",
    *    scale: d3.scaleLinear()
    *  });
    * ```
@@ -425,7 +425,7 @@ export default class RectangularChart extends Chart {
       .attr("x", config.widthOffset * this.width())
       .attr(
         "y",
-        this.xAxisPosition() === "bottom"
+        this.xAxisConfig().position === "bottom"
           ? this.height() - this.margin().bottom
           : this.margin().top
       )
@@ -474,7 +474,7 @@ export default class RectangularChart extends Chart {
       .attr("x", -this.height() * config.heightOffset)
       .attr(
         "y",
-        this.yAxisPosition() === "left"
+        this.yAxisConfig().position === "left"
           ? this.margin().left
           : this.width() - this.margin().right
       )
@@ -553,23 +553,23 @@ export default class RectangularChart extends Chart {
 
     legendGroup
       .selectAll("rect")
-      .data(this._ySeriesNames)
+      .data(this.yConfiguration().numericalSeries)
       .join("rect")
       .attr("class", (d) => `${d} legend`)
       .attr("width", config.size)
       .attr("height", config.size)
       .attr("y", (_, i) => (config.size + config.spacing) * i)
-      .style("fill", (d) => this.colorScale()(d));
+      .style("fill", (d) => this.colorScale(d));
 
     legendGroup
       .selectAll("text")
-      .data(this._ySeriesNames)
+      .data(this.yConfiguration().numericalSeries)
       .join("text")
       .attr("class", (d) => `${d} legend-name`)
       .attr("x", config.size + config.spacing)
       .attr("y", (_, i) => (config.size + config.spacing) * i)
       .attr("dy", config.size)
       .text((d) => d)
-      .style("fill", (d) => this.colorScale()(d));
+      .style("fill", (d) => this.colorScale(d));
   }
 }

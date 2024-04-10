@@ -28,7 +28,7 @@ export default class MultiAreaChart extends MultiLineChart {
 
     groupSeries
       .selectAll("g")
-      .data(this._ySeriesNames)
+      .data(this.yConfiguration().numericalSeries)
       .join("g")
       .attr("class", (d) => d);
 
@@ -43,8 +43,8 @@ export default class MultiAreaChart extends MultiLineChart {
       .data((d) => [
         {
           serie: d,
-          values: this.yValues.map((r, i) => ({
-            category: this.xValues.at(i),
+          values: this.data().map((r) => ({
+            category: r[this.xConfiguration().serie],
             value: r[d],
           })),
         },
@@ -52,7 +52,7 @@ export default class MultiAreaChart extends MultiLineChart {
       .join("path")
       .attr("class", (d) => `${d.serie} serie`)
       .attr("d", (d) => pathGenerator(d.values))
-      .style("fill", (d) => this.colorScale()(d.serie))
-      .style("stroke", (d) => this.colorScale()(d.serie));
+      .style("fill", (d) => this.colorScale(d.serie))
+      .style("stroke", (d) => this.colorScale(d.serie));
   }
 }

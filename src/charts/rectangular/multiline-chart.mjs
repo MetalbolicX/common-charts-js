@@ -1,6 +1,6 @@
 import RectangularChart from "./rectangular-chart.mjs";
 
-const { line, select, greatestIndex, leastIndex } = d3;
+const { line, select, greatestIndex, leastIndex, scaleOrdinal } = d3;
 
 ("use strict");
 
@@ -34,49 +34,46 @@ export default class MultiLineChart extends RectangularChart {
    * @returns {void}
    */
   init() {
-    this._xValues = this.data().map((d) => this.xSerie()(d));
-    const xSerieRange = this._serieRange(this.xValues);
+    const xValues = this.data().map((d) => d[this.xConfiguration().serie]);
+    const xSerieRange = this._serieRange(xValues);
 
     // Set the scale for the values in the bottom position of the x axis
-    this._x = this.xScale()
-      .domain(Object.values(xSerieRange))
+    this._x = this.xConfiguration()
+      .scale.domain(Object.values(xSerieRange))
       .range([this.margin().left, this.width() - this.margin().right]);
 
-    this._yValues = this.data().map((d) => this.ySeries()(d));
-    const ySerieRange = this._serieRange(
-      this.yValues.map((d) => Object.values(d)).flat()
+    const yValues = this.data().flatMap((d) =>
+      this.yConfiguration().numericalSeries.map((serie) => d[serie])
     );
-
+    const ySerieRange = this._serieRange(yValues);
     // Set the scale for the values in the left position of the y series
-    this._y = this.yScale()
-      .domain([
+    this._y = this.yConfiguration()
+      .scale.domain([
         (1 - this.yAxisOffset()) * ySerieRange.min,
         (1 + this.yAxisOffset()) * ySerieRange.max,
       ])
       .range([this.height() - this.margin().bottom, this.margin().top]);
-
     // Set the axes
-    this._xAxis = this._D3Axis(this.xAxisPosition()).scale(this.x);
-    this._yAxis = this._D3Axis(this.yAxisPosition()).scale(this.y);
-
-    // Set the column names of the y series
-    this._ySeriesNames = Object.keys(this.yValues.at(0));
+    this._xAxis = this._D3Axis(this.xAxisConfig().position).scale(this.x);
+    this._yAxis = this._D3Axis(this.yAxisConfig().position).scale(this.y);
     // Set the svg container of the chart
     this._setSvg();
     // Set the color schema
-    this.colorScale().domain(this._ySeriesNames);
+    this._colorScale = scaleOrdinal()
+      .domain(this.yConfiguration().numericalSeries)
+      .range(this.yConfiguration().colorSeries);
     // Set the the x axis customizations of format
-    if (this.xAxisCustomizations()) {
+    if (this.xAxisConfig().customizations) {
       for (const [xFormat, customFormat] of Object.entries(
-        this.xAxisCustomizations()
+        this.xAxisConfig().customizations
       )) {
         this.xAxis[xFormat](customFormat);
       }
     }
     // Set the y axis customizations of the y axis.
-    if (this.yAxisCustomizations()) {
+    if (this.yAxisConfig().customizations) {
       for (const [yFormat, customFormat] of Object.entries(
-        this.yAxisCustomizations()
+        this.yAxisConfig().customizations
       )) {
         this.yAxis[yFormat](customFormat);
       }
@@ -101,7 +98,7 @@ export default class MultiLineChart extends RectangularChart {
     const groupSeries = this._svg.append("g").attr("class", "series");
     groupSeries
       .selectAll("g")
-      .data(this._ySeriesNames)
+      .data(this.yConfiguration().numericalSeries)
       .join("g")
       .attr("class", (d) => d);
 
@@ -112,12 +109,11 @@ export default class MultiLineChart extends RectangularChart {
     groupSeries
       .selectAll("g")
       .selectAll("path")
-      // Create an array with an object containing the name of the serie and all data for each series.
       .data((d) => [
         {
           serie: d,
-          values: this.yValues.map((r, i) => ({
-            category: this.xValues.at(i),
+          values: this.data().map((r) => ({
+            category: r[this.xConfiguration().serie],
             value: r[d],
           })),
         },
@@ -125,7 +121,7 @@ export default class MultiLineChart extends RectangularChart {
       .join("path")
       .attr("class", (d) => `${d.serie} serie`)
       .attr("d", (d) => pathGenerator(d.values))
-      .style("stroke", (d) => this.colorScale()(d.serie))
+      .style("stroke", (d) => this.colorScale(d.serie))
       .style("fill", "none");
   }
 
@@ -149,10 +145,10 @@ export default class MultiLineChart extends RectangularChart {
       .selectAll("circle")
       // Create an array of object for each series to add a class and the position of each point
       .data((d) =>
-        this.yValues.map((r, i) => ({
+        this.data().map((r) => ({
           serie: d,
           value: r[d],
-          category: this.xValues.at(i),
+          category: r[this.xConfiguration().serie],
         }))
       )
       .join("circle")
@@ -272,8 +268,8 @@ export default class MultiLineChart extends RectangularChart {
    */
   addCriticalPoints() {
     // What are the max and min point in each series and its x position
-    const criticalPoints = this._ySeriesNames.reduce((acc, serie) => {
-      const currentSerie = this.yValues.map((d) => d[serie]);
+    const criticalPoints = this.yConfiguration().numericalSeries.reduce((acc, serie) => {
+      const currentSerie = this.data().map((d) => d[serie]);
       const maxIndex = greatestIndex(currentSerie);
       const minIndex = leastIndex(currentSerie);
       return {
@@ -281,8 +277,8 @@ export default class MultiLineChart extends RectangularChart {
         [serie]: {
           max: Math.max(...currentSerie),
           min: Math.min(...currentSerie),
-          maxPosition: this.xValues.at(maxIndex),
-          minPosition: this.xValues.at(minIndex),
+          maxPosition: this.data().at(maxIndex)[this.xConfiguration().serie],
+          minPosition: this.data().at(minIndex)[this.xConfiguration().serie],
         },
       };
     }, {});
@@ -328,12 +324,11 @@ export default class MultiLineChart extends RectangularChart {
     const seriesGroup = this._svg.selectAll(".series > g");
     seriesGroup
       .selectAll("text")
-      // Create an array of object for each series to add a class and the position of each point
       .data((d) =>
-        this.yValues.map((r, i) => ({
+        this.data().map((r) => ({
           serie: d,
           value: r[d],
-          category: this.xValues.at(i),
+          category: r[this.xConfiguration().serie],
         }))
       )
       .join("text")

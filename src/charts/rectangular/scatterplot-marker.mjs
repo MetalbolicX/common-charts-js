@@ -107,7 +107,7 @@ export default class ScatterPlotMarker extends ScatterPlot {
     const seriesGroup = this._svg.append("g").attr("class", "series");
     seriesGroup
       .selectAll(".serie")
-      .data(this._ySeriesNames)
+      .data(this.yConfiguration().numericalSeries)
       .join("g")
       .attr("class", (d) => `${d.toLowerCase().replace(" ", "-")} serie`);
 
@@ -115,13 +115,13 @@ export default class ScatterPlotMarker extends ScatterPlot {
       .selectAll(".serie")
       .selectAll("path")
       .data((d) =>
-        this.yValues.map((r, j) => ({
+        this.data().map((r, j) => ({
           serie: d,
-          x: this.xValues.at(j),
+          x: r[this.xConfiguration().serie],
           y: r[d],
-          category: this.categoriesValues.at(j),
+          category: r[this.categoryConfiguration().serie],
           marker:
-            this.markers()[this.markersConfig()[this.categoriesValues.at(j)]] ||
+            this.markers()[this.markersConfig()[r[this.categoryConfiguration().serie]]] ||
             this.markers().error404,
         }))
       )
@@ -136,6 +136,6 @@ export default class ScatterPlotMarker extends ScatterPlot {
       .attr("transform", (d) => `translate(${this.x(d.x)}, ${this.y(d.y)})`)
       .attr("d", (d) => d.marker)
       .style("fill", fillColor)
-      .style("stroke", (d) => this.colorScale()(d.category));
+      .style("stroke", (d) => this.colorScale(d.category));
   }
 }

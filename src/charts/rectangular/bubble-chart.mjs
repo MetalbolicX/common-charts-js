@@ -80,13 +80,13 @@ export default class BubbleChart extends ScatterPlot {
       .selectAll(".serie")
       .selectAll("circle")
       .data((d) =>
-      this.data().map((r) => ({
-        serie: d,
-        x: r[this.xConfiguration().serieName],
-        y: r[d],
-        category: r[this.categoryConfiguration().serie],
-        radius: this.radiusSerie()(r)
-      }))
+        this.data().map((r) => ({
+          serie: d,
+          x: r[this.xConfiguration().serie],
+          y: r[d],
+          category: r[this.categoryConfiguration().serie],
+          radius: this.radiusSerie()(r),
+        }))
       )
       .join("circle")
       .attr("class", (d) => `${d.serie.toLowerCase().replace(" ", "-")} point`)

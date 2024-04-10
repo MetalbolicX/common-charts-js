@@ -84,13 +84,15 @@ export default class ScatterPlot extends RectangularChart {
    * @returns {void}
    */
   init() {
-    const xValues = this.data().map((d) => d[this.xConfiguration().serieName]);
+    /** @type {number[]} */
+    const xValues = this.data().map((d) => d[this.xConfiguration().serie]);
     const xSerieRange = this._serieRange(xValues);
     // Set the scale for the values in the bottom position of the x axis
     this._x = this.xConfiguration()
       .scale.domain(Object.values(xSerieRange))
       .range([this.margin().left, this.width() - this.margin().right]);
 
+    /** @type {number[]} */
     const yValues = this.data().flatMap((d) =>
       this.yConfiguration().numericalSeries.map((serie) => d[serie])
     );
@@ -160,10 +162,10 @@ export default class ScatterPlot extends RectangularChart {
     seriesGroup
       .selectAll(".serie")
       .selectAll("circle")
-      .data((d) =>
+      .data((/** @type {string} */ d) =>
         this.data().map((r) => ({
           serie: d,
-          x: r[this.xConfiguration().serieName],
+          x: r[this.xConfiguration().serie],
           y: r[d],
           category: r[this.categoryConfiguration().serie],
         }))
@@ -264,21 +266,31 @@ export default class ScatterPlot extends RectangularChart {
     return Object.keys(group).map((key) => ({
       category: key,
       totals: {
-        x: group[key].reduce((acc, d) => acc + d[this.xConfiguration().serieName], 0),
-        xSquare: group[key].reduce((acc, d) => acc + d[this.xConfiguration().serieName] ** 2, 0),
+        x: group[key].reduce(
+          (acc, d) => acc + d[this.xConfiguration().serie],
+          0
+        ),
+        xSquare: group[key].reduce(
+          (acc, d) => acc + d[this.xConfiguration().serie] ** 2,
+          0
+        ),
         y: group[key]
           .map((d) => d[this.yConfiguration().numericalSeries.at(0)])
           .reduce((acc, d) => acc + d, 0),
         xy: group[key]
-          .map((d) => d[this.xConfiguration().serieName] * d[this.yConfiguration().numericalSeries.at(0)])
+          .map(
+            (d) =>
+              d[this.xConfiguration().serie] *
+              d[this.yConfiguration().numericalSeries.at(0)]
+          )
           .reduce((acc, d, i) => acc + d, 0),
         n: group[key].length,
         xMin: group[key].reduce(
-          (acc, d) => Math.min(acc, d[this.xConfiguration().serieName]),
+          (acc, d) => Math.min(acc, d[this.xConfiguration().serie]),
           Infinity
         ),
         xMax: group[key].reduce(
-          (acc, d) => Math.max(acc, d[this.xConfiguration().serieName]),
+          (acc, d) => Math.max(acc, d[this.xConfiguration().serie]),
           Number.NEGATIVE_INFINITY
         ),
       },
@@ -342,7 +354,10 @@ export default class ScatterPlot extends RectangularChart {
    * ```
    */
   addTrendingLines() {
-    const categories = this.groupBy(this.data(), this.categoryConfiguration().serie);
+    const categories = this.groupBy(
+      this.data(),
+      this.categoryConfiguration().serie
+    );
     const leastSquaresCalcs = this.leastSquares(categories);
     this.#slopes = this.calculateSlopes(leastSquaresCalcs);
     const coordinates = this.calculateCoordinates(this.slopes);
