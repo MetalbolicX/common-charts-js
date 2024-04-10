@@ -14,14 +14,10 @@ export default class Chart {
   #height;
   #margin;
   #data;
-  #ySeries;
-  #yScale;
+  #yConfiguration;
   #y;
-  #xValues;
-  #yValues;
-  #ySeriesNames;
-  #colorScale;
   #yAxisOffset;
+  #colorScale;
 
   constructor() {
     this.#bindTo = "svg";
@@ -30,14 +26,9 @@ export default class Chart {
     this.#height = 600;
     this.#margin = { top: 0, right: 0, bottom: 0, left: 0 };
     this.#data = undefined;
-    this.#ySeries = undefined;
-    this.#yScale = undefined;
-    this.#y = undefined;
-    this.#xValues = undefined;
-    this.#yValues = undefined;
-    this.#ySeriesNames = undefined;
-    this.#colorScale = undefined;
     this.#yAxisOffset = 0.05;
+    this.#yConfiguration = undefined;
+    this.#colorScale = undefined;
   }
 
   /**
@@ -164,41 +155,38 @@ export default class Chart {
 
   /**
    * @description
-   * Getter and setter a callback to iterate the y series in the dataset.
-   * @param {(d: object) => any} fn The callback function to deal with the y series.
-   * @returns {(d: object) => any|this}
+   * Getter and setter of the configuration of the y numerical values to draw in the chart.
+   * @param {object} config The configuration to give to the y (numerical) values series.
+   * @param {string[]} config.numericalSeries The names of the series to draw in the chart which must have the same name as the dataset.
+   * @param {string[]} config.colorSeries The string of the color to classify a each of the datasets.
+   * @param {D3Scale} config.scale The D3 js function to process the numerical data.
+   * @returns {{numbericalSeries: string[], colorSeries: string[], scale: () => any}|this}
    * @example
    * ```JavaScript
    * const chart = new Chart()
-   *  .data([
-   *    { date: "12-Feb-12", europe: 52, asia: 40, america: 65 },
-   *    { date: "27-Feb-12", europe: 56, asia: 35, america: 70 }
-   *  ])
-   *  .ySeries((d) => ({ // An anonymous function that returns an object with the series to draw in the chart
-   *    europe: d.europe,
-   *    asia: d.asia,
-   *    america: d.america
-   *  }));
+   *  .yConfiguration({
+   *    numericalSeries: ["europe", "asia", "amercia"],
+   *    colorSeries: ["black", "pink", "#aaa"]
+   *    scale: d3.scaleLinear()
+   *  });
    * ```
    */
-  ySeries(fn) {
-    return arguments.length ? ((this.#ySeries = fn), this) : this.#ySeries;
-  }
-
-  /**
-   * @description
-   * Getter and setter for the D3 js scale function to configure the y series scale.
-   * @param {D3Scale} scale The callback function to deal with the y series.
-   * @returns {D3Scale|this}
-   * @see {@link https://d3js.org/d3-scale}
-   * @example
-   * ```JavaScript
-   * const chart = new Chart()
-   *  .yScale(d3.scaleLinear());
-   * ```
-   */
-  yScale(scale) {
-    return arguments.length ? ((this.#yScale = scale), this) : this.#yScale;
+  yConfiguration(config) {
+    if (!arguments.length) {
+      return this.#yConfiguration;
+    }
+    if (
+      typeof config === "object" &&
+      config.numericalSeries.every((serie) => typeof serie === "string") &&
+      config.colorSeries.every((serie) => typeof serie === "string")
+    ) {
+      this.#yConfiguration = { ...config };
+    } else {
+      console.error(
+        `Invalid configuration of the object ${config}, verifiy the documentation`
+      );
+    }
+    return this;
   }
 
   /**
@@ -225,24 +213,6 @@ export default class Chart {
       );
     }
     return this;
-  }
-
-  /**
-   * @description
-   * Getter and setter for the D3 color for each serie.
-   * @param {D3Scale} scale The D3 js scale to set the color for each numeric series.
-   * @returns {callback|this}
-   * @see {@link https://d3js.org/d3-scale-chromatic/categorical}
-   * @example
-   * ```JavaScript
-   * const chart = new Chart()
-   *  .colorScale(d3.scaleOrdinal().range(["black", "green", "blue"]));
-   * ```
-   */
-  colorScale(scale) {
-    return arguments.length
-      ? ((this.#colorScale = scale), this)
-      : this.#colorScale;
   }
 
   /**
@@ -293,43 +263,12 @@ export default class Chart {
 
   /**
    * @description
-   * Show the array of names of all numeric series for the chart.
-   * @param {string[]} names The array of names of all numeric series.
-   * @access @protected
-   */
-  set _ySeriesNames(names) {
-    if (this.constructor !== Chart) {
-      this.#ySeriesNames = [...names];
-    } else {
-      console.error(
-        "Cannot modify protected property outside the class hierarchy"
-      );
-    }
-  }
-
-  /**
-   * @description
-   * Getter of the names of all numeric series for the chart.
-   * @returns {string[]}
-   */
-  get _ySeriesNames() {
-    return this.#ySeriesNames;
-  }
-
-  /**
-   * @description
    * Setter of the D3 js scale function generator for the y to transform data.
    * @param {D3Scale} scale The D3 js scale for the y series.
    * @access @protected
    */
   set _y(scale) {
-    if (this.constructor !== Chart) {
-      this.#y = scale;
-    } else {
-      console.error(
-        "Cannot modify protected property outside the class hierarchy"
-      );
-    }
+    this.#y = scale;
   }
 
   /**
@@ -343,51 +282,20 @@ export default class Chart {
 
   /**
    * @description
-   * Setter for the array of the x serie of data.
-   * @param {any[]} values The array of the x serie data.
+   * Setter of the color scale D3 js scale for the color.
+   * @param {D3Scale} scale The D3 js scale for the color.
    * @access @protected
    */
-  set _xValues(values) {
-    if (this.constructor !== Chart) {
-      this.#xValues = [...values];
-    } else {
-      console.error(
-        "Cannot modify protected property outside the class hierarchy"
-      );
-    }
+  set _colorScale(scale) {
+    this.#colorScale = scale;
   }
 
   /**
    * @description
-   * Getter for the array of the x serie of data.
-   * @returns {any[]}
+   * Getter of the color scale generator of the chart.
+   * @returns {D3Scale}
    */
-  get xValues() {
-    return this.#xValues;
-  }
-
-  /**
-   * @description
-   * Setter of data that forms y series to render in the chart.
-   * @param {object[]} values The array of the y series data.
-   * @access @protected
-   */
-  set _yValues(values) {
-    if (this.constructor !== Chart) {
-      this.#yValues = [...values];
-    } else {
-      console.error(
-        "Cannot modify protected property outside the class hierarchy"
-      );
-    }
-  }
-
-  /**
-   * @description
-   * Getter for the array of the y values of data.
-   * @returns {object[]}
-   */
-  get yValues() {
-    return this.#yValues;
+  get colorScale() {
+    return this.#colorScale;
   }
 }

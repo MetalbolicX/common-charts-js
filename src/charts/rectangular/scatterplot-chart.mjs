@@ -2,11 +2,11 @@ import RectangularChart from "./rectangular-chart.mjs";
 
 ("use strict");
 
+const { scaleOrdinal } = d3;
+
 export default class ScatterPlot extends RectangularChart {
   #radius;
-  #categorySerie;
-  #categoryValues;
-  #serieToShow;
+  #categoryConfiguration;
   /**
    * @description
    * The array of objects with the parameters to calculate the line equation between two points.
@@ -17,6 +17,7 @@ export default class ScatterPlot extends RectangularChart {
     super();
     this.#radius = 1;
     this.#slopes = undefined;
+    this.#categoryConfiguration = undefined;
   }
 
   /**
@@ -38,63 +39,34 @@ export default class ScatterPlot extends RectangularChart {
 
   /**
    * @description
-   * Getter and setter for the series to be rendered in the chart.
-   * @param {string} serieName Name of the serie in the dateset to show the slices in the chart.
-   * @returns {string|this}
-   * @example
-   * ```JavaScript
-   * const chart = new ScatterPlot()
-   *  .serieToShow("income");
-   * ```
-   */
-  serieToShow(serieName) {
-    return arguments.length && typeof serieName === "string"
-      ? ((this.#serieToShow = serieName), this)
-      : this.#serieToShow;
-  }
-
-  /**
-   * @description
    * Getter and setter a callback to iterate in series with has statistical category data type.
-   * @param {(d: object) => any} fn The callback function to deal with some series in the dataset.
-   * @returns {(d: object) => any|this}
+   * @param {object} config The configuration object of the serie that contains the categories in the dataset.
+   * @param {string} config.serie The name of the serie to iterate the categories.
+   * @param {string[]} config.colors The colors to set each category.
+   * @returns {{serie: string, colors: string[]}|this}
    * @example
    * ```JavaScript
    * const chart = new ScatterPlot()
-   *  .data([
-   *    { month: "February", department: "Sales", europe: 52, asia: 40, america: 65 },
-   *    { month: "March", department: "Sales", europe: 56, asia: 35, america: 70 }
-   *  ])
-   *  .categorySerie((d) => d.department);
+   *  .categoryConfiguration({
+   *    serie: "group",
+   *    colors: ["black", "green", "yellow"]
+   *  });
    * ```
    */
-  categorySerie(fn) {
-    return arguments.length
-      ? ((this.#categorySerie = fn), this)
-      : this.#categorySerie;
-  }
-
-  /**
-   * @description
-   * Setter for the categories in the dataset.
-   * @param {string[]} values The array of values for categories in the dataset.
-   * @access @protected
-   */
-  set _categoryValues(values) {
-    if (Array.isArray(values) && values.every((d) => typeof d === "string")) {
-      this.#categoryValues = [...values];
-    } else {
-      console.error("Invalid input values. It must be an array of strings");
+  categoryConfiguration(config) {
+    if (!arguments.length) {
+      return this.#categoryConfiguration;
     }
-  }
-
-  /**
-   * @description
-   * Getter for the categories values in the dataset.
-   * @returns {any[]}
-   */
-  get categoryValues() {
-    return this.#categoryValues;
+    if (
+      typeof config === "object" &&
+      typeof config.serie === "string" &&
+      config.colors.every((color) => typeof color === "string")
+    ) {
+      this.#categoryConfiguration = { ...config };
+    } else {
+      console.error(`Invalid configuration object ${config}`);
+    }
+    return this;
   }
 
   /**
@@ -112,52 +84,51 @@ export default class ScatterPlot extends RectangularChart {
    * @returns {void}
    */
   init() {
-    this._xValues = this.data().map((d) => this.xSerie()(d));
-    const xSerieRange = this._serieRange(this.xValues);
-
+    const xValues = this.data().map((d) => d[this.xConfiguration().serieName]);
+    const xSerieRange = this._serieRange(xValues);
     // Set the scale for the values in the bottom position of the x axis
-    this._x = this.xScale()
-      .domain(Object.values(xSerieRange))
+    this._x = this.xConfiguration()
+      .scale.domain(Object.values(xSerieRange))
       .range([this.margin().left, this.width() - this.margin().right]);
 
-    this._yValues = this.data().map((d) => this.ySeries()(d));
-    const ySerieRange = this._serieRange(this.yValues);
-
+    const yValues = this.data().flatMap((d) =>
+      this.yConfiguration().numericalSeries.map((serie) => d[serie])
+    );
+    const ySerieRange = this._serieRange(yValues);
     // Set the scale for the values in the left position of the y series
-    this._y = this.yScale()
-      .domain([
+    this._y = this.yConfiguration()
+      .scale.domain([
         (1 - this.yAxisOffset()) * ySerieRange.min,
         (1 + this.yAxisOffset()) * ySerieRange.max,
       ])
       .range([this.height() - this.margin().bottom, this.margin().top]);
 
     // Set the axes
-    this._xAxis = this._D3Axis(this.xAxisPosition()).scale(this.x);
-    this._yAxis = this._D3Axis(this.yAxisPosition()).scale(this.y);
-
-    // Set the column names of the y series
-    this._ySeriesNames = [this.serieToShow()];
+    this._xAxis = this._D3Axis(this.xAxisConfig().position).scale(this.x);
+    this._yAxis = this._D3Axis(this.yAxisConfig().position).scale(this.y);
     // Set the svg container of the chart
     this._setSvg();
     // Set the categories of the dataset
-    this._categoryValues = this.data().map((d) => this.categorySerie()(d));
-    // Set the color schema
-    this.colorScale().domain(
-      // Unique values of the categories
-      this.categoryValues.filter((d, i, ns) => ns.indexOf(d) == i)
+    const categoryValues = this.data().map(
+      (d) => d[this.categoryConfiguration().serie]
     );
+    // Set the color schema
+    this._colorScale = scaleOrdinal()
+      .domain(categoryValues.filter((d, i, ns) => ns.indexOf(d) == i))
+      .range(this.categoryConfiguration().colors);
+    // );
     // Set the the x axis customizations of format
-    if (this.xAxisCustomizations()) {
+    if (this.xAxisConfig().customizations) {
       for (const [xFormat, customFormat] of Object.entries(
-        this.xAxisCustomizations()
+        this.xAxisConfig().customizations
       )) {
         this.xAxis[xFormat](customFormat);
       }
     }
     // Set the y axis customizations of the y axis.
-    if (this.yAxisCustomizations()) {
+    if (this.yAxisConfig().customizations) {
       for (const [yFormat, customFormat] of Object.entries(
-        this.yAxisCustomizations()
+        this.yAxisConfig().customizations
       )) {
         this.yAxis[yFormat](customFormat);
       }
@@ -182,7 +153,7 @@ export default class ScatterPlot extends RectangularChart {
     const seriesGroup = this._svg.append("g").attr("class", "series");
     seriesGroup
       .selectAll(".serie")
-      .data(this._ySeriesNames)
+      .data(this.yConfiguration().numericalSeries)
       .join("g")
       .attr("class", (d) => `${d.toLowerCase().replace(" ", "-")} serie`);
 
@@ -190,11 +161,11 @@ export default class ScatterPlot extends RectangularChart {
       .selectAll(".serie")
       .selectAll("circle")
       .data((d) =>
-        this.yValues.map((r, i) => ({
+        this.data().map((r) => ({
           serie: d,
-          x: this.xValues.at(i),
-          y: r,
-          category: this.categoryValues.at(i),
+          x: r[this.xConfiguration().serieName],
+          y: r[d],
+          category: r[this.categoryConfiguration().serie],
         }))
       )
       .join("circle")
@@ -202,7 +173,7 @@ export default class ScatterPlot extends RectangularChart {
       .attr("cx", (d) => this.x(d.x))
       .attr("cy", (d) => this.y(d.y))
       .attr("r", this.radius())
-      .style("fill", (d) => this.colorScale()(d.category));
+      .style("fill", (d) => this.colorScale(d.category));
   }
 
   /**
@@ -244,38 +215,38 @@ export default class ScatterPlot extends RectangularChart {
 
     legendGroup
       .selectAll("rect")
-      .data(this.colorScale().domain())
+      .data(this.colorScale.domain())
       .join("rect")
       .attr("class", (d) => `${d} legend`)
       .attr("width", config.size)
       .attr("height", config.size)
       .attr("y", (_, i) => (config.size + config.spacing) * i)
-      .style("fill", (d) => this.colorScale()(d));
+      .style("fill", (d) => this.colorScale(d));
 
     legendGroup
       .selectAll("text")
-      .data(this.colorScale().domain())
+      .data(this.colorScale.domain())
       .join("text")
       .attr("class", (d) => `${d} legend-name`)
       .attr("x", config.size + config.spacing)
       .attr("y", (_, i) => (config.size + config.spacing) * i)
       .attr("dy", config.size)
       .text((d) => d)
-      .style("fill", (d) => this.colorScale()(d));
+      .style("fill", (d) => this.colorScale(d));
   }
 
   /**
    * @description
    * Group the dataset as and object of arrays.
    * @param {any[]} dataset A dataset of data as list of object.
-   * @param {(d: object) => any} fn A callback function with the field name to iterate through the dataset.
+   * @param {string} serie The name of the serie to group by.
    * @returns {{[key: string]: any[]}}
    */
-  groupBy(dataset, fn) {
+  groupBy(dataset, serie) {
     return dataset.reduce(
       (group, d) => ({
         ...group,
-        [fn(d)]: (group[fn(d)] ?? []).concat(d),
+        [d[serie]]: (group[d[serie]] ?? []).concat(d),
       }),
       {}
     );
@@ -293,21 +264,21 @@ export default class ScatterPlot extends RectangularChart {
     return Object.keys(group).map((key) => ({
       category: key,
       totals: {
-        x: group[key].reduce((acc, d) => acc + this.xSerie()(d), 0),
-        xSquare: group[key].reduce((acc, d) => acc + this.xSerie()(d) ** 2, 0),
+        x: group[key].reduce((acc, d) => acc + d[this.xConfiguration().serieName], 0),
+        xSquare: group[key].reduce((acc, d) => acc + d[this.xConfiguration().serieName] ** 2, 0),
         y: group[key]
-          .map((d) => this.ySeries()(d))
+          .map((d) => d[this.yConfiguration().numericalSeries.at(0)])
           .reduce((acc, d) => acc + d, 0),
         xy: group[key]
-          .map((d) => this.xSerie()(d) * this.ySeries()(d))
+          .map((d) => d[this.xConfiguration().serieName] * d[this.yConfiguration().numericalSeries.at(0)])
           .reduce((acc, d, i) => acc + d, 0),
         n: group[key].length,
         xMin: group[key].reduce(
-          (acc, d) => Math.min(acc, this.xSerie()(d)),
+          (acc, d) => Math.min(acc, d[this.xConfiguration().serieName]),
           Infinity
         ),
         xMax: group[key].reduce(
-          (acc, d) => Math.max(acc, this.xSerie()(d)),
+          (acc, d) => Math.max(acc, d[this.xConfiguration().serieName]),
           Number.NEGATIVE_INFINITY
         ),
       },
@@ -371,7 +342,7 @@ export default class ScatterPlot extends RectangularChart {
    * ```
    */
   addTrendingLines() {
-    const categories = this.groupBy(this.data(), this.categorySerie());
+    const categories = this.groupBy(this.data(), this.categoryConfiguration().serie);
     const leastSquaresCalcs = this.leastSquares(categories);
     this.#slopes = this.calculateSlopes(leastSquaresCalcs);
     const coordinates = this.calculateCoordinates(this.slopes);
@@ -390,6 +361,6 @@ export default class ScatterPlot extends RectangularChart {
       .attr("y1", (d) => this.y(d.yMin))
       .attr("x2", (d) => this.x(d.xMax))
       .attr("y2", (d) => this.y(d.yMax))
-      .style("stroke", (d) => this.colorScale()(d.category));
+      .style("stroke", (d) => this.colorScale(d.category));
   }
 }

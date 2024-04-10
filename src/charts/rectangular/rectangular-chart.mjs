@@ -5,62 +5,119 @@ import Chart from "../chart.mjs";
 const { axisTop, axisRight, axisBottom, axisLeft, format } = d3;
 
 export default class RectangularChart extends Chart {
-  #xSerie;
   #xAxis;
   #yAxis;
-  #xAxisPosition;
-  #yAxisPosition;
-  #xAxisCustomizations;
-  #yAxisCustomizations;
-  #xScale;
+  #yAxisConfiguration;
+  #xAxisConfiguration;
   #x;
+  #xConfiguration;
 
   constructor() {
     super();
-    this.#xSerie = undefined;
     this.#xAxis = undefined;
     this.#yAxis = undefined;
-    this.#xAxisPosition = "bottom";
-    this.#yAxisPosition = "left";
-    this.#xAxisCustomizations = { tickFormat: format(".1f") };
-    this.#yAxisCustomizations = { tickFormat: format(".1f") };
     this.#x = undefined;
-    this.#xScale = undefined;
+    this.#xConfiguration = undefined;
+    this.#yAxisConfiguration = {
+      position: "left",
+      customizations: { tickFormat: format(".1f") },
+    };
+    this.#xAxisConfiguration = {
+      position: "bottom",
+      customizations: { tickFormat: format(".1f") },
+    };
   }
 
   /**
    * @description
-   * Getter and setter a callback to iterate the x serie in the dataset.
-   * @param {(d: object) => any} fn The callback function to deal with the x serie.
-   * @returns {(d: object) => any|this}
+   * Getter and setter of the configuration of the x values to draw in the chart.
+   * @param {object} config The configuration to give to the x values series.
+   * @param {string} config.serieName The names of the serie for the x axis.
+   * @param {D3Scale} config.scale The D3 js function to process the x data.
+   * @returns {{serieName: string, scale: () => any}|this}
    * @example
    * ```JavaScript
    * const chart = new RectangularChart()
-   *  .data([
-   *    { date: "12-Feb-12", europe: 52, asia: 40, america: 65 },
-   *    { date: "27-Feb-12", europe: 56, asia: 35, america: 70 }
-   *  ])
-   *  .xSerie((d) => d.date); // An anonymous function to iterate in the serie for x axis
+   *  .xConfiguration({
+   *    serieName: "date",
+   *    scale: d3.scaleLinear()
+   *  });
    * ```
    */
-  xSerie(fn) {
-    return arguments.length ? ((this.#xSerie = fn), this) : this.#xSerie;
+  xConfiguration(config) {
+    if (!arguments.length) {
+      return this.#xConfiguration;
+    }
+    if (typeof config === "object") {
+      this.#xConfiguration = { ...config };
+    } else {
+      console.error(
+        `Invalid configuration of the object ${config}, verifiy the documentation`
+      );
+    }
+    return this;
   }
 
   /**
    * @description
-   * Getter and setter for the D3 js scale function to configure the x serie scale.
-   * @param {D3Scale} scale The callback function to deal with the x serie.
-   * @returns {D3Scale|this}
+   * Getter and setter of the configuration of the y axis.
+   * @param {object} config Configuration object of the y axis position and customizations.
+   * @param {string} config.position The position of the y axis. It can only be top, right, bottom or left inputs.
+   * @param {object} config.customizations The customizations of the y axis according to the D3 js axis.
+   * @returns {{position: string, customizations: object}|this}
    * @see {@link https://d3js.org/d3-scale}
    * @example
    * ```JavaScript
    * const chart = new RectangularChart()
-   *  .xScale(d3.scaleTime());
+   *  .yAxisConfig({
+   *    position: "right",
+   *    customizations: { tickFormat: d3.format(".1f") }
+   * });
    * ```
    */
-  xScale(scale) {
-    return arguments.length ? ((this.#xScale = scale), this) : this.#xScale;
+  yAxisConfig(config) {
+    if (!arguments.length) {
+      return this.#yAxisConfiguration;
+    }
+    if (
+      ["top", "right", "bottom", "left"].includes(config.position ?? "left")
+    ) {
+      this.#yAxisConfiguration = { ...config };
+    } else {
+      console.error(`Invalid yAxis configuration object ${config}`);
+    }
+    return this;
+  }
+
+  /**
+   * @description
+   * Getter and setter of the configuration of the x axis.
+   * @param {object} config Configuration object of the x axis position and customizations.
+   * @param {string} config.position The position of the x axis. It can only be top, right, bottom or left inputs.
+   * @param {object} config.customizations The customizations of the x axis according to the D3 js axis.
+   * @returns {{position: string, customizations: object}|this}
+   * @see {@link https://d3js.org/d3-scale}
+   * @example
+   * ```JavaScript
+   * const chart = new RectangularChart()
+   *  .xAxisConfig({
+   *    position: "top",
+   *    customizations: { tickFormat: d3.format(".1f") }
+   * });
+   * ```
+   */
+  xAxisConfig(config) {
+    if (!arguments.length) {
+      return this.#xAxisConfiguration;
+    }
+    if (
+      ["top", "right", "bottom", "left"].includes(config.position ?? "bottom")
+    ) {
+      this.#xAxisConfiguration = { ...config };
+    } else {
+      console.error(`Invalid yAxis configuration object ${config}`);
+    }
+    return this;
   }
 
   /**
@@ -98,106 +155,6 @@ export default class RectangularChart extends Chart {
    */
   get xAxis() {
     return this.#xAxis;
-  }
-
-  /**
-   * @description
-   * Getter and setter of the x axis position.
-   * @param {string} position The position of the axis. Only admit the values of "top", "right", "bottom" or "left".
-   * @returns {string|this}
-   * @example
-   * ```JavaScript
-   * const chart = new RectangularChart()
-   *  .xAxisPosition("bottom");
-   * ```
-   */
-  xAxisPosition(position) {
-    if (!arguments.length) {
-      return this.#xAxisPosition;
-    }
-    // Check if the argument is a valid string
-    if (
-      typeof position === "string" &&
-      ["top", "right", "bottom", "left"].includes(position)
-    ) {
-      this.#xAxisPosition = position;
-    } else {
-      console.error(
-        "Invalid xAxisPosition. Must be one of: top, right, bottom, or left."
-      );
-    }
-    return this;
-  }
-
-  /**
-   * @description
-   * Getter and setter for the x format customization. To check more about the D3 axis customizations see the link.
-   * @param {object} config The object with the necessary customizations for the x axis. The Key are the name of the customizations and the value is the customization.
-   * @returns {object|this}
-   * @see {@link https://d3js.org/d3-axis}
-   * @example
-   * ```JavaScript
-   * const chart = new RectangularChart()
-   *  .xAxisCustomizations({
-   *    tickFormat: d3.format(",.0f"),
-   *    tickValues: [1, 2, 3, 5, 8, 13, 21]
-   *  });
-   * ```
-   */
-  xAxisCustomizations(config) {
-    return arguments.length
-      ? ((this.#xAxisCustomizations = { ...config }), this)
-      : this.#xAxisCustomizations;
-  }
-
-  /**
-   * @description
-   * Getter and setter for the y format customization. To check more about the D3 axis customizations see the link.
-   * @param {object} config The object with the necessary customizations for the y axis. The Key are the name of the customizations and the value is the customization.
-   * @returns {object|this}
-   * @see {@link https://d3js.org/d3-axis}
-   * @example
-   * ```JavaScript
-   * const chart = new RectangularChart()
-   *  .yAxisCustomizations({
-   *    tickFormat: d3.format(",.0f"),
-   *    tickValues: [1, 2, 3, 5, 8, 13, 21]
-   *  });
-   * ```
-   */
-  yAxisCustomizations(config) {
-    return arguments.length
-      ? ((this.#yAxisCustomizations = { ...config }), this)
-      : this.#yAxisCustomizations;
-  }
-
-  /**
-   * @description
-   * Getter and setter of the y axis position.
-   * @param {string} position The position of the axis. Only admit the values of "top", "right", "bottom" or "left".
-   * @returns {string|this}
-   * @example
-   * ```JavaScript
-   * const chart = new RectangularChart()
-   *  .yAxisPositiont("height");
-   * ```
-   */
-  yAxisPosition(position) {
-    if (!arguments.length) {
-      return this.#yAxisPosition;
-    }
-    // Check if the argument is a valid string
-    if (
-      typeof position === "string" &&
-      ["top", "right", "bottom", "left"].includes(position)
-    ) {
-      this.#yAxisPosition = position;
-    } else {
-      console.error(
-        "Invalid xAxisPosition. Must be one of: top, right, bottom, or left."
-      );
-    }
-    return this;
   }
 
   /**
@@ -273,7 +230,7 @@ export default class RectangularChart extends Chart {
    * ```
    */
   addXAxis() {
-    const translation = this.#translateAxis(this.xAxisPosition());
+    const translation = this.#translateAxis(this.xAxisConfig().position);
     this._svg
       .append("g")
       .attr("class", "x axis")
@@ -296,7 +253,7 @@ export default class RectangularChart extends Chart {
    * ```
    */
   addYAxis() {
-    const translation = this.#translateAxis(this.yAxisPosition());
+    const translation = this.#translateAxis(this.yAxisConfig().position);
     this._svg
       .append("g")
       .attr("class", "y axis")
