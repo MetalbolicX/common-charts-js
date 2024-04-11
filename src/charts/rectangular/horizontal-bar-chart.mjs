@@ -28,11 +28,11 @@ export default class HBarChart extends VBarChart {
     const ySerieRange = this._serieRange(
       this.isStacked()
         ? yValues.map((d) => d.total)
-        : yValues.flatMap((d) => d.values.map((r) => r.value))
+        : yValues.flatMap((d) => d.values.map((r) => r.y))
     );
     // Set the band scale for the nain categories
     this._x = this.xConfiguration()
-      .scale.domain(this.data().map((d) => d.category))
+      .scale.domain(this.data().map((d) => d.x))
       .range([this.margin().top, this.height() - this.margin().bottom])
       .paddingInner(this.innerPadding());
     // Set the bar chart horizontally
@@ -80,10 +80,10 @@ export default class HBarChart extends VBarChart {
       .selectAll("g")
       .data(this.data())
       .join("g")
-      .attr("transform", (d) => `translate(0, ${this.x(d.category)})`)
+      .attr("transform", (d) => `translate(0, ${this.x(d.x)})`)
       .attr(
         "class",
-        (d) => `${d.category.toLowerCase().replace(" ", "-")} bar-group`
+        (d) => `${d.x.toLowerCase().replace(" ", "-")} bar-group`
       );
 
     barsGroup
@@ -91,12 +91,12 @@ export default class HBarChart extends VBarChart {
       .selectAll("rect")
       .data((d) => d.values)
       .join("rect")
-      .attr("class", (d) => `${d.category.toLowerCase().replace(" ", "-")} bar`)
+      .attr("class", (d) => `${d.x.toLowerCase().replace(" ", "-")} bar`)
       .attr(
         "height",
         this.isStacked() ? this.x.bandwidth() : this.x1.bandwidth()
       )
-      .attr("width", (d) => this.y(d.value) - this.y(this.y.domain().at(0)))
+      .attr("width", (d) => this.y(d.y) - this.y(this.y.domain().at(0)))
       .attr("x", (d) =>
         this.isStacked() ? this.y(d.previous) : this.y(this.y.domain().at(0))
       )
@@ -155,17 +155,17 @@ export default class HBarChart extends VBarChart {
       .join("text")
       .attr(
         "class",
-        (d) => `${d.category.toLowerCase().replace(" ", "-")} text-label`
+        (d) => `${d.x.toLowerCase().replace(" ", "-")} text-label`
       )
       .attr("x", (d) =>
-        this.isStacked() ? this.y(d.previous) : this.y(d.value)
+        this.isStacked() ? this.y(d.previous) : this.y(d.y)
       )
       .attr("y", (d) =>
         this.isStacked() ? this.x.bandwidth() / 2 : this.x1(d.serie)
       )
       .attr("dx", deltaX)
       .attr("dy", this.x1.bandwidth() / 2 + deltaY)
-      .text((d) => this.yAxis.tickFormat()(d.value));
+      .text((d) => this.yAxis.tickFormat()(d.y));
   }
 
   /**

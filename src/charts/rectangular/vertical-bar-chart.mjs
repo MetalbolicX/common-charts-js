@@ -157,20 +157,20 @@ export default class VBarChart extends RectangularChart {
         const percentageFactor = this.isPercentage() ? this.grantTotal : 1;
         const normalizedFactor = this.isNormalized() ? totalPerCategory : 1;
         return {
-          category: d[this.xConfiguration().serie],
+          x: d[this.xConfiguration().serie],
           values: this.yConfiguration()
             .numericalSeries.map((serie) => ({
               serie,
-              value: d[serie],
-              category: d[this.xConfiguration().serie],
+              x: d[this.xConfiguration().serie],
+              y: d[serie],
             }))
-            .sort((a, b) => b.value - a.value)
+            .sort((a, b) => b.y - a.y)
             .map((r, i, ns) => ({
-              category: r.category,
+              x: r.x,
               serie: r.serie,
-              value: r.value / (percentageFactor * normalizedFactor),
+              y: r.y / (percentageFactor * normalizedFactor),
               previous:
-                ns.slice(0, i).reduce((acc, s) => acc + s.value, 0) /
+                ns.slice(0, i).reduce((acc, s) => acc + s.y, 0) /
                 (percentageFactor * normalizedFactor),
             })),
           total: totalPerCategory / (percentageFactor * normalizedFactor),
@@ -203,11 +203,11 @@ export default class VBarChart extends RectangularChart {
     const ySerieRange = this._serieRange(
       this.isStacked()
         ? yValues.map((d) => d.total)
-        : yValues.flatMap((d) => d.values.map((r) => r.value))
+        : yValues.flatMap((d) => d.values.map((r) => r.y))
     );
     // Set the band scale for the nain categories
     this._x = this.xConfiguration()
-      .scale.domain(this.data().map((d) => d.category))
+      .scale.domain(this.data().map((d) => d.x))
       .range([this.margin().right, this.width()])
       .paddingInner(this.innerPadding());
     // Set the bar chart horizontally
@@ -255,26 +255,23 @@ export default class VBarChart extends RectangularChart {
       .selectAll("g")
       .data(this.data())
       .join("g")
-      .attr("transform", (d) => `translate(${this.x(d.category)}, 0)`)
-      .attr(
-        "class",
-        (d) => `${d.category.toLowerCase().replace(" ", "-")} bar-group`
-      );
+      .attr("transform", (d) => `translate(${this.x(d.x)}, 0)`)
+      .attr("class", (d) => `${d.x.toLowerCase().replace(" ", "-")} bar-group`);
 
     barsGroup
       .selectAll("g")
       .selectAll("rect")
       .data((d) => d.values)
       .join("rect")
-      .attr("class", (d) => `${d.category.toLowerCase().replace(" ", "-")} bar`)
+      .attr("class", (d) => `${d.x.toLowerCase().replace(" ", "-")} bar`)
       .attr(
         "width",
         this.isStacked() ? this.x.bandwidth() : this.x1.bandwidth()
       )
-      .attr("height", (d) => this.y(this.y.domain().at(0)) - this.y(d.value))
+      .attr("height", (d) => this.y(this.y.domain().at(0)) - this.y(d.y))
       .attr("x", (d) => (this.isStacked() ? 0 : this.x1(d.serie)))
       .attr("y", (d) =>
-        this.isStacked() ? this.y(d.previous + d.value) : this.y(d.value)
+        this.isStacked() ? this.y(d.previous + d.y) : this.y(d.y)
       )
       .style("fill", (d) => this.colorScale(d.serie));
   }
@@ -327,20 +324,17 @@ export default class VBarChart extends RectangularChart {
       .selectAll("text")
       .data((d) => d.values)
       .join("text")
-      .attr(
-        "class",
-        (d) => `${d.category.toLowerCase().replace(" ", "-")} text-label`
-      )
+      .attr("class", (d) => `${d.x.toLowerCase().replace(" ", "-")} text-label`)
       .attr("x", (d) =>
         this.isStacked()
           ? this.x.bandwidth() / 2
           : this.x1(d.serie) + this.x1.bandwidth() / 2
       )
       .attr("y", (d) =>
-        this.isStacked() ? this.y(d.previous + d.value) : this.y(d.value)
+        this.isStacked() ? this.y(d.previous + d.y) : this.y(d.y)
       )
       .attr("dy", deltaY)
-      .text((d) => this.yAxis.tickFormat()(d.value))
+      .text((d) => this.yAxis.tickFormat()(d.y))
       .style("text-anchor", "middle");
   }
 
