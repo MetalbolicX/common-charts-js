@@ -1,11 +1,10 @@
 import VBarChart from "./vertical-bar-chart.mjs";
 
-const { scaleBand } = d3;
+const { scaleBand, scaleOrdinal } = d3;
 
 ("use strict");
 
 export default class HBarChart extends VBarChart {
-
   constructor() {
     super();
   }
@@ -17,51 +16,44 @@ export default class HBarChart extends VBarChart {
   init() {
     // Select the svg element container for the chart
     this._setSvg();
-    // Set the column names of the y series
-    this._ySeriesNames = Object.keys(this.ySeries()(this.data().at(0)));
     // Set the grant total
     this._setGrantTotal();
     // Rearrange the dataset
     this._reestructureData();
-    // Set the x and y values
-    this._xValues = this.data().map((d) => ({ category: d.category }));
-    this._yValues = this.data().map((d) => ({
+    // Which are the maximum values for the domain of the y configuration
+    const yValues = this.data().map((d) => ({
       values: d.values,
       total: d.total,
     }));
-
     const ySerieRange = this._serieRange(
       this.isStacked()
-        ? this.yValues.map((d) => d.total)
-        : this.yValues.map((d) => d.values.map((r) => r.value)).flat()
+        ? yValues.map((d) => d.total)
+        : yValues.flatMap((d) => d.values.map((r) => r.value))
     );
-
     // Set the band scale for the nain categories
-    this._x = this.xScale()
-      .domain(this.xValues.map((d) => d.category))
+    this._x = this.xConfiguration()
+      .scale.domain(this.data().map((d) => d.category))
       .range([this.margin().top, this.height() - this.margin().bottom])
       .paddingInner(this.innerPadding());
-
     // Set the bar chart horizontally
-    this._y = this.yScale()
-      .domain([0, (1 + this.yAxisOffset()) * ySerieRange.max])
+    this._y = this.yConfiguration()
+      .scale.domain([0, (1 + this.yAxisOffset()) * ySerieRange.max])
       .range([this.margin().left, this.width() - this.margin().right]);
-
     // Set the color schema
-    this.colorScale().domain(this._ySeriesNames);
-
+    this._colorScale = scaleOrdinal()
+      .domain(this.yConfiguration().numericalSeries)
+      .range(this.yConfiguration().colorSeries);
     // Set the axes
-    this._xAxis = this._D3Axis(this.xAxisPosition()).scale(this.x);
-    this._yAxis = this._D3Axis(this.yAxisPosition()).scale(this.y);
-
+    this._xAxis = this._D3Axis(this.xAxisConfig().position).scale(this.x);
+    this._yAxis = this._D3Axis(this.yAxisConfig().position).scale(this.y);
     // Set the second scale for the grouped bar chart if the graph is not stacked
     this._x1 = scaleBand()
-      .domain(this._ySeriesNames)
+      .domain(this.yConfiguration().numericalSeries)
       .range([0, this.x.bandwidth()]);
     // Set the y axis customizations of the y axis.
-    if (this.yAxisCustomizations()) {
+    if (this.yAxisConfig().customizations) {
       for (const [yFormat, customFormat] of Object.entries(
-        this.yAxisCustomizations()
+        this.yAxisConfig().customizations
       )) {
         this.yAxis[yFormat](customFormat);
       }
@@ -109,7 +101,7 @@ export default class HBarChart extends VBarChart {
         this.isStacked() ? this.y(d.previous) : this.y(this.y.domain().at(0))
       )
       .attr("y", (d) => (this.isStacked() ? 0 : this.x1(d.serie)))
-      .style("fill", (d) => this.colorScale()(d.serie));
+      .style("fill", (d) => this.colorScale(d.serie));
   }
 
   /**

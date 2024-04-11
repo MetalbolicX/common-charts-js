@@ -16,7 +16,7 @@ export default class VBarChart extends RectangularChart {
   constructor() {
     super();
     this.#x1 = undefined;
-    this.#innerPadding = 0;
+    this.#innerPadding = 0.1;
     this.#sortAscending = false;
     this.#isStacked = true;
     this.#isPercentage = false;
