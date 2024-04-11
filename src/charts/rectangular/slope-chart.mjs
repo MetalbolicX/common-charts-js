@@ -2,6 +2,8 @@ import RectangularChart from "./rectangular-chart.mjs";
 
 ("use strict");
 
+const { scaleOrdinal } = d3;
+
 export default class SlopeChart extends RectangularChart {
   #radius;
   constructor() {
@@ -34,31 +36,31 @@ export default class SlopeChart extends RectangularChart {
   init() {
     // Select the svg element container for the chart
     this._setSvg();
-    // Set the column names of the y series
-    this._ySeriesNames = Object.keys(this.ySeries()(this.data().at(0)));
-    this._xValues = this.data().map((d) => this.xSerie()(d));
+    const xValues = this.data().map((d) => d[this.xConfiguration().serie]);
     // Set the horizontal values of the x axis
-    this._x = this.xScale()
-      .domain(this._ySeriesNames)
+    this._x = this.xConfiguration()
+      .scale.domain(this.yConfiguration().numericalSeries)
       .range([this.margin().left, this.width() - this.margin().right]);
 
-    this._yValues = this.data().map((d) => this.ySeries()(d));
-    const ySerieRange = this._serieRange(
-      this.yValues.map((d) => Object.values(d)).flat()
+    const yValues = this.data().flatMap((d) =>
+      this.yConfiguration().numericalSeries.map((r) => d[r])
     );
+    const ySerieRange = this._serieRange(yValues);
     // Set the scale for the values in the left position of the y series
-    this._y = this.yScale()
-      .domain([0, (1 + this.yAxisOffset()) * ySerieRange.max])
+    this._y = this.yConfiguration()
+      .scale.domain([0, (1 + this.yAxisOffset()) * ySerieRange.max])
       .range([this.height() - this.margin().bottom, this.margin().top]);
     // Set the axes
-    this._xAxis = this._D3Axis(this.xAxisPosition()).scale(this.x);
-    this._yAxis = this._D3Axis(this.yAxisPosition()).scale(this.y);
+    this._xAxis = this._D3Axis(this.xAxisConfig().position).scale(this.x);
+    this._yAxis = this._D3Axis(this.yAxisConfig().position).scale(this.y);
     // Set the color schema
-    this.colorScale().domain(this.xValues);
+    this._colorScale = scaleOrdinal()
+      .domain(xValues)
+      .range(this.yConfiguration().colorSeries);
     // Set the y axis customizations of the y axis.
-    if (this.yAxisCustomizations()) {
+    if (this.yAxisConfig().customizations) {
       for (const [yFormat, customFormat] of Object.entries(
-        this.yAxisCustomizations()
+        this.yAxisConfig().customizations
       )) {
         this.yAxis[yFormat](customFormat);
       }
@@ -85,33 +87,27 @@ export default class SlopeChart extends RectangularChart {
     groupSeries
       .selectAll("g")
       .data(
-        this.yValues.map((d, i) => ({
-          category: this.xValues.at(i),
-          values: Object.values(d).map((r, j) => ({
-            // It will add the category per each row od the dataset
-            type: this.xValues.at(i),
-            // It will add the previous and actual serie
-            serie: this._ySeriesNames.at(j),
-            // It will the datum value
-            value: r,
+        this.data().map((d, i) => ({
+          x: d[this.xConfiguration().serie],
+          values: this.yConfiguration().numericalSeries.map((serie) => ({
+            x: d[this.xConfiguration().serie],
+            y: d[serie],
+            serie,
           })),
         }))
       )
       .join("g")
-      .attr("class", (d) => d.category.toLowerCase().replace(" ", "-"));
+      .attr("class", (d) => d.x.toLowerCase().replace(" ", "-"));
 
     groupSeries
       .selectAll("g")
       .append("line")
-      .attr(
-        "class",
-        (d) => `${d.category.toLowerCase().replace(" ", "-")} serie`
-      )
+      .attr("class", (d) => `${d.x.toLowerCase().replace(" ", "-")} serie`)
       .attr("x1", (d) => this.x(d.values.at(0).serie))
-      .attr("y1", (d) => this.y(d.values.at(0).value))
+      .attr("y1", (d) => this.y(d.values.at(0).y))
       .attr("x2", (d) => this.x(d.values.at(-1).serie))
-      .attr("y2", (d) => this.y(d.values.at(-1).value))
-      .style("stroke", (d) => this.colorScale()(d.category));
+      .attr("y2", (d) => this.y(d.values.at(-1).y))
+      .style("stroke", (d) => this.colorScale(d.x));
   }
 
   /**
@@ -136,11 +132,11 @@ export default class SlopeChart extends RectangularChart {
       .selectAll("circle")
       .data((d) => d.values)
       .join("circle")
-      .attr("class", (d) => `${d.type.toLowerCase().replace(" ", "-")} point`)
+      .attr("class", (d) => `${d.x.toLowerCase().replace(" ", "-")} point`)
       .attr("cx", (d) => this.x(d.serie))
-      .attr("cy", (d) => this.y(d.value))
+      .attr("cy", (d) => this.y(d.y))
       .attr("r", this.radius())
-      .style("fill", (d) => this.colorScale()(d.type));
+      .style("fill", (d) => this.colorScale(d.x));
   }
 
   /**
@@ -160,18 +156,17 @@ export default class SlopeChart extends RectangularChart {
    */
   addLabels(deltaY = -5) {
     const groupSeries = this._svg.select(".series");
-    console.log("Hola", this.yAxis.tickFormat());
     groupSeries
       .selectAll("g")
       .selectAll("text")
       .data((d) => d.values)
       .join("text")
-      .attr("class", (d) => `${d.type.toLowerCase().replace(" ", "-")} point`)
+      .attr("class", (d) => `${d.x.toLowerCase().replace(" ", "-")} point`)
       .attr("x", (d) => this.x(d.serie))
-      .attr("y", (d) => this.y(d.value))
+      .attr("y", (d) => this.y(d.y))
       .attr("dy", deltaY)
-      .text((d) => this.yAxis.tickFormat()(d.value))
-      .style("fill", (d) => this.colorScale()(d.type))
+      .text((d) => this.yAxis.tickFormat()(d.y))
+      .style("fill", (d) => this.colorScale(d.x))
       .style("text-anchor", "middle");
   }
 
@@ -212,25 +207,28 @@ export default class SlopeChart extends RectangularChart {
         })`
       );
 
+    /** @type {string[]}*/
+    const xValues = this.data().map((d) => d[this.xConfiguration().serie]);
+
     legendGroup
       .selectAll("rect")
-      .data(this.xValues)
+      .data(xValues)
       .join("rect")
       .attr("class", (d) => `${d} legend`)
       .attr("width", config.size)
       .attr("height", config.size)
       .attr("y", (_, i) => (config.size + config.spacing) * i)
-      .style("fill", (d) => this.colorScale()(d));
+      .style("fill", (d) => this.colorScale(d));
 
     legendGroup
       .selectAll("text")
-      .data(this.xValues)
+      .data(xValues)
       .join("text")
       .attr("class", (d) => `${d} legend-name`)
       .attr("x", config.size + config.spacing)
       .attr("y", (_, i) => (config.size + config.spacing) * i)
       .attr("dy", config.size)
       .text((d) => d)
-      .style("fill", (d) => this.colorScale()(d));
+      .style("fill", (d) => this.colorScale(d));
   }
 }
