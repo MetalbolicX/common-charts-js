@@ -82,6 +82,17 @@ export default class MultiLineChart extends RectangularChart {
 
   /**
    * @description
+   * Callback function to iterate throught a serie in the dataset by the serie name.
+   * @param {object} d An object from the dataset.
+   * @param {string} serie Name of the serie to get the data from the dataset.
+   * @returns {{serie: string, x: number, y: number}}
+   */
+  getSerieData(d, serie) {
+    return { serie, x: d[this.xConfiguration().serie], y: d[serie] };
+  }
+
+  /**
+   * @description
    * Create the multiline series graph.
    * @returns {void}
    * @example
@@ -103,21 +114,29 @@ export default class MultiLineChart extends RectangularChart {
       .attr("class", (d) => d);
 
     const pathGenerator = line()
-      .x((d) => this.x(d.category))
-      .y((d) => this.y(d.value));
+      .x((d) => this.x(d.x))
+      .y((d) => this.y(d.y));
+
+    /**
+     * @description
+     * The rearranged data to drawn the line chart with the svg path element.
+     * @param {string} d The serie datum name.
+     * @returns {[{serie: string, values: {x: number, y: number}[]}]}
+     */
+    const rearrangedData = (d) => [
+      {
+        serie: d,
+        values: this.data().map((r) => ({
+          x: r[this.xConfiguration().serie],
+          y: r[d],
+        })),
+      },
+    ];
 
     groupSeries
       .selectAll("g")
       .selectAll("path")
-      .data((d) => [
-        {
-          serie: d,
-          values: this.data().map((r) => ({
-            category: r[this.xConfiguration().serie],
-            value: r[d],
-          })),
-        },
-      ])
+      .data((d) => rearrangedData(d))
       .join("path")
       .attr("class", (d) => `${d.serie} serie`)
       .attr("d", (d) => pathGenerator(d.values))
@@ -143,20 +162,12 @@ export default class MultiLineChart extends RectangularChart {
     const seriesGroup = this._svg.selectAll(".series > g");
     seriesGroup
       .selectAll("circle")
-      // Create an array of object for each series to add a class and the position of each point
-      .data((d) =>
-        this.data().map((r) => ({
-          serie: d,
-          value: r[d],
-          category: r[this.xConfiguration().serie],
-        }))
-      )
+      .data((d) => this.data().map((r) => this.getSerieData(r, d)))
       .join("circle")
       .attr("class", (d) => `${d.serie} point`)
-      .attr("cx", (d) => this.x(d.category))
-      .attr("cy", (d) => this.y(d.value))
+      .attr("cx", (d) => this.x(d.x))
+      .attr("cy", (d) => this.y(d.y))
       .attr("r", this.radius());
-    // .attr("data-position", (d) => d.category);
   }
 
   /**
@@ -201,8 +212,8 @@ export default class MultiLineChart extends RectangularChart {
           const dotSelected = select(e.target);
           dotSelected.attr("r", 2 * this.radius());
           const coordinates = {
-            x: this.xAxis.tickFormat()(dotSelected.datum().category),
-            y: this.yAxis.tickFormat()(dotSelected.datum().value),
+            x: this.xAxis.tickFormat()(dotSelected.datum().x),
+            y: this.yAxis.tickFormat()(dotSelected.datum().y),
           };
 
           const tooltip = select(".tooltip");
@@ -268,20 +279,23 @@ export default class MultiLineChart extends RectangularChart {
    */
   addCriticalPoints() {
     // What are the max and min point in each series and its x position
-    const criticalPoints = this.yConfiguration().numericalSeries.reduce((acc, serie) => {
-      const currentSerie = this.data().map((d) => d[serie]);
-      const maxIndex = greatestIndex(currentSerie);
-      const minIndex = leastIndex(currentSerie);
-      return {
-        ...acc,
-        [serie]: {
-          max: Math.max(...currentSerie),
-          min: Math.min(...currentSerie),
-          maxPosition: this.data().at(maxIndex)[this.xConfiguration().serie],
-          minPosition: this.data().at(minIndex)[this.xConfiguration().serie],
-        },
-      };
-    }, {});
+    const criticalPoints = this.yConfiguration().numericalSeries.reduce(
+      (acc, serie) => {
+        const currentSerie = this.data().map((d) => d[serie]);
+        const maxIndex = greatestIndex(currentSerie);
+        const minIndex = leastIndex(currentSerie);
+        return {
+          ...acc,
+          [serie]: {
+            max: Math.max(...currentSerie),
+            min: Math.min(...currentSerie),
+            maxPosition: this.data().at(maxIndex)[this.xConfiguration().serie],
+            minPosition: this.data().at(minIndex)[this.xConfiguration().serie],
+          },
+        };
+      },
+      {}
+    );
 
     const groupCritical = this._svg
       .append("g")
@@ -324,17 +338,11 @@ export default class MultiLineChart extends RectangularChart {
     const seriesGroup = this._svg.selectAll(".series > g");
     seriesGroup
       .selectAll("text")
-      .data((d) =>
-        this.data().map((r) => ({
-          serie: d,
-          value: r[d],
-          category: r[this.xConfiguration().serie],
-        }))
-      )
+      .data((d) => this.data().map((r) => this.getSerieData(r, d)))
       .join("text")
       .attr("class", (d) => `${d.serie} label`)
-      .attr("x", (d) => this.x(d.category))
-      .attr("y", (d) => this.y(d.value))
-      .text((d) => this.yAxis.tickFormat()(d.value));
+      .attr("x", (d) => this.x(d.x))
+      .attr("y", (d) => this.y(d.y))
+      .text((d) => this.yAxis.tickFormat()(d.y));
   }
 }
