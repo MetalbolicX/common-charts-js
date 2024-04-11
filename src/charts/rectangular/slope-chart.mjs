@@ -36,12 +36,12 @@ export default class SlopeChart extends RectangularChart {
   init() {
     // Select the svg element container for the chart
     this._setSvg();
-    const xValues = this.data().map((d) => d[this.xConfiguration().serie]);
     // Set the horizontal values of the x axis
     this._x = this.xConfiguration()
       .scale.domain(this.yConfiguration().numericalSeries)
       .range([this.margin().left, this.width() - this.margin().right]);
 
+    /** @type {number[]} */
     const yValues = this.data().flatMap((d) =>
       this.yConfiguration().numericalSeries.map((r) => d[r])
     );
@@ -55,7 +55,7 @@ export default class SlopeChart extends RectangularChart {
     this._yAxis = this._D3Axis(this.yAxisConfig().position).scale(this.y);
     // Set the color schema
     this._colorScale = scaleOrdinal()
-      .domain(xValues)
+      .domain(this.data().map((d) => d[this.xConfiguration().serie]))
       .range(this.yConfiguration().colorSeries);
     // Set the y axis customizations of the y axis.
     if (this.yAxisConfig().customizations) {
@@ -207,12 +207,9 @@ export default class SlopeChart extends RectangularChart {
         })`
       );
 
-    /** @type {string[]}*/
-    const xValues = this.data().map((d) => d[this.xConfiguration().serie]);
-
     legendGroup
       .selectAll("rect")
-      .data(xValues)
+      .data(this.colorScale.domain())
       .join("rect")
       .attr("class", (d) => `${d} legend`)
       .attr("width", config.size)
@@ -222,7 +219,7 @@ export default class SlopeChart extends RectangularChart {
 
     legendGroup
       .selectAll("text")
-      .data(xValues)
+      .data(this.colorScale.domain())
       .join("text")
       .attr("class", (d) => `${d} legend-name`)
       .attr("x", config.size + config.spacing)
