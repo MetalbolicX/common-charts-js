@@ -18,7 +18,7 @@ export default class CircleChart extends Chart {
    * @returns {(d: object) => any|this}
    * @example
    * ```JavaScript
-   * const chart = new RectangularChart()
+   * const chart = new CircleChart()
    *  .data([
    *    { date: "12-Feb-12", europe: 52, asia: 40, america: 65 },
    *    { date: "27-Feb-12", europe: 56, asia: 35, america: 70 }

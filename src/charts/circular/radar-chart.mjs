@@ -2,7 +2,7 @@ import CircleChart from "./circle-chart.mjs";
 
 ("use strict");
 
-const { select, lineRadial, curveLinearClosed, format } = d3;
+const { select, lineRadial, curveLinearClosed, format, scaleOrdinal } = d3;
 
 export default class RadarChart extends CircleChart {
   #axisTicks;
@@ -33,26 +33,30 @@ export default class RadarChart extends CircleChart {
     const w = this.width() - this.margin().left - this.margin().right;
     const h = this.height() - this.margin().top - this.margin().bottom;
     this._circleRadius = Math.min(w, h) / 2;
-
-    this._ySeriesNames = Object.keys(this.ySeries()(this.data().at(0)));
     // Set the color schema
-    this.colorScale().domain(this._ySeriesNames);
-    // Separate the values of categories and the numeric series
-    this._xValues = this.data().map((d) => this.xSerie()(d));
-    this._yValues = this.data().map((d) => this.ySeries()(d));
+    this._colorScale = scaleOrdinal()
+      .domain(this.yConfiguration().numericalSeries)
+      .range(this.yConfiguration().colorSeries);
     // Find the highest value of all series
     const ySerieRange = this._serieRange(
-      this.yValues.map((d) => Object.values(d)).flat()
+      this.data().flatMap((d) =>
+        this.yConfiguration().numericalSeries.map((serie) => d[serie])
+      )
     );
     // Add the radians to the series values
-    const addRadians = this.yValues.map((d, i, ns) => ({
-      ...d,
+    const addRadians = this.data().map((d, i, ns) => ({
+      x: this.xSerie()(d),
+      // Create and object with the numerical series and combine with others key and value pairs
+      ...this.yConfiguration().numericalSeries.reduce(
+        (acc, serie) => ({ ...acc, [serie]: d[serie] }),
+        {}
+      ),
       radians: ((2 * Math.PI) / ns.length) * i,
     }));
-    this._yValues = addRadians;
+    this.data(addRadians);
     // Set the scale of the radius
-    this._y = this.yScale()
-      .domain([0, (1 + this.yAxisOffset()) * ySerieRange.max])
+    this._y = this.yConfiguration()
+      .scale.domain([0, (1 + this.yAxisOffset()) * ySerieRange.max])
       .range([0, this.circleRadius]);
     // Select the svg element to bind chart
     this._setSvg();
@@ -136,22 +140,28 @@ export default class RadarChart extends CircleChart {
       .append("g")
       .attr("class", "lines axes");
 
+    /** @type {{x: string, y: number}[]}*/
+    const anglesPerCategory = this.data().map((d) => ({
+      x: d.x,
+      radians: d.radians,
+    }));
+
     groupAxes
       .selectAll("line")
-      .data(this.yValues)
+      .data(anglesPerCategory)
       .join("line")
-      .attr("class", (_, i) => `${this.xValues.at(i)} axis`)
+      .attr("class", (d) => `${d.x.toLowerCase().replace(" ", "-")} axis`)
       .attr("x2", (d) => this.circleRadius * Math.sin(d.radians))
       .attr("y2", (d) => this.circleRadius * Math.cos(d.radians));
 
     groupAxes
       .selectAll("text")
-      .data(this.yValues)
+      .data(anglesPerCategory)
       .join("text")
-      .attr("class", (_, i) => `${this.xValues.at(i)} label`)
+      .attr("class", (d) => `${d.x.toLowerCase().replace(" ", "-")} label`)
       .attr("x", (d) => this.circleRadius * Math.sin(d.radians))
       .attr("y", (d) => -this.circleRadius * Math.cos(d.radians))
-      .text((_, i) => this.xValues.at(i))
+      .text((d) => d.x)
       .style("text-anchor", "middle");
   }
 
@@ -177,28 +187,28 @@ export default class RadarChart extends CircleChart {
 
     const pathsGroup = seriesGroup
       .selectAll("g")
-      .data(this._ySeriesNames)
+      .data(this.yConfiguration().numericalSeries)
       .join("g")
       .attr("class", (d) => `${d.toLowerCase().replace(" ", "-")}`);
 
     // Set the D3 js line radial generator for a serie os data to create the string svg path
     const pathGenerator = lineRadial()
-      .radius((d) => this.y(d.value))
+      .radius((d) => this.y(d.y))
       .angle((d) => d.radian)
       .curve(curveLinearClosed);
 
     pathsGroup
       .append("path")
-      .attr("class", (d) => `${d} serie`)
+      .attr("class", (d) => `${d.toLowerCase().replace(" ", "-")} serie`)
       .attr("d", (d) => {
-        /** @type {{value: number, radian: number}[]}*/
-        const serie = this.yValues.map((r) => ({
-          value: r[d],
+        /** @type {{y: number, radian: number}[]}*/
+        const serie = this.data().map((r) => ({
+          y: r[d],
           radian: r.radians,
         }));
         return pathGenerator(serie);
       })
-      .style("stroke", (d) => this.colorScale()(d));
+      .style("stroke", (d) => this.colorScale(d));
   }
 
   /**
@@ -227,18 +237,25 @@ export default class RadarChart extends CircleChart {
     pathsSeries.each((d, i, ns) => {
       const currentPath = select(ns[i]);
       /** @type {number[]} */
-      const serie = this.yValues.map((r) => r[d]);
+      const serie = this.data().map((r) => r[d]);
       const coordinates = this.#extractCoordinates(
         currentPath.attr("d"),
         serie
       );
-      const parent = select(ns[i].parentElement);
 
+      const parent = select(ns[i].parentElement);
       parent
         .selectAll("text")
         .data(coordinates)
         .join("text")
-        .attr("class", (_, i) => `${d} ${this.xValues.at(i)} label`)
+        .attr(
+          "class",
+          (_, j) =>
+            `${d.toLowerCase().replace(" ", "-")} ${this.data()
+              .at(j)
+              .x.toLowerCase()
+              .replace(" ", "-")} label`
+        )
         .attr("x", (r) => r.x)
         .attr("y", (r) => r.y)
         .text((r) => fnFormat(r.value));
@@ -314,24 +331,24 @@ export default class RadarChart extends CircleChart {
 
     legendGroup
       .selectAll("rect")
-      .data(this._ySeriesNames)
+      .data(this.yConfiguration().numericalSeries)
       .join("rect")
       .attr("class", (d) => `${d} legend`)
       .attr("width", config.size)
       .attr("height", config.size)
       .attr("y", (_, i) => (config.size + config.spacing) * i)
-      .style("fill", (d) => this.colorScale()(d));
+      .style("fill", (d) => this.colorScale(d));
 
     legendGroup
       .selectAll("text")
-      .data(this._ySeriesNames)
+      .data(this.yConfiguration().numericalSeries)
       .join("text")
       .attr("class", (d) => `${d} legend-name`)
       .attr("x", config.size + config.spacing)
       .attr("y", (_, i) => (config.size + config.spacing) * i)
       .attr("dy", config.size)
       .text((d) => d)
-      .style("fill", (d) => this.colorScale()(d));
+      .style("fill", (d) => this.colorScale(d));
   }
 
   /**
