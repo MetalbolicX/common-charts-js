@@ -65,7 +65,7 @@ export default class PolarChart extends PieChart {
     const mainGroup = this._svg.select(".main");
     const groupSeries = mainGroup
       .selectAll(".serie")
-      .data(this._ySeriesNames)
+      .data(this.yConfiguration().numericalSeries)
       .join("g")
       .attr("class", (d) => `${d.toLowerCase().replace(" ", "-")} serie`);
 
@@ -73,12 +73,11 @@ export default class PolarChart extends PieChart {
       .selectAll(".arc")
       .data((d, i) =>
         // Process each serie of data to get the values for the arc path generator
-        pie().value((t) => t.datum)(
-          this.yValues
-            .map((r, j) => ({
-              category: this.xValues.at(j),
-              // datum: r[d],
-              datum: this.serieToShow() === d ? r[d] : r[this.serieToShow()],
+        pie().value((t) => t.y)(
+          this.data()
+            .map((r) => ({
+              x: this.xSerie()(r),
+              y: this.serieToShow() === d ? r[d] : r[this.serieToShow()],
               textValue: r[d],
               serie: d,
               radius: {
@@ -86,13 +85,13 @@ export default class PolarChart extends PieChart {
                 outer: this.sliceSize() * r[this.serieToShow()],
               },
             }))
-            .sort((a, b) => b.datum - a.datum)
+            .sort((a, b) => b.y - a.y)
         )
       )
       .join("g")
       .attr(
         "class",
-        (d) => `${d.data.category.toLowerCase().replace(" ", "-")} arc`
+        (d) => `${d.data.x.toLowerCase().replace(" ", "-")} arc`
       );
 
     groupSlices
@@ -104,9 +103,9 @@ export default class PolarChart extends PieChart {
       )
       .attr(
         "class",
-        (d) => `${d.data.category.toLowerCase().replace(" ", "-")} slice`
+        (d) => `${d.data.x.toLowerCase().replace(" ", "-")} slice`
       )
-      .style("fill", (d) => this.colorScale()(d.data.category));
+      .style("fill", (d) => this.colorScale(d.data.x));
   }
 
   /**
@@ -141,9 +140,9 @@ export default class PolarChart extends PieChart {
       })
       .attr(
         "class",
-        (d) => `${d.data.category.toLowerCase().replace(" ", "-")} label`
+        (d) => `${d.data.x.toLowerCase().replace(" ", "-")} label`
       )
-      .text((d) => `${d.data.category}: ${fnFormat(d.data.textValue)}`)
+      .text((d) => `${d.data.x}: ${fnFormat(d.data.textValue)}`)
       .style("text-anchor", "middle");
   }
 }
