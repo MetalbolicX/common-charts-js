@@ -197,17 +197,19 @@ export default class RadarChart extends CircleChart {
       .angle((d) => d.radian)
       .curve(curveLinearClosed);
 
+    /**
+     * @description
+     * Get all vallues of the specified numerical serie and the radians to create the svg path.
+     * @param {string} serie The name of the serie to get the numerical values.
+     * @returns {{y: number, radian: number}[]}
+     */
+    const getSerie = (serie) =>
+      this.data().map((d) => ({ y: d[serie], radian: d.radians }));
+
     pathsGroup
       .append("path")
       .attr("class", (d) => `${d.toLowerCase().replace(" ", "-")} serie`)
-      .attr("d", (d) => {
-        /** @type {{y: number, radian: number}[]}*/
-        const serie = this.data().map((r) => ({
-          y: r[d],
-          radian: r.radians,
-        }));
-        return pathGenerator(serie);
-      })
+      .attr("d", (d) => pathGenerator(getSerie(d)))
       .style("stroke", (d) => this.colorScale(d));
   }
 
@@ -333,7 +335,7 @@ export default class RadarChart extends CircleChart {
       .selectAll("rect")
       .data(this.yConfiguration().numericalSeries)
       .join("rect")
-      .attr("class", (d) => `${d} legend`)
+      .attr("class", (d) => `${d.toLowerCase().replace(" ", "-")} legend`)
       .attr("width", config.size)
       .attr("height", config.size)
       .attr("y", (_, i) => (config.size + config.spacing) * i)
@@ -343,7 +345,7 @@ export default class RadarChart extends CircleChart {
       .selectAll("text")
       .data(this.yConfiguration().numericalSeries)
       .join("text")
-      .attr("class", (d) => `${d} legend-name`)
+      .attr("class", (d) => `${d.toLowerCase().replace(" ", "-")} legend-name`)
       .attr("x", config.size + config.spacing)
       .attr("y", (_, i) => (config.size + config.spacing) * i)
       .attr("dy", config.size)

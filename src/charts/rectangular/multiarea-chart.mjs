@@ -29,7 +29,7 @@ export default class MultiAreaChart extends MultiLineChart {
       .selectAll("g")
       .data(this.yConfiguration().numericalSeries)
       .join("g")
-      .attr("class", (d) => d);
+      .attr("class", (d) => d.toLowerCase().replace(" ", "-"));
 
     const pathGenerator = area()
       .y0(this.y.range().at(0))
@@ -39,15 +39,16 @@ export default class MultiAreaChart extends MultiLineChart {
     /**
      * @description
      * The rearranged data to drawn the line chart with the svg path element.
-     * @param {string} d The serie datum name.
+     * @param {string} serie The serie datum name.
+     * @param {string} xSerieName The name of the x serie in the dataset.
      * @returns {[{serie: string, values: {x: number, y: number}[]}]}
      */
-    const rearrangedData = (d) => [
+    const rearrangedData = (serie, xSerieName) => [
       {
-        serie: d,
+        serie,
         values: this.data().map((r) => ({
-          x: r[this.xConfiguration().serie],
-          y: r[d],
+          x: r[xSerieName],
+          y: r[serie],
         })),
       },
     ];
@@ -55,7 +56,7 @@ export default class MultiAreaChart extends MultiLineChart {
     groupSeries
       .selectAll("g")
       .selectAll("path")
-      .data((d) => rearrangedData(d))
+      .data((d) => rearrangedData(d, this.xConfiguration().serie))
       .join("path")
       .attr("class", (d) => `${d.serie} serie`)
       .attr("d", (d) => pathGenerator(d.values))

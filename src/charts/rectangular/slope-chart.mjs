@@ -84,18 +84,23 @@ export default class SlopeChart extends RectangularChart {
   addSeries() {
     const groupSeries = this._svg.append("g").attr("class", "series");
 
+    /**
+     * @description
+     * The rearranged data to create the g elements per category
+     * @type {{x: string, values: {serie: string, x: number, y: number}[]}[]}
+     */
+    const series = this.data().map((d) => ({
+      x: d[this.xConfiguration().serie],
+      values: this.yConfiguration().numericalSeries.map((serie) => ({
+        serie,
+        x: d[this.xConfiguration().serie],
+        y: d[serie],
+      })),
+    }));
+
     groupSeries
       .selectAll("g")
-      .data(
-        this.data().map((d, i) => ({
-          x: d[this.xConfiguration().serie],
-          values: this.yConfiguration().numericalSeries.map((serie) => ({
-            x: d[this.xConfiguration().serie],
-            y: d[serie],
-            serie,
-          })),
-        }))
-      )
+      .data(series)
       .join("g")
       .attr("class", (d) => d.x.toLowerCase().replace(" ", "-"));
 
@@ -211,7 +216,7 @@ export default class SlopeChart extends RectangularChart {
       .selectAll("rect")
       .data(this.colorScale.domain())
       .join("rect")
-      .attr("class", (d) => `${d} legend`)
+      .attr("class", (d) => `${d.toLowerCase().replace(" ", "-")} legend`)
       .attr("width", config.size)
       .attr("height", config.size)
       .attr("y", (_, i) => (config.size + config.spacing) * i)
@@ -221,7 +226,7 @@ export default class SlopeChart extends RectangularChart {
       .selectAll("text")
       .data(this.colorScale.domain())
       .join("text")
-      .attr("class", (d) => `${d} legend-name`)
+      .attr("class", (d) => `${d.toLowerCase().replace(" ", "-")} legend-name`)
       .attr("x", config.size + config.spacing)
       .attr("y", (_, i) => (config.size + config.spacing) * i)
       .attr("dy", config.size)

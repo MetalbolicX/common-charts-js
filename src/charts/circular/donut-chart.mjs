@@ -60,19 +60,31 @@ export default class DonutChart extends PieChart {
       .join("g")
       .attr("class", (d) => `${d.toLowerCase().replace(" ", "-")} serie`);
 
+    // The pie data transformation function of D3 js to iterate the numerical values
+    const pieData = pie().value((d) => d.y);
+    /**
+     * @description
+     * The row of the dataset to create the slice of the pie chart.
+     * @param {object} d The row in the dataset.
+     * @param {string} serie The name of the serie to get the numeric values.
+     * @param {number} index The index of the dataset row.
+     * @returns {{x: string, y: number, radius: {inner: number, outer: number}}}
+     */
+    const getSerie = (d, serie, index) => ({
+      x: this.xSerie()(d),
+      y: d[serie],
+      radius: {
+        inner: this.donutSpacing() * (2 * index + 1) * this.circleRadius,
+        outer: this.donutSpacing() * (2 * (index + 1)) * this.circleRadius,
+      },
+    });
+
     const groupSlices = groupSeries
       .selectAll(".arc")
       .data((d, i) =>
-        pie().value((t) => t.y)(
+        pieData(
           this.data()
-            .map((r) => ({
-              x: this.xSerie()(r),
-              y: r[d],
-              radius: {
-                inner: this.donutSpacing() * (2 * i + 1) * this.circleRadius,
-                outer: this.donutSpacing() * (2 * (i + 1)) * this.circleRadius,
-              },
-            }))
+            .map((r) => getSerie(r, d, i))
             .sort((a, b) => b.y - a.y)
         )
       )
@@ -80,7 +92,6 @@ export default class DonutChart extends PieChart {
       .attr(
         "class",
         (d) => `${d.data.x.toLowerCase().replace(" ", "-")} arc`
-        // d => console.log(d)
       );
 
     groupSlices
@@ -90,10 +101,7 @@ export default class DonutChart extends PieChart {
           d
         )
       )
-      .attr(
-        "class",
-        (d) => `${d.data.x.toLowerCase().replace(" ", "-")} slice`
-      )
+      .attr("class", (d) => `${d.data.x.toLowerCase().replace(" ", "-")} slice`)
       .style("fill", (d) => this.colorScale(d.data.x));
   }
 }

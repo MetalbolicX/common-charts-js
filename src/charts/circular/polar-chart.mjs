@@ -69,30 +69,38 @@ export default class PolarChart extends PieChart {
       .join("g")
       .attr("class", (d) => `${d.toLowerCase().replace(" ", "-")} serie`);
 
+    // The pie data transformation function of D3 js to iterate the numerical values
+    const pieData = pie().value((d) => d.y);
+    /**
+     * @description
+     * The row of the dataset to create the slice of the pie chart.
+     * @param {object} d The row in the dataset.
+     * @param {string} serie The name of the serie to get the numeric values.
+     * @param {number} index The index of the dataset row.
+     * @returns {{x: string, y: number, textValue: string, serie: string, radius: {inner: number, outer: number}}}
+     */
+    const getSerie = (d, serie) => ({
+      x: this.xSerie()(d),
+      y: this.serieToShow() === serie ? d[serie] : d[this.serieToShow()],
+      textValue: d[serie],
+      serie,
+      radius: {
+        inner: 0,
+        outer: this.sliceSize() * d[this.serieToShow()],
+      },
+    });
+
     const groupSlices = groupSeries
       .selectAll(".arc")
-      .data((d, i) =>
-        // Process each serie of data to get the values for the arc path generator
-        pie().value((t) => t.y)(
+      .data((d) =>
+        pieData(
           this.data()
-            .map((r) => ({
-              x: this.xSerie()(r),
-              y: this.serieToShow() === d ? r[d] : r[this.serieToShow()],
-              textValue: r[d],
-              serie: d,
-              radius: {
-                inner: 0,
-                outer: this.sliceSize() * r[this.serieToShow()],
-              },
-            }))
+            .map((r) => getSerie(r, d))
             .sort((a, b) => b.y - a.y)
         )
       )
       .join("g")
-      .attr(
-        "class",
-        (d) => `${d.data.x.toLowerCase().replace(" ", "-")} arc`
-      );
+      .attr("class", (d) => `${d.data.x.toLowerCase().replace(" ", "-")} arc`);
 
     groupSlices
       .append("path")
@@ -101,10 +109,7 @@ export default class PolarChart extends PieChart {
           d
         )
       )
-      .attr(
-        "class",
-        (d) => `${d.data.x.toLowerCase().replace(" ", "-")} slice`
-      )
+      .attr("class", (d) => `${d.data.x.toLowerCase().replace(" ", "-")} slice`)
       .style("fill", (d) => this.colorScale(d.data.x));
   }
 
@@ -138,10 +143,7 @@ export default class PolarChart extends PieChart {
           ? `translate(${coordinates})`
           : `translate(${coordinates.at(0) * 2.5}, ${coordinates.at(1) * 2.5})`;
       })
-      .attr(
-        "class",
-        (d) => `${d.data.x.toLowerCase().replace(" ", "-")} label`
-      )
+      .attr("class", (d) => `${d.data.x.toLowerCase().replace(" ", "-")} label`)
       .text((d) => `${d.data.x}: ${fnFormat(d.data.textValue)}`)
       .style("text-anchor", "middle");
   }

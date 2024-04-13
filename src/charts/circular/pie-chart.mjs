@@ -58,28 +58,32 @@ export default class PieChart extends CircleChart {
       .join("g")
       .attr("class", (d) => `${d.toLowerCase().replace(" ", "-")} serie`);
 
+    // The pie data transformation function of D3 js to iterate the numerical values
+    const pieData = pie().value((d) => d.y);
+    /**
+     * @description
+     * The row of the dataset to create the slice of the pie chart.
+     * @param {object} d The row in the dataset.
+     * @param {string} serie The name of the serie to get the numeric values
+     * @returns {{x: string, y: number, radius: {inner: number, outer: number}}}
+     */
+    const getSerie = (d, serie) => ({
+      x: this.xSerie()(d),
+      y: d[serie],
+      radius: { inner: 0, outer: this.circleRadius },
+    });
+
     const groupSlices = groupSeries
       .selectAll(".arc")
       .data((d) =>
-        // Process each serie of data to get the values for the arc path generator
-        pie().value((t) => t.y)(
+        pieData(
           this.data()
-            .map((r) => ({
-              x: this.xSerie()(r),
-              y: r[d],
-              radius: {
-                inner: 0,
-                outer: this.circleRadius,
-              },
-            }))
+            .map((r) => getSerie(r, d))
             .sort((a, b) => b.y - a.y)
         )
       )
       .join("g")
-      .attr(
-        "class",
-        (d) => `${d.data.x.toLowerCase().replace(" ", "-")} arc`
-      );
+      .attr("class", (d) => `${d.data.x.toLowerCase().replace(" ", "-")} arc`);
 
     groupSlices
       .append("path")
@@ -88,10 +92,7 @@ export default class PieChart extends CircleChart {
           d
         )
       )
-      .attr(
-        "class",
-        (d) => `${d.data.x.toLowerCase().replace(" ", "-")} slice`
-      )
+      .attr("class", (d) => `${d.data.x.toLowerCase().replace(" ", "-")} slice`)
       .style("fill", (d) => this.colorScale(d.data.x));
   }
 
@@ -124,10 +125,7 @@ export default class PieChart extends CircleChart {
             .outerRadius(d.data.radius.outer)
             .centroid(d)})`
       )
-      .attr(
-        "class",
-        (d) => `${d.data.x.toLowerCase().replace(" ", "-")} label`
-      )
+      .attr("class", (d) => `${d.data.x.toLowerCase().replace(" ", "-")} label`)
       .text((d) => `${d.data.x}: ${fnFormat(d.data.y)}`)
       .style("text-anchor", "middle");
   }

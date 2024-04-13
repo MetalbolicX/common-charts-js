@@ -85,10 +85,11 @@ export default class MultiLineChart extends RectangularChart {
    * Callback function to iterate throught a serie in the dataset by the serie name.
    * @param {object} d An object from the dataset.
    * @param {string} serie Name of the serie to get the data from the dataset.
+   * @param {string} xSerieName The name of the x serie in the dataset.
    * @returns {{serie: string, x: number, y: number}}
    */
-  getSerieData(d, serie) {
-    return { serie, x: d[this.xConfiguration().serie], y: d[serie] };
+  getSerieData(d, serie, xSerieName) {
+    return { serie, x: d[xSerieName], y: d[serie] };
   }
 
   /**
@@ -111,7 +112,7 @@ export default class MultiLineChart extends RectangularChart {
       .selectAll("g")
       .data(this.yConfiguration().numericalSeries)
       .join("g")
-      .attr("class", (d) => d);
+      .attr("class", (d) => d.toLowerCase().replace(" ", "-"));
 
     const pathGenerator = line()
       .x((d) => this.x(d.x))
@@ -120,15 +121,16 @@ export default class MultiLineChart extends RectangularChart {
     /**
      * @description
      * The rearranged data to drawn the line chart with the svg path element.
-     * @param {string} d The serie datum name.
+     * @param {string} serie The serie datum name.
+     * @param {string} xSerieName The name of the x serie in the dataset.
      * @returns {[{serie: string, values: {x: number, y: number}[]}]}
      */
-    const rearrangedData = (d) => [
+    const rearrangedData = (serie, xSerieName) => [
       {
-        serie: d,
+        serie,
         values: this.data().map((r) => ({
-          x: r[this.xConfiguration().serie],
-          y: r[d],
+          x: r[xSerieName],
+          y: r[serie],
         })),
       },
     ];
@@ -136,7 +138,7 @@ export default class MultiLineChart extends RectangularChart {
     groupSeries
       .selectAll("g")
       .selectAll("path")
-      .data((d) => rearrangedData(d))
+      .data((d) => rearrangedData(d, this.xConfiguration().serie))
       .join("path")
       .attr("class", (d) => `${d.serie} serie`)
       .attr("d", (d) => pathGenerator(d.values))
@@ -162,7 +164,11 @@ export default class MultiLineChart extends RectangularChart {
     const seriesGroup = this._svg.selectAll(".series > g");
     seriesGroup
       .selectAll("circle")
-      .data((d) => this.data().map((r) => this.getSerieData(r, d)))
+      .data((d) =>
+        this.data().map((r) =>
+          this.getSerieData(r, d, this.xConfiguration().serie)
+        )
+      )
       .join("circle")
       .attr("class", (d) => `${d.serie} point`)
       .attr("cx", (d) => this.x(d.x))
@@ -338,7 +344,11 @@ export default class MultiLineChart extends RectangularChart {
     const seriesGroup = this._svg.selectAll(".series > g");
     seriesGroup
       .selectAll("text")
-      .data((d) => this.data().map((r) => this.getSerieData(r, d)))
+      .data((d) =>
+        this.data().map((r) =>
+          this.getSerieData(r, d, this.xConfiguration().serie)
+        )
+      )
       .join("text")
       .attr("class", (d) => `${d.serie} label`)
       .attr("x", (d) => this.x(d.x))

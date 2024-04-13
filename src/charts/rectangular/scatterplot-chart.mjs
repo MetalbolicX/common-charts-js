@@ -139,6 +139,22 @@ export default class ScatterPlot extends RectangularChart {
 
   /**
    * @description
+   * The transformed data to draw in the chart.
+   * @param {object} d A row of data in the dataset.
+   * @param {string} serie The name of the serie to get the value.
+   * @returns {{serie: string, x: number, y: number, category: string}}
+   */
+  getSerie(d, serie) {
+    return {
+      serie,
+      x: d[this.xConfiguration().serie],
+      y: d[serie],
+      category: d[this.categoryConfiguration().serie],
+    };
+  }
+
+  /**
+   * @description
    * Creates the data points in the chart.
    * @returns {void}
    * @example
@@ -162,14 +178,7 @@ export default class ScatterPlot extends RectangularChart {
     seriesGroup
       .selectAll(".serie")
       .selectAll("circle")
-      .data((/** @type {string} */ d) =>
-        this.data().map((r) => ({
-          serie: d,
-          x: r[this.xConfiguration().serie],
-          y: r[d],
-          category: r[this.categoryConfiguration().serie],
-        }))
-      )
+      .data((d) => this.data().map((r) => this.getSerie(r, d)))
       .join("circle")
       .attr("class", (d) => `${d.serie.toLowerCase().replace(" ", "-")} point`)
       .attr("cx", (d) => this.x(d.x))
