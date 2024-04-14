@@ -168,6 +168,7 @@ export default class RadarChart extends CircleChart {
   /**
    * @description
    * Add the series of the radial chart.
+   * @param {boolean} [isToFill=false] Whether the series will be filled or not by the color of each series. By default, it will not be filled.
    * @return {void}
    * @example
    * ```JavaScript
@@ -179,7 +180,7 @@ export default class RadarChart extends CircleChart {
    * chart.addSeries();
    * ```
    */
-  addSeries() {
+  addSeries(isToFill = false) {
     const seriesGroup = this._svg
       .select(".main")
       .append("g")
@@ -210,7 +211,8 @@ export default class RadarChart extends CircleChart {
       .append("path")
       .attr("class", (d) => `${d.toLowerCase().replace(" ", "-")} serie`)
       .attr("d", (d) => pathGenerator(getSerie(d)))
-      .style("stroke", (d) => this.colorScale(d));
+      .style("stroke", (d) => this.colorScale(d))
+      .style("fill", (d) => isToFill ? this.colorScale(d) : null);
   }
 
   /**
