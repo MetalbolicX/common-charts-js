@@ -140,16 +140,16 @@ export default class ScatterPlot extends RectangularChart {
   /**
    * @description
    * The transformed data to draw in the chart.
-   * @param {object} d A row of data in the dataset.
+   * @param {object} row A row of data in the dataset.
    * @param {string} serie The name of the serie to get the value.
    * @returns {{serie: string, x: number, y: number, category: string}}
    */
-  getSerie(d, serie) {
+  getSerie(row, serie) {
     return {
       serie,
-      x: d[this.xConfiguration().serie],
-      y: d[serie],
-      category: d[this.categoryConfiguration().serie],
+      x: row[this.xConfiguration().serie],
+      y: row[serie],
+      category: row[this.categoryConfiguration().serie],
     };
   }
 
@@ -178,7 +178,7 @@ export default class ScatterPlot extends RectangularChart {
     seriesGroup
       .selectAll(".serie")
       .selectAll("circle")
-      .data((d) => this.data().map((r) => this.getSerie(r, d)))
+      .data((d) => this.data().map((row) => this.getSerie(row, d)))
       .join("circle")
       .attr("class", (d) => `${d.serie.toLowerCase().replace(" ", "-")} point`)
       .attr("cx", (d) => this.x(d.x))
@@ -228,7 +228,7 @@ export default class ScatterPlot extends RectangularChart {
       .selectAll("rect")
       .data(this.colorScale.domain())
       .join("rect")
-      .attr("class", (d) => `${d} legend`)
+      .attr("class", (d) => `${d.toLowerCase().replace(" ", "-")} legend`)
       .attr("width", config.size)
       .attr("height", config.size)
       .attr("y", (_, i) => (config.size + config.spacing) * i)
@@ -238,7 +238,7 @@ export default class ScatterPlot extends RectangularChart {
       .selectAll("text")
       .data(this.colorScale.domain())
       .join("text")
-      .attr("class", (d) => `${d} legend-name`)
+      .attr("class", (d) => `${d.toLowerCase().replace(" ", "-")} legend-name`)
       .attr("x", config.size + config.spacing)
       .attr("y", (_, i) => (config.size + config.spacing) * i)
       .attr("dy", config.size)
@@ -255,9 +255,9 @@ export default class ScatterPlot extends RectangularChart {
    */
   groupBy(dataset, serie) {
     return dataset.reduce(
-      (group, d) => ({
+      (group, row) => ({
         ...group,
-        [d[serie]]: (group[d[serie]] ?? []).concat(d),
+        [row[serie]]: (group[row[serie]] ?? []).concat(row),
       }),
       {}
     );

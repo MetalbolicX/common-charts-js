@@ -115,8 +115,8 @@ export default class ScatterPlotMarker extends ScatterPlot {
       .selectAll(".serie")
       .selectAll("path")
       .data((d) =>
-        this.data().map((r) => ({
-          ...this.getSerie(r, d),
+        this.data().map((row) => ({
+          ...this.getSerie(row, d),
           marker:
             this.markers()[
               this.markersConfig()[r[this.categoryConfiguration().serie]]

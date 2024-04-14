@@ -46,9 +46,9 @@ export default class MultiAreaChart extends MultiLineChart {
     const rearrangedData = (serie, xSerieName) => [
       {
         serie,
-        values: this.data().map((r) => ({
-          x: r[xSerieName],
-          y: r[serie],
+        values: this.data().map((row) => ({
+          x: row[xSerieName],
+          y: row[serie],
         })),
       },
     ];

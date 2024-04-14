@@ -19,7 +19,6 @@ export default class PieChart extends CircleChart {
     const w = this.width() - (this.margin().right + this.margin().left);
     const h = this.height() - (this.margin().top + this.margin().bottom);
     this._circleRadius = Math.min(w, h) / 2;
-    // Set the column names of the y series
     // Set the svg container of the chart
     this._setSvg();
     // Set the color schema
@@ -63,13 +62,13 @@ export default class PieChart extends CircleChart {
     /**
      * @description
      * The row of the dataset to create the slice of the pie chart.
-     * @param {object} d The row in the dataset.
+     * @param {object} row The row in the dataset.
      * @param {string} serie The name of the serie to get the numeric values
      * @returns {{x: string, y: number, radius: {inner: number, outer: number}}}
      */
-    const getSerie = (d, serie) => ({
-      x: this.xSerie()(d),
-      y: d[serie],
+    const getSerie = (row, serie) => ({
+      x: this.xSerie()(row),
+      y: row[serie],
       radius: { inner: 0, outer: this.circleRadius },
     });
 
@@ -78,7 +77,7 @@ export default class PieChart extends CircleChart {
       .data((d) =>
         pieData(
           this.data()
-            .map((r) => getSerie(r, d))
+            .map((row) => getSerie(row, d))
             .sort((a, b) => b.y - a.y)
         )
       )
@@ -172,7 +171,7 @@ export default class PieChart extends CircleChart {
       .selectAll("rect")
       .data(this.colorScale.domain())
       .join("rect")
-      .attr("class", (d) => `${d} legend`)
+      .attr("class", (d) => `${d.toLowerCase().replace(" ", "-")} legend`)
       .attr("width", config.size)
       .attr("height", config.size)
       .attr("y", (_, i) => (config.size + config.spacing) * i)
@@ -182,7 +181,7 @@ export default class PieChart extends CircleChart {
       .selectAll("text")
       .data(this.colorScale.domain())
       .join("text")
-      .attr("class", (d) => `${d} legend-name`)
+      .attr("class", (d) => `${d.toLowerCase().replace(" ", "-")} legend-name`)
       .attr("x", config.size + config.spacing)
       .attr("y", (_, i) => (config.size + config.spacing) * i)
       .attr("dy", config.size)

@@ -42,8 +42,8 @@ export default class SlopeChart extends RectangularChart {
       .range([this.margin().left, this.width() - this.margin().right]);
 
     /** @type {number[]} */
-    const yValues = this.data().flatMap((d) =>
-      this.yConfiguration().numericalSeries.map((r) => d[r])
+    const yValues = this.data().flatMap((row) =>
+      this.yConfiguration().numericalSeries.map((serie) => row[serie])
     );
     const ySerieRange = this._serieRange(yValues);
     // Set the scale for the values in the left position of the y series
@@ -55,7 +55,7 @@ export default class SlopeChart extends RectangularChart {
     this._yAxis = this._D3Axis(this.yAxisConfig().position).scale(this.y);
     // Set the color schema
     this._colorScale = scaleOrdinal()
-      .domain(this.data().map((d) => d[this.xConfiguration().serie]))
+      .domain(this.data().map((row) => row[this.xConfiguration().serie]))
       .range(this.yConfiguration().colorSeries);
     // Set the y axis customizations of the y axis.
     if (this.yAxisConfig().customizations) {
@@ -89,12 +89,12 @@ export default class SlopeChart extends RectangularChart {
      * The rearranged data to create the g elements per category
      * @type {{x: string, values: {serie: string, x: number, y: number}[]}[]}
      */
-    const series = this.data().map((d) => ({
-      x: d[this.xConfiguration().serie],
+    const series = this.data().map((row) => ({
+      x: row[this.xConfiguration().serie],
       values: this.yConfiguration().numericalSeries.map((serie) => ({
         serie,
-        x: d[this.xConfiguration().serie],
-        y: d[serie],
+        x: row[this.xConfiguration().serie],
+        y: row[serie],
       })),
     }));
 

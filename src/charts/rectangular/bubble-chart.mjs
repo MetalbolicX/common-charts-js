@@ -80,9 +80,9 @@ export default class BubbleChart extends ScatterPlot {
       .selectAll(".serie")
       .selectAll("circle")
       .data((d) =>
-        this.data().map((r) => ({
-          ...this.getSerie(r, d),
-          radius: this.radiusSerie()(r),
+        this.data().map((row) => ({
+          ...this.getSerie(row, d),
+          radius: this.radiusSerie()(row),
         }))
       )
       .join("circle")

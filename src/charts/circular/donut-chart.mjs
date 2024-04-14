@@ -65,14 +65,14 @@ export default class DonutChart extends PieChart {
     /**
      * @description
      * The row of the dataset to create the slice of the pie chart.
-     * @param {object} d The row in the dataset.
+     * @param {object} row The row in the dataset.
      * @param {string} serie The name of the serie to get the numeric values.
      * @param {number} index The index of the dataset row.
      * @returns {{x: string, y: number, radius: {inner: number, outer: number}}}
      */
-    const getSerie = (d, serie, index) => ({
-      x: this.xSerie()(d),
-      y: d[serie],
+    const getSerie = (row, serie, index) => ({
+      x: this.xSerie()(row),
+      y: row[serie],
       radius: {
         inner: this.donutSpacing() * (2 * index + 1) * this.circleRadius,
         outer: this.donutSpacing() * (2 * (index + 1)) * this.circleRadius,
@@ -84,7 +84,7 @@ export default class DonutChart extends PieChart {
       .data((d, i) =>
         pieData(
           this.data()
-            .map((r) => getSerie(r, d, i))
+            .map((row) => getSerie(row, d, i))
             .sort((a, b) => b.y - a.y)
         )
       )

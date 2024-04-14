@@ -74,19 +74,19 @@ export default class PolarChart extends PieChart {
     /**
      * @description
      * The row of the dataset to create the slice of the pie chart.
-     * @param {object} d The row in the dataset.
+     * @param {object} row The row in the dataset.
      * @param {string} serie The name of the serie to get the numeric values.
      * @param {number} index The index of the dataset row.
      * @returns {{x: string, y: number, textValue: string, serie: string, radius: {inner: number, outer: number}}}
      */
-    const getSerie = (d, serie) => ({
-      x: this.xSerie()(d),
-      y: this.serieToShow() === serie ? d[serie] : d[this.serieToShow()],
-      textValue: d[serie],
+    const getSerie = (row, serie) => ({
+      x: this.xSerie()(row),
+      y: this.serieToShow() === serie ? row[serie] : row[this.serieToShow()],
+      textValue: row[serie],
       serie,
       radius: {
         inner: 0,
-        outer: this.sliceSize() * d[this.serieToShow()],
+        outer: this.sliceSize() * row[this.serieToShow()],
       },
     });
 
@@ -95,7 +95,7 @@ export default class PolarChart extends PieChart {
       .data((d) =>
         pieData(
           this.data()
-            .map((r) => getSerie(r, d))
+            .map((row) => getSerie(row, d))
             .sort((a, b) => b.y - a.y)
         )
       )

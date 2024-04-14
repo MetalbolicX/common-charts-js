@@ -39,16 +39,16 @@ export default class RadarChart extends CircleChart {
       .range(this.yConfiguration().colorSeries);
     // Find the highest value of all series
     const ySerieRange = this._serieRange(
-      this.data().flatMap((d) =>
-        this.yConfiguration().numericalSeries.map((serie) => d[serie])
+      this.data().flatMap((row) =>
+        this.yConfiguration().numericalSeries.map((serie) => row[serie])
       )
     );
     // Add the radians to the series values
-    const addRadians = this.data().map((d, i, ns) => ({
-      x: this.xSerie()(d),
+    const addRadians = this.data().map((row, i, ns) => ({
+      x: this.xSerie()(row),
       // Create and object with the numerical series and combine with others key and value pairs
       ...this.yConfiguration().numericalSeries.reduce(
-        (acc, serie) => ({ ...acc, [serie]: d[serie] }),
+        (acc, serie) => ({ ...acc, [serie]: row[serie] }),
         {}
       ),
       radians: ((2 * Math.PI) / ns.length) * i,
@@ -141,9 +141,9 @@ export default class RadarChart extends CircleChart {
       .attr("class", "lines axes");
 
     /** @type {{x: string, y: number}[]}*/
-    const anglesPerCategory = this.data().map((d) => ({
-      x: d.x,
-      radians: d.radians,
+    const anglesPerCategory = this.data().map((row) => ({
+      x: row.x,
+      radians: row.radians,
     }));
 
     groupAxes
@@ -204,7 +204,7 @@ export default class RadarChart extends CircleChart {
      * @returns {{y: number, radian: number}[]}
      */
     const getSerie = (serie) =>
-      this.data().map((d) => ({ y: d[serie], radian: d.radians }));
+      this.data().map((row) => ({ y: row[serie], radian: row.radians }));
 
     pathsGroup
       .append("path")
@@ -239,7 +239,7 @@ export default class RadarChart extends CircleChart {
     pathsSeries.each((d, i, ns) => {
       const currentPath = select(ns[i]);
       /** @type {number[]} */
-      const serie = this.data().map((r) => r[d]);
+      const serie = this.data().map((row) => row[d]);
       const coordinates = this.#extractCoordinates(
         currentPath.attr("d"),
         serie

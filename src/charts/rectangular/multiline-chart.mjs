@@ -83,13 +83,13 @@ export default class MultiLineChart extends RectangularChart {
   /**
    * @description
    * Callback function to iterate throught a serie in the dataset by the serie name.
-   * @param {object} d An object from the dataset.
+   * @param {object} row An object from the dataset.
    * @param {string} serie Name of the serie to get the data from the dataset.
    * @param {string} xSerieName The name of the x serie in the dataset.
    * @returns {{serie: string, x: number, y: number}}
    */
-  getSerieData(d, serie, xSerieName) {
-    return { serie, x: d[xSerieName], y: d[serie] };
+  getSerieData(row, serie, xSerieName) {
+    return { serie, x: row[xSerieName], y: row[serie] };
   }
 
   /**
@@ -128,9 +128,9 @@ export default class MultiLineChart extends RectangularChart {
     const rearrangedData = (serie, xSerieName) => [
       {
         serie,
-        values: this.data().map((r) => ({
-          x: r[xSerieName],
-          y: r[serie],
+        values: this.data().map((row) => ({
+          x: row[xSerieName],
+          y: row[serie],
         })),
       },
     ];
@@ -161,12 +161,13 @@ export default class MultiLineChart extends RectangularChart {
    * ```
    */
   addPoints() {
-    const seriesGroup = this._svg.selectAll(".series > g");
+    // const seriesGroup = this._svg.selectAll(".series > g");
+    const seriesGroup = this._svg.select(".series").selectChildren("g");
     seriesGroup
       .selectAll("circle")
       .data((d) =>
-        this.data().map((r) =>
-          this.getSerieData(r, d, this.xConfiguration().serie)
+        this.data().map((row) =>
+          this.getSerieData(row, d, this.xConfiguration().serie)
         )
       )
       .join("circle")
@@ -341,12 +342,12 @@ export default class MultiLineChart extends RectangularChart {
    * ```
    */
   addLabels() {
-    const seriesGroup = this._svg.selectAll(".series > g");
+    const seriesGroup = this._svg.selectAll(".series").selectChildren("g");
     seriesGroup
       .selectAll("text")
       .data((d) =>
-        this.data().map((r) =>
-          this.getSerieData(r, d, this.xConfiguration().serie)
+        this.data().map((row) =>
+          this.getSerieData(row, d, this.xConfiguration().serie)
         )
       )
       .join("text")

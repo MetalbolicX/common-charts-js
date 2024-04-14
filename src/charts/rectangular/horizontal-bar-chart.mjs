@@ -21,9 +21,9 @@ export default class HBarChart extends VBarChart {
     // Rearrange the dataset
     this._reestructureData();
     // Which are the maximum values for the domain of the y configuration
-    const yValues = this.data().map((d) => ({
-      values: d.values,
-      total: d.total,
+    const yValues = this.data().map((row) => ({
+      values: row.values,
+      total: row.total,
     }));
     const ySerieRange = this._serieRange(
       this.isStacked()
@@ -32,7 +32,7 @@ export default class HBarChart extends VBarChart {
     );
     // Set the band scale for the nain categories
     this._x = this.xConfiguration()
-      .scale.domain(this.data().map((d) => d.x))
+      .scale.domain(this.data().map((row) => row.x))
       .range([this.margin().top, this.height() - this.margin().bottom])
       .paddingInner(this.innerPadding());
     // Set the bar chart horizontally

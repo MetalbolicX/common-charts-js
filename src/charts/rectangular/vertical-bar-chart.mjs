@@ -150,27 +150,27 @@ export default class VBarChart extends RectangularChart {
    */
   _reestructureData() {
     const records = this.data()
-      .map((d) => {
+      .map((row) => {
         const totalPerCategory = this.yConfiguration()
-          .numericalSeries.flatMap((serie) => d[serie])
-          .reduce((acc, r) => acc + r, 0);
+          .numericalSeries.flatMap((serie) => row[serie])
+          .reduce((acc, d) => acc + d, 0);
         const percentageFactor = this.isPercentage() ? this.grantTotal : 1;
         const normalizedFactor = this.isNormalized() ? totalPerCategory : 1;
         return {
-          x: d[this.xConfiguration().serie],
+          x: row[this.xConfiguration().serie],
           values: this.yConfiguration()
             .numericalSeries.map((serie) => ({
               serie,
-              x: d[this.xConfiguration().serie],
-              y: d[serie],
+              x: row[this.xConfiguration().serie],
+              y: row[serie],
             }))
             .sort((a, b) => b.y - a.y)
-            .map((r, i, ns) => ({
-              x: r.x,
-              serie: r.serie,
-              y: r.y / (percentageFactor * normalizedFactor),
+            .map((d, i, ns) => ({
+              x: d.x,
+              serie: d.serie,
+              y: d.y / (percentageFactor * normalizedFactor),
               previous:
-                ns.slice(0, i).reduce((acc, s) => acc + s.y, 0) /
+                ns.slice(0, i).reduce((acc, r) => acc + r.y, 0) /
                 (percentageFactor * normalizedFactor),
             })),
           total: totalPerCategory / (percentageFactor * normalizedFactor),
@@ -196,9 +196,9 @@ export default class VBarChart extends RectangularChart {
     // Rearrange the dataset
     this._reestructureData();
     // Which are the maximum values for the domain of the y configuration
-    const yValues = this.data().map((d) => ({
-      values: d.values,
-      total: d.total,
+    const yValues = this.data().map((row) => ({
+      values: row.values,
+      total: row.total,
     }));
     const ySerieRange = this._serieRange(
       this.isStacked()
@@ -207,7 +207,7 @@ export default class VBarChart extends RectangularChart {
     );
     // Set the band scale for the nain categories
     this._x = this.xConfiguration()
-      .scale.domain(this.data().map((d) => d.x))
+      .scale.domain(this.data().map((row) => row.x))
       .range([this.margin().right, this.width()])
       .paddingInner(this.innerPadding());
     // Set the bar chart horizontally
