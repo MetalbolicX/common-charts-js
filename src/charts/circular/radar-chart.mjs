@@ -212,7 +212,7 @@ export default class RadarChart extends CircleChart {
       .attr("class", (d) => `${d.toLowerCase().replace(" ", "-")} serie`)
       .attr("d", (d) => pathGenerator(getSerie(d)))
       .style("stroke", (d) => this.colorScale(d))
-      .style("fill", (d) => isToFill ? this.colorScale(d) : null);
+      .style("fill", (d) => (isToFill ? this.colorScale(d) : null));
   }
 
   /**
@@ -240,8 +240,11 @@ export default class RadarChart extends CircleChart {
 
     pathsSeries.each((d, i, ns) => {
       const currentPath = select(ns[i]);
-      /** @type {number[]} */
-      const serie = this.data().map((row) => row[d]);
+      /** @type {{category: string, value: number}[]} */
+      const serie = this.data().map((row) => ({
+        value: row[d],
+        category: row.x,
+      }));
       const coordinates = this.#extractCoordinates(
         currentPath.attr("d"),
         serie
@@ -254,15 +257,14 @@ export default class RadarChart extends CircleChart {
         .join("text")
         .attr(
           "class",
-          (_, j) =>
-            `${d.toLowerCase().replace(" ", "-")} ${this.data()
-              .at(j)
-              .x.toLowerCase()
+          (r) =>
+            `${d.toLowerCase().replace(" ", "-")} ${r.category
+              .toLowerCase()
               .replace(" ", "-")} label`
         )
-        .attr("x", (r) => r.x)
-        .attr("y", (r) => r.y)
-        .text((r) => fnFormat(r.value));
+        .attr("x", (r) => r.xPosition)
+        .attr("y", (r) => r.yPosition)
+        .text((r) => fnFormat(r.y));
     });
   }
 
@@ -270,8 +272,8 @@ export default class RadarChart extends CircleChart {
    * @description
    * From a svg path which was created using line radial, extract the x and y coordinates.
    * @param {string} svgPath The string of the SVG path element.
-   * @param {number[]} serieValues The values of data points.
-   * @returns {{x: number, y: number}[]}
+   * @param {{category: string, value: number}[]} serieValues The values of data points.
+   * @returns {{xPosition: number, yPosition: number, y: number, category: string}[]}
    */
   #extractCoordinates(svgPath, serieValues) {
     const re = /[-+]?\d+(\.\d+)?/g;
@@ -281,17 +283,18 @@ export default class RadarChart extends CircleChart {
         // Iterate to each pair of matches to rearrange the numbers in x and y
         // rectangular coordinates. Return null when the positioning is an odd number
         // Later the null's will be removed
-        if (i % 2 === 0) {
-          const x = +match;
-          const y = +matches.at(i + 1);
-          return { x, y };
+        if (!(i % 2)) {
+          const xPosition = +match;
+          const yPosition = +matches.at(i + 1);
+          return { xPosition, yPosition };
         }
         return null;
       })
       .filter((match) => match)
       .map((match, i) => ({
         ...match,
-        value: serieValues.at(i),
+        y: serieValues.at(i).value,
+        category: serieValues.at(i).category,
       }));
   }
 
