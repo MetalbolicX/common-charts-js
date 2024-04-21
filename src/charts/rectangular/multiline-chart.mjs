@@ -34,18 +34,23 @@ export default class MultiLineChart extends RectangularChart {
    * @returns {void}
    */
   init() {
-    const xValues = this.data().map((d) => d[this.xConfiguration().serie]);
-    const xSerieRange = this._serieRange(xValues);
-
+    const xSerieRange = this._serieRange(
+      this.data().map((d) => d[this.xConfiguration().serie])
+    );
     // Set the scale for the values in the bottom position of the x axis
     this._x = this.xConfiguration()
       .scale.domain(Object.values(xSerieRange))
       .range([this.margin().left, this.width() - this.margin().right]);
 
-    const yValues = this.data().flatMap((d) =>
-      this.yConfiguration().numericalSeries.map((serie) => d[serie])
+    const dataSample = this._getNumericalRow(this.data().at(0), [
+      this.xConfiguration().serie,
+      this.categorySerie(),
+    ]);
+    // Set the names of the numerical series
+    this._ySeries = Object.keys(dataSample);
+    const ySerieRange = this._serieRange(
+      this.data().flatMap((d) => this.ySeries.map((serie) => d[serie]))
     );
-    const ySerieRange = this._serieRange(yValues);
     // Set the scale for the values in the left position of the y series
     this._y = this.yConfiguration()
       .scale.domain([
@@ -60,7 +65,7 @@ export default class MultiLineChart extends RectangularChart {
     this._setSvg();
     // Set the color schema
     this._colorScale = scaleOrdinal()
-      .domain(this.yConfiguration().numericalSeries)
+      .domain(this.ySeries)
       .range(this.yConfiguration().colorSeries);
     // Set the the x axis customizations of format
     if (this.xAxisConfig().customizations) {
@@ -94,23 +99,24 @@ export default class MultiLineChart extends RectangularChart {
 
   /**
    * @description
-   * Create the multiline series graph.
+   * Add all the series or just one series to the chart.
+   * @param {string} name The name of the serie to draw if one one will be specified.
    * @returns {void}
-   * @example
-   * ```JavaScript
-   * // Set all the parameters of the chart
-   * const chart = new MultiLineChart()
-   *  ...;
-   *
-   * chart.init();
-   * char.addSeries();
-   * ```
    */
-  addSeries() {
-    const groupSeries = this._svg.append("g").attr("class", "series");
+  #addSeries(name) {
+    const groupSeries = this._svg
+      .selectAll(".series")
+      .data([null])
+      .join("g")
+      .attr("class", "series");
+
+    this._seriesShown = !name
+      ? this.ySeries
+      : this.ySeries.filter((serie) => serie === name);
+
     groupSeries
       .selectAll("g")
-      .data(this.yConfiguration().numericalSeries)
+      .data(this.seriesShown)
       .join("g")
       .attr("class", (d) => d.toLowerCase().replace(" ", "-"));
 
@@ -144,6 +150,43 @@ export default class MultiLineChart extends RectangularChart {
       .attr("d", (d) => pathGenerator(d.values))
       .style("stroke", (d) => this.colorScale(d.serie))
       .style("fill", "none");
+  }
+
+  /**
+   * @description
+   * Create the multiline series graph.
+   * @returns {void}
+   * @example
+   * ```JavaScript
+   * // Set all the parameters of the chart
+   * const chart = new MultiLineChart()
+   *  ...;
+   *
+   * chart.init();
+   * char.addAllSeries();
+   * ```
+   */
+  addAllSeries() {
+    this.#addSeries("");
+  }
+
+  /**
+   * @description
+   * Create the just one serie in the chart by the given name.
+   * @param {String} name The name of the serie to create.
+   * @returns {void}
+   * @example
+   * ```JavaScript
+   * // Set all the parameters of the chart
+   * const chart = new MultiLineChart()
+   *  ...;
+   *
+   * chart.init();
+   * char.addSerie();
+   * ```
+   */
+  addSerie(name) {
+    this.#addSeries(name);
   }
 
   /**
@@ -286,26 +329,25 @@ export default class MultiLineChart extends RectangularChart {
    */
   addCriticalPoints() {
     // What are the max and min point in each series and its x position
-    const criticalPoints = this.yConfiguration().numericalSeries.reduce(
-      (acc, serie) => {
-        const currentSerie = this.data().map((d) => d[serie]);
-        const maxIndex = greatestIndex(currentSerie);
-        const minIndex = leastIndex(currentSerie);
-        return {
-          ...acc,
-          [serie]: {
-            max: Math.max(...currentSerie),
-            min: Math.min(...currentSerie),
-            maxPosition: this.data().at(maxIndex)[this.xConfiguration().serie],
-            minPosition: this.data().at(minIndex)[this.xConfiguration().serie],
-          },
-        };
-      },
-      {}
-    );
+    const criticalPoints = this.ySeries.reduce((acc, serie) => {
+      const currentSerie = this.data().map((d) => d[serie]);
+      const maxIndex = greatestIndex(currentSerie);
+      const minIndex = leastIndex(currentSerie);
+      return {
+        ...acc,
+        [serie]: {
+          max: Math.max(...currentSerie),
+          min: Math.min(...currentSerie),
+          maxPosition: this.data().at(maxIndex)[this.xConfiguration().serie],
+          minPosition: this.data().at(minIndex)[this.xConfiguration().serie],
+        },
+      };
+    }, {});
 
     const groupCritical = this._svg
-      .append("g")
+      .selectAll(".critical-points")
+      .data([null])
+      .join("g")
       .attr("class", "critical-points");
 
     for (const key in criticalPoints) {

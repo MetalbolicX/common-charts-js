@@ -33,27 +33,18 @@ export default class RadarChart extends CircleChart {
     const w = this.width() - this.margin().left - this.margin().right;
     const h = this.height() - this.margin().top - this.margin().bottom;
     this._circleRadius = Math.min(w, h) / 2;
+
+    this._ySeries = Object.keys(
+      this._getNumericalRow(this.data().at(0), [this.xSerie()])
+    );
     // Set the color schema
     this._colorScale = scaleOrdinal()
-      .domain(this.yConfiguration().numericalSeries)
+      .domain(this.ySeries)
       .range(this.yConfiguration().colorSeries);
     // Find the highest value of all series
     const ySerieRange = this._serieRange(
-      this.data().flatMap((row) =>
-        this.yConfiguration().numericalSeries.map((serie) => row[serie])
-      )
+      this.data().flatMap((row) => this.ySeries.map((serie) => row[serie]))
     );
-    // Add the radians to the series values
-    const addRadians = this.data().map((row, i, ns) => ({
-      x: this.xSerie()(row),
-      // Create and object with the numerical series and combine with others key and value pairs
-      ...this.yConfiguration().numericalSeries.reduce(
-        (acc, serie) => ({ ...acc, [serie]: row[serie] }),
-        {}
-      ),
-      radians: ((2 * Math.PI) / ns.length) * i,
-    }));
-    this.data(addRadians);
     // Set the scale of the radius
     this._y = this.yConfiguration()
       .scale.domain([0, (1 + this.yAxisOffset()) * ySerieRange.max])
@@ -140,10 +131,10 @@ export default class RadarChart extends CircleChart {
       .append("g")
       .attr("class", "lines axes");
 
-    /** @type {{x: string, y: number}[]}*/
-    const anglesPerCategory = this.data().map((row) => ({
-      x: row.x,
-      radians: row.radians,
+    /** @type {{x: string, radians: number}[]}*/
+    const anglesPerCategory = this.data().map((row, i, ns) => ({
+      x: row[this.xSerie()],
+      radians: ((2 * Math.PI) / ns.length) * i,
     }));
 
     groupAxes
@@ -177,10 +168,10 @@ export default class RadarChart extends CircleChart {
    *  ...;
    *
    * chart.init();
-   * chart.addSeries();
+   * chart.addAllSeries();
    * ```
    */
-  addSeries(isToFill = false) {
+  addAllSeries(isToFill = false) {
     const seriesGroup = this._svg
       .select(".main")
       .append("g")
@@ -188,7 +179,7 @@ export default class RadarChart extends CircleChart {
 
     const pathsGroup = seriesGroup
       .selectAll("g")
-      .data(this.yConfiguration().numericalSeries)
+      .data(this.ySeries)
       .join("g")
       .attr("class", (d) => `${d.toLowerCase().replace(" ", "-")}`);
 
@@ -205,7 +196,10 @@ export default class RadarChart extends CircleChart {
      * @returns {{y: number, radian: number}[]}
      */
     const getSerie = (serie) =>
-      this.data().map((row) => ({ y: row[serie], radian: row.radians }));
+      this.data().map((row, i, ns) => ({
+        y: row[serie],
+        radian: ((2 * Math.PI) / ns.length) * i,
+      }));
 
     pathsGroup
       .append("path")
@@ -243,7 +237,7 @@ export default class RadarChart extends CircleChart {
       /** @type {{category: string, value: number}[]} */
       const serie = this.data().map((row) => ({
         value: row[d],
-        category: row.x,
+        category: row[this.xSerie()],
       }));
       const coordinates = this.#extractCoordinates(
         currentPath.attr("d"),
@@ -338,7 +332,7 @@ export default class RadarChart extends CircleChart {
 
     legendGroup
       .selectAll("rect")
-      .data(this.yConfiguration().numericalSeries)
+      .data(this.ySeries)
       .join("rect")
       .attr("class", (d) => `${d.toLowerCase().replace(" ", "-")} legend`)
       .attr("width", config.size)
@@ -348,7 +342,7 @@ export default class RadarChart extends CircleChart {
 
     legendGroup
       .selectAll("text")
-      .data(this.yConfiguration().numericalSeries)
+      .data(this.ySeries)
       .join("text")
       .attr("class", (d) => `${d.toLowerCase().replace(" ", "-")} legend-name`)
       .attr("x", config.size + config.spacing)

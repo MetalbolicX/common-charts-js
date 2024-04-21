@@ -19,15 +19,15 @@ export default class MultiAreaChart extends MultiLineChart {
    *  ...;
    *
    * chart.init();
-   * char.addSeries();
+   * char.addAllSeries();
    * ```
    */
-  addSeries() {
+  addAllSeries() {
     const groupSeries = this._svg.append("g").attr("class", "series");
 
     groupSeries
       .selectAll("g")
-      .data(this.yConfiguration().numericalSeries)
+      .data(this.ySeries)
       .join("g")
       .attr("class", (d) => d.toLowerCase().replace(" ", "-"));
 

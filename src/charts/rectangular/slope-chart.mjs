@@ -36,14 +36,20 @@ export default class SlopeChart extends RectangularChart {
   init() {
     // Select the svg element container for the chart
     this._setSvg();
+    // Add the name of the numberical series
+    const dataSample = this._getNumericalRow(this.data().at(0), [
+      this.xConfiguration().serie,
+      "expense",
+    ]);
+    this._ySeries = Object.keys(dataSample);
     // Set the horizontal values of the x axis
     this._x = this.xConfiguration()
-      .scale.domain(this.yConfiguration().numericalSeries)
+      .scale.domain(this.ySeries)
       .range([this.margin().left, this.width() - this.margin().right]);
 
     /** @type {number[]} */
     const yValues = this.data().flatMap((row) =>
-      this.yConfiguration().numericalSeries.map((serie) => row[serie])
+      this.ySeries.map((serie) => row[serie])
     );
     const ySerieRange = this._serieRange(yValues);
     // Set the scale for the values in the left position of the y series
@@ -78,10 +84,10 @@ export default class SlopeChart extends RectangularChart {
    *  ...;
    *
    * chart.init();
-   * char.addSeries();
+   * char.addAllSeries();
    * ```
    */
-  addSeries() {
+  addAllSeries() {
     const groupSeries = this._svg.append("g").attr("class", "series");
 
     /**
@@ -91,7 +97,7 @@ export default class SlopeChart extends RectangularChart {
      */
     const series = this.data().map((row) => ({
       x: row[this.xConfiguration().serie],
-      values: this.yConfiguration().numericalSeries.map((serie) => ({
+      values: this.ySeries.map((serie) => ({
         serie,
         x: row[this.xConfiguration().serie],
         y: row[serie],

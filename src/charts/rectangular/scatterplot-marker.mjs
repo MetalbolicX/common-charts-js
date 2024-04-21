@@ -100,14 +100,14 @@ export default class ScatterPlotMarker extends ScatterPlot {
    *  ...;
    *
    * chart.init();
-   * char.addSeries();
+   * char.addAllSeries();
    * ```
    */
-  addSeries(fillColor = "#ddd") {
+  addAllSeries(fillColor = "#ddd") {
     const seriesGroup = this._svg.append("g").attr("class", "series");
     seriesGroup
       .selectAll(".serie")
-      .data(this.yConfiguration().numericalSeries)
+      .data(this.ySeries)
       .join("g")
       .attr("class", (d) => `${d.toLowerCase().replace(" ", "-")} serie`);
 
@@ -119,7 +119,7 @@ export default class ScatterPlotMarker extends ScatterPlot {
           ...this.getSerie(row, d),
           marker:
             this.markers()[
-              this.markersConfig()[r[this.categoryConfiguration().serie]]
+              this.markersConfig()[row[this.categoryConfiguration().serie]]
             ] || this.markers().error404,
         }))
       )

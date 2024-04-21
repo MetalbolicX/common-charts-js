@@ -49,14 +49,14 @@ export default class DonutChart extends PieChart {
    *  ...;
    *
    * chart.init();
-   * chart.addSeries();
+   * chart.addAllSeries();
    * ```
    */
-  addSeries() {
+  addAllSeries() {
     const mainGroup = this._svg.select(".main");
     const groupSeries = mainGroup
       .selectAll(".serie")
-      .data(this.yConfiguration().numericalSeries)
+      .data(this.ySeries)
       .join("g")
       .attr("class", (d) => `${d.toLowerCase().replace(" ", "-")} serie`);
 
@@ -71,7 +71,7 @@ export default class DonutChart extends PieChart {
      * @returns {{x: string, y: number, radius: {inner: number, outer: number}}}
      */
     const getSerie = (row, serie, index) => ({
-      x: this.xSerie()(row),
+      x: row[this.xSerie()],
       y: row[serie],
       radius: {
         inner: this.donutSpacing() * (2 * index + 1) * this.circleRadius,

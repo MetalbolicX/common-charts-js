@@ -13,9 +13,9 @@ export default class CircleChart extends Chart {
 
   /**
    * @description
-   * Getter and setter a callback to iterate the x serie in the dataset.
-   * @param {(d: object) => any} fn The callback function to deal with the x serie.
-   * @returns {(d: object) => any|this}
+   * Getter and setter of the name serie in the dataset that will be x serie.
+   * @param {string} name The name of the serie in the dataset of the x serie.
+   * @returns {string|this}
    * @example
    * ```JavaScript
    * const chart = new CircleChart()
@@ -23,11 +23,11 @@ export default class CircleChart extends Chart {
    *    { date: "12-Feb-12", europe: 52, asia: 40, america: 65 },
    *    { date: "27-Feb-12", europe: 56, asia: 35, america: 70 }
    *  ])
-   *  .xSerie((d) => d.date); // An anonymous function to iterate in the serie for x axis
+   *  .xSerie("date");
    * ```
    */
-  xSerie(fn) {
-    return arguments.length ? ((this.#xSerie = fn), this) : this.#xSerie;
+  xSerie(name) {
+    return arguments.length && typeof name === "string" ? ((this.#xSerie = name), this) : this.#xSerie;
   }
 
   /**

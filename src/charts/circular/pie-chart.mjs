@@ -5,8 +5,27 @@ import CircleChart from "./circle-chart.mjs";
 const { pie, arc, format, scaleOrdinal } = d3;
 
 export default class PieChart extends CircleChart {
+  #serieToShow;
   constructor() {
     super();
+    this.#serieToShow = undefined;
+  }
+
+  /**
+   * @description
+   * Getter and setter for the series to be rendered in the chart.
+   * @param {string} serieName Name of the serie in the dateset to show the slices in the chart.
+   * @returns {string|this}
+   * @example
+   * ```JavaScript
+   * const chart = new PolarChart()
+   *  .serieToShow("income");
+   * ```
+   */
+  serieToShow(serieName) {
+    return arguments.length && typeof serieName === "string"
+      ? ((this.#serieToShow = serieName), this)
+      : this.#serieToShow;
   }
 
   /**
@@ -21,9 +40,15 @@ export default class PieChart extends CircleChart {
     this._circleRadius = Math.min(w, h) / 2;
     // Set the svg container of the chart
     this._setSvg();
+    // Set the numerical serie
+    this._ySeries = Object.keys(
+      this._getNumericalRow(this.data().at(0), [
+        this.xSerie()
+      ])
+    );
     // Set the color schema
     this._colorScale = scaleOrdinal()
-      .domain(this.yConfiguration().numericalSeries)
+      .domain(this.data().map((d) => d[this.xSerie()]))
       .range(this.yConfiguration().colorSeries);
     // Set the g element for centered
     this._svg
@@ -46,14 +71,14 @@ export default class PieChart extends CircleChart {
    *  ...;
    *
    * chart.init();
-   * chart.addSeries();
+   * chart.addAllSeries();
    * ```
    */
-  addSeries() {
+  addAllSeries() {
     const mainGroup = this._svg.select(".main");
     const groupSeries = mainGroup
       .selectAll(".serie")
-      .data(this.yConfiguration().numericalSeries)
+      .data(this.ySeries.filter(serie => serie === this.serieToShow()))
       .join("g")
       .attr("class", (d) => `${d.toLowerCase().replace(" ", "-")} serie`);
 
@@ -67,7 +92,7 @@ export default class PieChart extends CircleChart {
      * @returns {{x: string, y: number, radius: {inner: number, outer: number}}}
      */
     const getSerie = (row, serie) => ({
-      x: this.xSerie()(row),
+      x: row[this.xSerie()],
       y: row[serie],
       radius: { inner: 0, outer: this.circleRadius },
     });

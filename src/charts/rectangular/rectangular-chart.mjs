@@ -11,6 +11,7 @@ export default class RectangularChart extends Chart {
   #xAxisConfiguration;
   #x;
   #xConfiguration;
+  #categorySerie;
 
   constructor() {
     super();
@@ -26,6 +27,7 @@ export default class RectangularChart extends Chart {
       position: "bottom",
       customizations: { tickFormat: format(".1f") },
     };
+    this.#categorySerie = undefined;
   }
 
   /**
@@ -213,6 +215,27 @@ export default class RectangularChart extends Chart {
       translations[position] ||
       `translate(0, ${this.height() - this.margin().bottom})`
     );
+  }
+
+  /**
+   * @description
+   * Getter and setter of the name of serie that contains categorical values.
+   * @param {string} name The name of the serie in the dataset of the categorical values.
+   * @returns {string|this}
+   * @example
+   * ```JavaScript
+   * const chart = new CircleChart()
+   *  .data([
+   *    { date: "12-Feb-12", europe: 52, asia: 40, america: 65 },
+   *    { date: "27-Feb-12", europe: 56, asia: 35, america: 70 }
+   *  ])
+   *  .categorySerie("date");
+   * ```
+   */
+  categorySerie(name) {
+    return arguments.length && typeof name === "string"
+      ? ((this.#categorySerie = name), this)
+      : this.#categorySerie;
   }
 
   /**
@@ -553,7 +576,7 @@ export default class RectangularChart extends Chart {
 
     legendGroup
       .selectAll("rect")
-      .data(this.yConfiguration().numericalSeries)
+      .data(this.seriesShown)
       .join("rect")
       .attr("class", (d) => `${d} legend`)
       .attr("width", config.size)
@@ -563,7 +586,7 @@ export default class RectangularChart extends Chart {
 
     legendGroup
       .selectAll("text")
-      .data(this.yConfiguration().numericalSeries)
+      .data(this.seriesShown)
       .join("text")
       .attr("class", (d) => `${d} legend-name`)
       .attr("x", config.size + config.spacing)

@@ -14,6 +14,10 @@ export default class HBarChart extends VBarChart {
    * @returns {void}
    */
   init() {
+    // Set the numerical series
+    this._ySeries = Object.keys(
+      this._getNumericalRow(this.data().at(0), [this.xConfiguration().serie])
+    );
     // Select the svg element container for the chart
     this._setSvg();
     // Set the grant total
@@ -41,14 +45,14 @@ export default class HBarChart extends VBarChart {
       .range([this.margin().left, this.width() - this.margin().right]);
     // Set the color schema
     this._colorScale = scaleOrdinal()
-      .domain(this.yConfiguration().numericalSeries)
+      .domain(this.ySeries)
       .range(this.yConfiguration().colorSeries);
     // Set the axes
     this._xAxis = this._D3Axis(this.xAxisConfig().position).scale(this.x);
     this._yAxis = this._D3Axis(this.yAxisConfig().position).scale(this.y);
     // Set the second scale for the grouped bar chart if the graph is not stacked
     this._x1 = scaleBand()
-      .domain(this.yConfiguration().numericalSeries)
+      .domain(this.ySeries)
       .range([0, this.x.bandwidth()]);
     // Set the y axis customizations of the y axis.
     if (this.yAxisConfig().customizations) {

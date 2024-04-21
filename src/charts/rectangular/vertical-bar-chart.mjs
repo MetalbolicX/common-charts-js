@@ -127,9 +127,7 @@ export default class VBarChart extends RectangularChart {
    */
   _setGrantTotal() {
     this.#granTotal = this.data()
-      .flatMap((d) =>
-        this.yConfiguration().numericalSeries.map((serie) => d[serie])
-      )
+      .flatMap((d) => this.ySeries.map((serie) => d[serie]))
       .reduce((acc, d) => acc + d, 0);
   }
 
@@ -151,15 +149,15 @@ export default class VBarChart extends RectangularChart {
   _reestructureData() {
     const records = this.data()
       .map((row) => {
-        const totalPerCategory = this.yConfiguration()
-          .numericalSeries.flatMap((serie) => row[serie])
+        const totalPerCategory = this.ySeries
+          .flatMap((serie) => row[serie])
           .reduce((acc, d) => acc + d, 0);
         const percentageFactor = this.isPercentage() ? this.grantTotal : 1;
         const normalizedFactor = this.isNormalized() ? totalPerCategory : 1;
         return {
           x: row[this.xConfiguration().serie],
-          values: this.yConfiguration()
-            .numericalSeries.map((serie) => ({
+          values: this.ySeries
+            .map((serie) => ({
               serie,
               x: row[this.xConfiguration().serie],
               y: row[serie],
@@ -189,6 +187,10 @@ export default class VBarChart extends RectangularChart {
    * @returns {void}
    */
   init() {
+    // Set the numerical series
+    this._ySeries = Object.keys(
+      this._getNumericalRow(this.data().at(0), [this.xConfiguration().serie])
+    );
     // Select the svg element container for the chart
     this._setSvg();
     // Set the grant total
@@ -216,15 +218,13 @@ export default class VBarChart extends RectangularChart {
       .range([this.height() - this.margin().bottom, this.margin().top]);
     // Set the color schema
     this._colorScale = scaleOrdinal()
-      .domain(this.yConfiguration().numericalSeries)
+      .domain(this.ySeries)
       .range(this.yConfiguration().colorSeries);
     // Set the axes
     this._xAxis = this._D3Axis(this.xAxisConfig().position).scale(this.x);
     this._yAxis = this._D3Axis(this.yAxisConfig().position).scale(this.y);
     // Set the second scale for the grouped bar chart if the graph is not stacked
-    this._x1 = scaleBand()
-      .domain(this.yConfiguration().numericalSeries)
-      .range([0, this.x.bandwidth()]);
+    this._x1 = scaleBand().domain(this.ySeries).range([0, this.x.bandwidth()]);
     // Set the y axis customizations of the y axis.
     if (this.yAxisConfig().customizations) {
       for (const [yFormat, customFormat] of Object.entries(

@@ -2,6 +2,8 @@ import ScatterPlot from "./scatterplot-chart.mjs";
 
 ("use strict");
 
+const { scaleOrdinal } = d3;
+
 export default class BubbleChart extends ScatterPlot {
   #radiusSerie;
   #radiusFactor;
@@ -13,8 +15,8 @@ export default class BubbleChart extends ScatterPlot {
   /**
    * @description
    * Getter and setter a callback to iterate in series that will be radius size.
-   * @param {(d: object) => any} fn The callback function to deal with some series in the dataset.
-   * @returns {(d: object) => any|this}
+   * @param {string} name The callback function to deal with some series in the dataset.
+   * @returns {string|this}
    * @example
    * ```JavaScript
    * const chart = new ScatterPlot()
@@ -22,12 +24,12 @@ export default class BubbleChart extends ScatterPlot {
    *    { month: "February", department: "Sales", europe: 52, asia: 40, america: 65 },
    *    { month: "March", department: "Sales", europe: 56, asia: 35, america: 70 }
    *  ])
-   *  .radiusSerie((d) => d.europe);
+   *  .radiusSerie("europe");
    * ```
    */
-  radiusSerie(fn) {
-    return arguments.length
-      ? ((this.#radiusSerie = fn), this)
+  radiusSerie(name) {
+    return arguments.length && typeof name === "string"
+      ? ((this.#radiusSerie = name), this)
       : this.#radiusSerie;
   }
 
@@ -56,6 +58,69 @@ export default class BubbleChart extends ScatterPlot {
 
   /**
    * @description
+   * Start and set all the values for the D3 Scales, axis data rearranged data. Before creating the chart.
+   * @returns {void}
+   */
+  init() {
+    const xSerieRange = this._serieRange(
+      this.data().map((d) => d[this.xConfiguration().serie])
+    );
+    // Set the scale for the values in the bottom position of the x axis
+    this._x = this.xConfiguration()
+      .scale.domain(Object.values(xSerieRange))
+      .range([this.margin().left, this.width() - this.margin().right]);
+    // Get the numerical fields names
+    const dataSample = this._getNumericalRow(this.data().at(0), [
+      this.xConfiguration().serie,
+      this.categoryConfiguration().serie,
+      this.radiusSerie(),
+    ]);
+    this._ySeries = Object.keys(dataSample);
+    const ySerieRange = this._serieRange(
+      this.data().flatMap((d) => this.ySeries.map((serie) => d[serie]))
+    );
+    // Set the scale for the values in the left position of the y series
+    this._y = this.yConfiguration()
+      .scale.domain([
+        (1 - this.yAxisOffset()) * ySerieRange.min,
+        (1 + this.yAxisOffset()) * ySerieRange.max,
+      ])
+      .range([this.height() - this.margin().bottom, this.margin().top]);
+
+    // Set the axes
+    this._xAxis = this._D3Axis(this.xAxisConfig().position).scale(this.x);
+    this._yAxis = this._D3Axis(this.yAxisConfig().position).scale(this.y);
+    // Set the svg container of the chart
+    this._setSvg();
+    // Set the categories of the dataset
+    const categoryValues = this.data().map(
+      (d) => d[this.categoryConfiguration().serie]
+    );
+    // Set the color schema
+    this._colorScale = scaleOrdinal()
+      .domain(categoryValues.filter((d, i, ns) => ns.indexOf(d) == i))
+      .range(this.categoryConfiguration().colors);
+    // );
+    // Set the the x axis customizations of format
+    if (this.xAxisConfig().customizations) {
+      for (const [xFormat, customFormat] of Object.entries(
+        this.xAxisConfig().customizations
+      )) {
+        this.xAxis[xFormat](customFormat);
+      }
+    }
+    // Set the y axis customizations of the y axis.
+    if (this.yAxisConfig().customizations) {
+      for (const [yFormat, customFormat] of Object.entries(
+        this.yAxisConfig().customizations
+      )) {
+        this.yAxis[yFormat](customFormat);
+      }
+    }
+  }
+
+  /**
+   * @description
    * Creates the data points in the chart.
    * @returns {void}
    * @example
@@ -65,14 +130,14 @@ export default class BubbleChart extends ScatterPlot {
    *  ...;
    *
    * chart.init();
-   * char.addSeries();
+   * char.addAllSeries();
    * ```
    */
-  addSeries() {
+  addAllSeries() {
     const seriesGroup = this._svg.append("g").attr("class", "series");
     seriesGroup
       .selectAll(".serie")
-      .data(this.yConfiguration().numericalSeries)
+      .data(this.ySeries)
       .join("g")
       .attr("class", (d) => `${d.toLowerCase().replace(" ", "-")} serie`);
 
@@ -82,7 +147,7 @@ export default class BubbleChart extends ScatterPlot {
       .data((d) =>
         this.data().map((row) => ({
           ...this.getSerie(row, d),
-          radius: this.radiusSerie()(row),
+          radius: row[this.radiusSerie()],
         }))
       )
       .join("circle")

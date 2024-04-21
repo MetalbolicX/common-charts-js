@@ -84,19 +84,22 @@ export default class ScatterPlot extends RectangularChart {
    * @returns {void}
    */
   init() {
-    /** @type {number[]} */
-    const xValues = this.data().map((d) => d[this.xConfiguration().serie]);
-    const xSerieRange = this._serieRange(xValues);
+    const xSerieRange = this._serieRange(
+      this.data().map((d) => d[this.xConfiguration().serie])
+    );
     // Set the scale for the values in the bottom position of the x axis
     this._x = this.xConfiguration()
       .scale.domain(Object.values(xSerieRange))
       .range([this.margin().left, this.width() - this.margin().right]);
-
-    /** @type {number[]} */
-    const yValues = this.data().flatMap((d) =>
-      this.yConfiguration().numericalSeries.map((serie) => d[serie])
+    // Get the numerical fields names
+    const dataSample = this._getNumericalRow(this.data().at(0), [
+      this.xConfiguration().serie,
+      this.categoryConfiguration().serie,
+    ]);
+    this._ySeries = Object.keys(dataSample);
+    const ySerieRange = this._serieRange(
+      this.data().flatMap((d) => this.ySeries.map((serie) => d[serie]))
     );
-    const ySerieRange = this._serieRange(yValues);
     // Set the scale for the values in the left position of the y series
     this._y = this.yConfiguration()
       .scale.domain([
@@ -164,14 +167,14 @@ export default class ScatterPlot extends RectangularChart {
    *  ...;
    *
    * chart.init();
-   * char.addSeries();
+   * char.addAllSeries();
    * ```
    */
-  addSeries() {
+  addAllSeries() {
     const seriesGroup = this._svg.append("g").attr("class", "series");
     seriesGroup
       .selectAll(".serie")
-      .data(this.yConfiguration().numericalSeries)
+      .data(this.ySeries)
       .join("g")
       .attr("class", (d) => `${d.toLowerCase().replace(" ", "-")} serie`);
 
@@ -284,14 +287,10 @@ export default class ScatterPlot extends RectangularChart {
           0
         ),
         y: group[key]
-          .map((d) => d[this.yConfiguration().numericalSeries.at(0)])
+          .map((d) => d[this.ySeries.at(0)])
           .reduce((acc, d) => acc + d, 0),
         xy: group[key]
-          .map(
-            (d) =>
-              d[this.xConfiguration().serie] *
-              d[this.yConfiguration().numericalSeries.at(0)]
-          )
+          .map((d) => d[this.xConfiguration().serie] * d[this.ySeries.at(0)])
           .reduce((acc, d, i) => acc + d, 0),
         n: group[key].length,
         xMin: group[key].reduce(

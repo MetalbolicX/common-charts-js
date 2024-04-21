@@ -6,7 +6,6 @@ const { pie, arc } = d3;
 
 export default class PolarChart extends PieChart {
   #sliceSize;
-  #serieToShow;
 
   constructor() {
     super();
@@ -32,23 +31,6 @@ export default class PolarChart extends PieChart {
 
   /**
    * @description
-   * Getter and setter for the series to be rendered in the chart.
-   * @param {string} serieName Name of the serie in the dateset to show the slices in the chart.
-   * @returns {string|this}
-   * @example
-   * ```JavaScript
-   * const chart = new PolarChart()
-   *  .serieToShow("income");
-   * ```
-   */
-  serieToShow(serieName) {
-    return arguments.length && typeof serieName === "string"
-      ? ((this.#serieToShow = serieName), this)
-      : this.#serieToShow;
-  }
-
-  /**
-   * @description
    * Add the slices to create the chart.
    * @returns {void}
    * @example
@@ -65,7 +47,7 @@ export default class PolarChart extends PieChart {
     const mainGroup = this._svg.select(".main");
     const groupSeries = mainGroup
       .selectAll(".serie")
-      .data(this.yConfiguration().numericalSeries)
+      .data(this.ySeries)
       .join("g")
       .attr("class", (d) => `${d.toLowerCase().replace(" ", "-")} serie`);
 
@@ -80,7 +62,7 @@ export default class PolarChart extends PieChart {
      * @returns {{x: string, y: number, textValue: string, serie: string, radius: {inner: number, outer: number}}}
      */
     const getSerie = (row, serie) => ({
-      x: this.xSerie()(row),
+      x: row[this.xSerie()],
       y: this.serieToShow() === serie ? row[serie] : row[this.serieToShow()],
       textValue: row[serie],
       serie,

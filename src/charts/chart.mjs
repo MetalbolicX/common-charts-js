@@ -18,6 +18,8 @@ export default class Chart {
   #y;
   #yAxisOffset;
   #colorScale;
+  #ySeries;
+  #seriesShown;
 
   constructor() {
     this.#bindTo = "svg";
@@ -29,6 +31,8 @@ export default class Chart {
     this.#yAxisOffset = 0.05;
     this.#yConfiguration = undefined;
     this.#colorScale = undefined;
+    this.#ySeries = undefined;
+    this.#seriesShown = undefined;
   }
 
   /**
@@ -157,15 +161,13 @@ export default class Chart {
    * @description
    * Getter and setter of the configuration of the y numerical values to draw in the chart.
    * @param {object} config The configuration to give to the y (numerical) values series.
-   * @param {string[]} config.numericalSeries The names of the series to draw in the chart which must have the same name as the dataset.
    * @param {string[]} config.colorSeries The string of the color to classify a each of the datasets.
    * @param {D3Scale} config.scale The D3 js function to process the numerical data.
-   * @returns {{numbericalSeries: string[], colorSeries: string[], scale: () => any}|this}
+   * @returns {{colorSeries: string[], scale: () => any}|this}
    * @example
    * ```JavaScript
    * const chart = new Chart()
    *  .yConfiguration({
-   *    numericalSeries: ["europe", "asia", "amercia"],
    *    colorSeries: ["black", "pink", "#aaa"]
    *    scale: d3.scaleLinear()
    *  });
@@ -177,7 +179,6 @@ export default class Chart {
     }
     if (
       typeof config === "object" &&
-      config.numericalSeries.every((serie) => typeof serie === "string") &&
       config.colorSeries.every((serie) => typeof serie === "string")
     ) {
       this.#yConfiguration = { ...config };
@@ -187,6 +188,29 @@ export default class Chart {
       );
     }
     return this;
+  }
+
+  /**
+   * @description
+   * Setter of the y numerical series names of the dataset.
+   * @param {string[]} series The list of names of the y series
+   * @access @protected
+   */
+  set _ySeries(series) {
+    if (series.every((serie) => typeof serie === "string")) {
+      this.#ySeries = [...series];
+    } else {
+      console.error("The name of the y series must be a string");
+    }
+  }
+
+  /**
+   * @description
+   * Getter of the y series.
+   * @return {string[]}
+   */
+  get ySeries() {
+    return this.#ySeries;
   }
 
   /**
@@ -297,5 +321,43 @@ export default class Chart {
    */
   get colorScale() {
     return this.#colorScale;
+  }
+
+  /**
+   * @description
+   * Transform a row of the dataset into just numerical series data.
+   * @param {object} row An object of the dataset for the chart.
+   * @param {string[]} columnsToExclude The names of columns to exclude for the numerical fields.
+   * @access @protected
+   * @returns {object.<string, number>}
+   */
+  _getNumericalRow(row, columnsToExclude) {
+    return Object.entries(row)
+      .filter(([key, _]) => !columnsToExclude.includes(key) && key.length)
+      .reduce((group, [key, value]) => ({ ...group, [key]: value }), {});
+  }
+
+  /**
+   * @description
+   * Setter for the series display in the chart.
+   * @param {string[]} series The series to show in the chart.
+   * @access @protected
+   * @returns {void}
+   */
+  set _seriesShown(series) {
+    if (series.length && series.every((serie) => typeof serie === "string")) {
+      this.#seriesShown = series;
+    } else {
+      console.error("Only accepts an array of strings");
+    }
+  }
+
+  /**
+   * @description
+   * Getter of the series to be shown in the chart.
+   * @returns {string[]}
+   */
+  get seriesShown() {
+    return this.#seriesShown;
   }
 }
