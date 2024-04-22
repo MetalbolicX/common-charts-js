@@ -5,27 +5,8 @@ import CircleChart from "./circle-chart.mjs";
 const { pie, arc, format, scaleOrdinal } = d3;
 
 export default class PieChart extends CircleChart {
-  #serieToShow;
   constructor() {
     super();
-    this.#serieToShow = undefined;
-  }
-
-  /**
-   * @description
-   * Getter and setter for the series to be rendered in the chart.
-   * @param {string} serieName Name of the serie in the dateset to show the slices in the chart.
-   * @returns {string|this}
-   * @example
-   * ```JavaScript
-   * const chart = new PolarChart()
-   *  .serieToShow("income");
-   * ```
-   */
-  serieToShow(serieName) {
-    return arguments.length && typeof serieName === "string"
-      ? ((this.#serieToShow = serieName), this)
-      : this.#serieToShow;
   }
 
   /**
@@ -42,9 +23,7 @@ export default class PieChart extends CircleChart {
     this._setSvg();
     // Set the numerical serie
     this._ySeries = Object.keys(
-      this._getNumericalRow(this.data().at(0), [
-        this.xSerie()
-      ])
+      this._getNumericalRow(this.data().at(0), [this.xSerie()])
     );
     // Set the color schema
     this._colorScale = scaleOrdinal()
@@ -63,6 +42,7 @@ export default class PieChart extends CircleChart {
   /**
    * @description
    * Add the slices to create the chart.
+   * @param {string} name The name of the serie to add to the chart.
    * @returns {void}
    * @example
    * ```JavaScript
@@ -71,14 +51,17 @@ export default class PieChart extends CircleChart {
    *  ...;
    *
    * chart.init();
-   * chart.addAllSeries();
+   * chart.addSerie("sales");
    * ```
    */
-  addAllSeries() {
+  addSerie(name) {
     const mainGroup = this._svg.select(".main");
+
+    this._seriesShown = this.ySeries.filter((serie) => serie === name);
+
     const groupSeries = mainGroup
       .selectAll(".serie")
-      .data(this.ySeries.filter(serie => serie === this.serieToShow()))
+      .data(this.seriesShown)
       .join("g")
       .attr("class", (d) => `${d.toLowerCase().replace(" ", "-")} serie`);
 
@@ -110,7 +93,9 @@ export default class PieChart extends CircleChart {
       .attr("class", (d) => `${d.data.x.toLowerCase().replace(" ", "-")} arc`);
 
     groupSlices
-      .append("path")
+      .selectAll("path")
+      .data(d => [d])
+      .join("path")
       .attr("d", (d) =>
         arc().innerRadius(d.data.radius.inner).outerRadius(d.data.radius.outer)(
           d

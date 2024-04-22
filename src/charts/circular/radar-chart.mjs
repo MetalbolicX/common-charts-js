@@ -190,13 +190,12 @@ export default class RadarChart extends CircleChart {
      * @description
      * The rearranged data to drawn the line chart with the svg path element.
      * @param {string} serie The name of the serie to get the numerical values.
-     * @returns {{serie: string, values: {x: string, y: number, radian: number}[]}[]}
+     * @returns {{serie: string, values: {y: number, radian: number}[]}[]}
      */
     const getSerie = (serie) => [
       {
         serie,
         values: this.data().map((row, i, ns) => ({
-          x: row[this.xSerie()],
           y: row[serie],
           radian: ((2 * Math.PI) / ns.length) * i,
         })),
@@ -239,7 +238,7 @@ export default class RadarChart extends CircleChart {
    * @example
    * ```JavaScript
    * // Set all the parameters of the chart
-   * const chart = new MultiLineChart()
+   * const chart = new RadarChart()
    *  ...;
    *
    * chart.init();
