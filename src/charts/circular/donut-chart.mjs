@@ -40,23 +40,20 @@ export default class DonutChart extends PieChart {
 
   /**
    * @description
-   * Add the slices to create the chart.
+   * Add all the series or just one series to the chart.
+   * @param {string} name The name of the serie to draw if one one will be specified.
    * @returns {void}
-   * @example
-   * ```JavaScript
-   * // Set all the parameters of the chart
-   * const chart = new DonutChart()
-   *  ...;
-   *
-   * chart.init();
-   * chart.addAllSeries();
-   * ```
    */
-  addAllSeries() {
+  #addSeries(name) {
     const mainGroup = this._svg.select(".main");
+
+    this._seriesShown = !name
+      ? this.ySeries
+      : this.ySeries.filter((serie) => serie === name);
+
     const groupSeries = mainGroup
       .selectAll(".serie")
-      .data(this.ySeries)
+      .data(this.seriesShown)
       .join("g")
       .attr("class", (d) => `${d.toLowerCase().replace(" ", "-")} serie`);
 
@@ -89,19 +86,55 @@ export default class DonutChart extends PieChart {
         )
       )
       .join("g")
-      .attr(
-        "class",
-        (d) => `${d.data.x.toLowerCase().replace(" ", "-")} arc`
-      );
+      .attr("class", (d) => `${d.data.x.toLowerCase().replace(" ", "-")} arc`);
 
     groupSlices
-      .append("path")
+      .selectAll("path")
+      .data((d) => [d])
+      .join("path")
+      .attr("class", (d) => `${d.data.x.toLowerCase().replace(" ", "-")} slice`)
       .attr("d", (d) =>
         arc().innerRadius(d.data.radius.inner).outerRadius(d.data.radius.outer)(
           d
         )
       )
-      .attr("class", (d) => `${d.data.x.toLowerCase().replace(" ", "-")} slice`)
       .style("fill", (d) => this.colorScale(d.data.x));
   }
+
+  /**
+   * @description
+   * Add the slices to create the chart.
+   * @returns {void}
+   * @example
+   * ```JavaScript
+   * // Set all the parameters of the chart
+   * const chart = new DonutChart()
+   *  ...;
+   *
+   * chart.init();
+   * chart.addAllSeries();
+   * ```
+   */
+  addAllSeries() {
+    this.#addSeries("");
+  }
+
+    /**
+   * @description
+   * Create the just one serie in the chart by the given name.
+   * @param {string} name The name of the serie to create.
+   * @returns {void}
+   * @example
+   * ```JavaScript
+   * // Set all the parameters of the chart
+   * const chart = new DonutChart()
+   *  ...;
+   *
+   * chart.init();
+   * chart.addSerie("sales");
+   * ```
+   */
+    addSerie(name) {
+      this.#addSeries(name);
+    }
 }

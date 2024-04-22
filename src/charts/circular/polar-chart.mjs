@@ -6,10 +6,12 @@ const { pie, arc } = d3;
 
 export default class PolarChart extends PieChart {
   #sliceSize;
+  #serieToShow;
 
   constructor() {
     super();
     this.#sliceSize = 2;
+    this.#serieToShow = undefined;
   }
 
   /**
@@ -31,7 +33,8 @@ export default class PolarChart extends PieChart {
 
   /**
    * @description
-   * Add the slices to create the chart.
+   * Add the slices to create the chart and select which serie will be shown.
+   * @param {string} name The name of the serie to show.
    * @returns {void}
    * @example
    * ```JavaScript
@@ -40,11 +43,12 @@ export default class PolarChart extends PieChart {
    *  ...;
    *
    * chart.init();
-   * chart.addSeries();
+   * chart.addSeries("sales");
    * ```
    */
-  addSeries() {
+  addSeries(name) {
     const mainGroup = this._svg.select(".main");
+    this.#serieToShow = name;
     const groupSeries = mainGroup
       .selectAll(".serie")
       .data(this.ySeries)
@@ -63,12 +67,12 @@ export default class PolarChart extends PieChart {
      */
     const getSerie = (row, serie) => ({
       x: row[this.xSerie()],
-      y: this.serieToShow() === serie ? row[serie] : row[this.serieToShow()],
+      y: serie === name ? row[serie] : row[this.#serieToShow],
       textValue: row[serie],
       serie,
       radius: {
         inner: 0,
-        outer: this.sliceSize() * row[this.serieToShow()],
+        outer: this.sliceSize() * row[this.#serieToShow],
       },
     });
 
@@ -85,13 +89,15 @@ export default class PolarChart extends PieChart {
       .attr("class", (d) => `${d.data.x.toLowerCase().replace(" ", "-")} arc`);
 
     groupSlices
-      .append("path")
+      .selectAll("path")
+      .data((d) => [d])
+      .join("path")
+      .attr("class", (d) => `${d.data.x.toLowerCase().replace(" ", "-")} slice`)
       .attr("d", (d) =>
         arc().innerRadius(d.data.radius.inner).outerRadius(d.data.radius.outer)(
           d
         )
       )
-      .attr("class", (d) => `${d.data.x.toLowerCase().replace(" ", "-")} slice`)
       .style("fill", (d) => this.colorScale(d.data.x));
   }
 
@@ -113,7 +119,6 @@ export default class PolarChart extends PieChart {
    */
   addLabels(fnFormat = format(".1f")) {
     const groupSlices = this._svg.selectAll(".arc");
-
     groupSlices
       .append("text")
       .attr("transform", (d) => {
@@ -121,7 +126,7 @@ export default class PolarChart extends PieChart {
           .innerRadius(d.data.radius.inner)
           .outerRadius(d.data.radius.outer)
           .centroid(d);
-        return this.serieToShow() === d.data.serie
+        return this.#serieToShow === d.data.serie
           ? `translate(${coordinates})`
           : `translate(${coordinates.at(0) * 2.5}, ${coordinates.at(1) * 2.5})`;
       })

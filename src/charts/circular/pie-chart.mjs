@@ -94,14 +94,14 @@ export default class PieChart extends CircleChart {
 
     groupSlices
       .selectAll("path")
-      .data(d => [d])
+      .data((d) => [d])
       .join("path")
+      .attr("class", (d) => `${d.data.x.toLowerCase().replace(" ", "-")} slice`)
       .attr("d", (d) =>
         arc().innerRadius(d.data.radius.inner).outerRadius(d.data.radius.outer)(
           d
         )
       )
-      .attr("class", (d) => `${d.data.x.toLowerCase().replace(" ", "-")} slice`)
       .style("fill", (d) => this.colorScale(d.data.x));
   }
 
