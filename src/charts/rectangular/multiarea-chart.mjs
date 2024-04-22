@@ -8,26 +8,27 @@ export default class MultiAreaChart extends MultiLineChart {
   constructor() {
     super();
   }
+
   /**
    * @description
-   * Create the multiline series graph.
+   * Add all the series or just one series to the chart.
+   * @param {string} name The name of the serie to draw if one one will be specified.
    * @returns {void}
-   * @example
-   * ```JavaScript
-   * // Set all the parameters of the chart
-   * const chart = new MultiAreaChart()
-   *  ...;
-   *
-   * chart.init();
-   * char.addAllSeries();
-   * ```
    */
-  addAllSeries() {
-    const groupSeries = this._svg.append("g").attr("class", "series");
+  #addSeries(name) {
+    const groupSeries = this._svg
+      .selectAll(".series")
+      .data([null])
+      .join("g")
+      .attr("class", "series");
+
+    this._seriesShown = !name
+      ? this.ySeries
+      : this.ySeries.filter((serie) => serie === name);
 
     groupSeries
       .selectAll("g")
-      .data(this.ySeries)
+      .data(this.seriesShown)
       .join("g")
       .attr("class", (d) => d.toLowerCase().replace(" ", "-"));
 
@@ -62,5 +63,42 @@ export default class MultiAreaChart extends MultiLineChart {
       .attr("d", (d) => pathGenerator(d.values))
       .style("fill", (d) => this.colorScale(d.serie))
       .style("stroke", (d) => this.colorScale(d.serie));
+  }
+
+  /**
+   * @description
+   * Create the multiline series graph.
+   * @returns {void}
+   * @example
+   * ```JavaScript
+   * // Set all the parameters of the chart
+   * const chart = new MultiAreaChart()
+   *  ...;
+   *
+   * chart.init();
+   * chart.addAllSeries();
+   * ```
+   */
+  addAllSeries() {
+    this.#addSeries("");
+  }
+
+  /**
+   * @description
+   * Create the just one serie in the chart by the given name.
+   * @param {string} name The name of the serie to create.
+   * @returns {void}
+   * @example
+   * ```JavaScript
+   * // Set all the parameters of the chart
+   * const chart = new MultiAreaChart()
+   *  ...;
+   *
+   * chart.init();
+   * chart.addSerie();
+   * ```
+   */
+  addSerie(name) {
+    this.#addSeries(name);
   }
 }

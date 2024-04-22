@@ -75,20 +75,20 @@ export default class SlopeChart extends RectangularChart {
 
   /**
    * @description
-   * Create the multiline series graph.
+   * Add all the series or just one series to the chart.
+   * @param {string} name The name of the serie to draw if one one will be specified.
    * @returns {void}
-   * @example
-   * ```JavaScript
-   * // Set all the parameters of the chart
-   * const chart = new SlopeChart()
-   *  ...;
-   *
-   * chart.init();
-   * char.addAllSeries();
-   * ```
    */
-  addAllSeries() {
-    const groupSeries = this._svg.append("g").attr("class", "series");
+  #addSeries(name) {
+    const groupSeries = this._svg
+      .selectAll(".series")
+      .data([null])
+      .join("g")
+      .attr("class", "series");
+
+    this._seriesShown = !name
+      ? this.colorScale.domain()
+      : this.colorScale.domain().filter((serie) => serie === name);
 
     /**
      * @description
@@ -104,21 +104,59 @@ export default class SlopeChart extends RectangularChart {
       })),
     }));
 
-    groupSeries
+    const groupSerie = groupSeries
       .selectAll("g")
-      .data(series)
+      .data(!name ? series : series.filter((row) => row.x === name))
       .join("g")
       .attr("class", (d) => d.x.toLowerCase().replace(" ", "-"));
 
-    groupSeries
-      .selectAll("g")
-      .append("line")
+    groupSerie
+      .selectAll("line")
+      .data((d) => [d])
+      .join("line")
       .attr("class", (d) => `${d.x.toLowerCase().replace(" ", "-")} serie`)
       .attr("x1", (d) => this.x(d.values.at(0).serie))
       .attr("y1", (d) => this.y(d.values.at(0).y))
       .attr("x2", (d) => this.x(d.values.at(-1).serie))
       .attr("y2", (d) => this.y(d.values.at(-1).y))
       .style("stroke", (d) => this.colorScale(d.x));
+  }
+
+  /**
+   * @description
+   * Create the multiline series graph.
+   * @returns {void}
+   * @example
+   * ```JavaScript
+   * // Set all the parameters of the chart
+   * const chart = new SlopeChart()
+   *  ...;
+   *
+   * chart.init();
+   * chart.addAllSeries();
+   * ```
+   */
+  addAllSeries() {
+    this.#addSeries("");
+  }
+
+  /**
+   * @description
+   * Create the just one serie in the chart by the given name.
+   * @param {string} name The name of the serie to create.
+   * @returns {void}
+   * @example
+   * ```JavaScript
+   * // Set all the parameters of the chart
+   * const chart = new SlopeChart()
+   *  ...;
+   *
+   * chart.init();
+   * chart.addSerie();
+   * ```
+   */
+  addSerie(name) {
+    this.#addSeries(name);
   }
 
   /**
@@ -132,12 +170,11 @@ export default class SlopeChart extends RectangularChart {
    *  ...;
    *
    * chart.init();
-   * char.addPoints();
+   * chart.addPoints();
    * ```
    */
   addPoints() {
     const groupSeries = this._svg.select(".series");
-
     groupSeries
       .selectAll("g")
       .selectAll("circle")
@@ -162,7 +199,7 @@ export default class SlopeChart extends RectangularChart {
    *  ...;
    *
    * chart.init();
-   * char.addLabels(-10);
+   * chart.addLabels(-10);
    * ```
    */
   addLabels(deltaY = -5) {
@@ -220,7 +257,7 @@ export default class SlopeChart extends RectangularChart {
 
     legendGroup
       .selectAll("rect")
-      .data(this.colorScale.domain())
+      .data(this.seriesShown)
       .join("rect")
       .attr("class", (d) => `${d.toLowerCase().replace(" ", "-")} legend`)
       .attr("width", config.size)
@@ -230,7 +267,7 @@ export default class SlopeChart extends RectangularChart {
 
     legendGroup
       .selectAll("text")
-      .data(this.colorScale.domain())
+      .data(this.seriesShown)
       .join("text")
       .attr("class", (d) => `${d.toLowerCase().replace(" ", "-")} legend-name`)
       .attr("x", config.size + config.spacing)

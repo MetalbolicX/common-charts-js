@@ -23,10 +23,12 @@ export default class ScatterPlotMarker extends ScatterPlot {
     gear: "M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z",
   };
   #markersConfiguration;
+  #fillColor;
 
   constructor() {
     super();
     this.#markersConfiguration = undefined;
+    this.#fillColor = "#ccc";
   }
 
   /**
@@ -90,24 +92,36 @@ export default class ScatterPlotMarker extends ScatterPlot {
 
   /**
    * @description
-   * Creates the data points in the chart.
-   * @param {string} [fillColor="#ddd"] The color to fill the marker. By default the color is "#ddd".
-   * @returns {void}
-   * @example
-   * ```JavaScript
-   * // Set all the parameters of the chart
-   * const chart = new ScatterPlotMarker()
-   *  ...;
-   *
-   * chart.init();
-   * char.addAllSeries();
-   * ```
+   * Getter and setter of the color to fill the markers.
+   * @param {string} color The hexadecimal code for the color to fill the marker.
+   * @returns {string|this}
    */
-  addAllSeries(fillColor = "#ddd") {
-    const seriesGroup = this._svg.append("g").attr("class", "series");
+  fillColor(color) {
+    return arguments.length && typeof color === "string"
+      ? ((this.#fillColor = color), this)
+      : this.#fillColor;
+  }
+
+  /**
+   * @description
+   * Add all the series or just one series to the chart.
+   * @param {string} name The name of the serie to draw if one one will be specified.
+   * @returns {void}
+   */
+  #addSeries(name) {
+    const seriesGroup = this._svg
+      .selectAll(".series")
+      .data([null])
+      .join("g")
+      .attr("class", "series");
+
+    this._seriesShown = !name
+      ? this.ySeries
+      : this.ySeries.filter((serie) => serie === name);
+
     seriesGroup
       .selectAll(".serie")
-      .data(this.ySeries)
+      .data(this.seriesShown)
       .join("g")
       .attr("class", (d) => `${d.toLowerCase().replace(" ", "-")} serie`);
 
@@ -133,7 +147,44 @@ export default class ScatterPlotMarker extends ScatterPlot {
       )
       .attr("transform", (d) => `translate(${this.x(d.x)}, ${this.y(d.y)})`)
       .attr("d", (d) => d.marker)
-      .style("fill", fillColor)
+      .style("fill", this.fillColor())
       .style("stroke", (d) => this.colorScale(d.category));
   }
+
+  /**
+   * @description
+   * Creates the data points in the chart.
+   * @returns {void}
+   * @example
+   * ```JavaScript
+   * // Set all the parameters of the chart
+   * const chart = new ScatterPlotMarker()
+   *  ...;
+   *
+   * chart.init();
+   * chart.addAllSeries();
+   * ```
+   */
+  addAllSeries() {
+    this.#addSeries("");
+  }
+
+    /**
+   * @description
+   * Create the just one serie in the chart by the given name.
+   * @param {string} name The name of the serie to create.
+   * @returns {void}
+   * @example
+   * ```JavaScript
+   * // Set all the parameters of the chart
+   * const chart = new ScatterPlotMarker()
+   *  ...;
+   *
+   * chart.init();
+   * chart.addSerie();
+   * ```
+   */
+    addSerie(name) {
+      this.#addSeries(name);
+    }
 }

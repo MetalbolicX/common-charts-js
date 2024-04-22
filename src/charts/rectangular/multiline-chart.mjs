@@ -41,13 +41,11 @@ export default class MultiLineChart extends RectangularChart {
     this._x = this.xConfiguration()
       .scale.domain(Object.values(xSerieRange))
       .range([this.margin().left, this.width() - this.margin().right]);
-
-    const dataSample = this._getNumericalRow(this.data().at(0), [
+    // Set the names of the numerical series
+    this._ySeries = Object.keys(this._getNumericalRow(this.data().at(0), [
       this.xConfiguration().serie,
       this.categorySerie(),
-    ]);
-    // Set the names of the numerical series
-    this._ySeries = Object.keys(dataSample);
+    ]));
     const ySerieRange = this._serieRange(
       this.data().flatMap((d) => this.ySeries.map((serie) => d[serie]))
     );
@@ -163,7 +161,7 @@ export default class MultiLineChart extends RectangularChart {
    *  ...;
    *
    * chart.init();
-   * char.addAllSeries();
+   * chart.addAllSeries();
    * ```
    */
   addAllSeries() {
@@ -173,7 +171,7 @@ export default class MultiLineChart extends RectangularChart {
   /**
    * @description
    * Create the just one serie in the chart by the given name.
-   * @param {String} name The name of the serie to create.
+   * @param {string} name The name of the serie to create.
    * @returns {void}
    * @example
    * ```JavaScript
@@ -182,7 +180,7 @@ export default class MultiLineChart extends RectangularChart {
    *  ...;
    *
    * chart.init();
-   * char.addSerie();
+   * chart.addSerie();
    * ```
    */
   addSerie(name) {
@@ -200,11 +198,10 @@ export default class MultiLineChart extends RectangularChart {
    *  ...;
    *
    * chart.init();
-   * char.addPoints();
+   * chart.addPoints();
    * ```
    */
   addPoints() {
-    // const seriesGroup = this._svg.selectAll(".series > g");
     const seriesGroup = this._svg.select(".series").selectChildren("g");
     seriesGroup
       .selectAll("circle")
@@ -236,7 +233,7 @@ export default class MultiLineChart extends RectangularChart {
    *  ...;
    *
    * chart.init();
-   * char.coloringSeries({
+   * chart.coloringSeries({
    *    bindTo: ".series",
    *    mouseover: (e) => { console.log("Mouse over event", e.target); },
    *    mouseout: (e) => { console.log("Mouse out event", e.target); },
@@ -324,7 +321,7 @@ export default class MultiLineChart extends RectangularChart {
    *  ...;
    *
    * chart.init();
-   * char.addCriticalPoints();
+   * chart.addCriticalPoints();
    * ```
    */
   addCriticalPoints() {
@@ -380,7 +377,7 @@ export default class MultiLineChart extends RectangularChart {
    *  ...;
    *
    * chart.init();
-   * char.addLabels();
+   * chart.addLabels();
    * ```
    */
   addLabels() {

@@ -121,23 +121,24 @@ export default class BubbleChart extends ScatterPlot {
 
   /**
    * @description
-   * Creates the data points in the chart.
+   * Add all the series or just one series to the chart.
+   * @param {string} name The name of the serie to draw if one one will be specified.
    * @returns {void}
-   * @example
-   * ```JavaScript
-   * // Set all the parameters of the chart
-   * const chart = new BubbleChart()
-   *  ...;
-   *
-   * chart.init();
-   * char.addAllSeries();
-   * ```
    */
-  addAllSeries() {
-    const seriesGroup = this._svg.append("g").attr("class", "series");
+  #addSeries(name) {
+    const seriesGroup = this._svg
+      .selectAll(".series")
+      .data([null])
+      .join("g")
+      .attr("class", "series");
+
+    this._seriesShown = !name
+      ? this.ySeries
+      : this.ySeries.filter((serie) => serie === name);
+
     seriesGroup
       .selectAll(".serie")
-      .data(this.ySeries)
+      .data(this.seriesShown)
       .join("g")
       .attr("class", (d) => `${d.toLowerCase().replace(" ", "-")} serie`);
 
@@ -156,5 +157,42 @@ export default class BubbleChart extends ScatterPlot {
       .attr("cy", (d) => this.y(d.y))
       .attr("r", (d) => d.radius * this.radiusFactor())
       .style("fill", (d) => this.colorScale(d.category));
+  }
+
+  /**
+   * @description
+   * Creates the data points in the chart.
+   * @returns {void}
+   * @example
+   * ```JavaScript
+   * // Set all the parameters of the chart
+   * const chart = new BubbleChart()
+   *  ...;
+   *
+   * chart.init();
+   * chart.addAllSeries();
+   * ```
+   */
+  addAllSeries() {
+    this.#addSeries("");
+  }
+
+  /**
+   * @description
+   * Create the just one serie in the chart by the given name.
+   * @param {string} name The name of the serie to create.
+   * @returns {void}
+   * @example
+   * ```JavaScript
+   * // Set all the parameters of the chart
+   * const chart = new ScatterPlotMarker()
+   *  ...;
+   *
+   * chart.init();
+   * chart.addSerie();
+   * ```
+   */
+  addSerie(name) {
+    this.#addSeries(name);
   }
 }

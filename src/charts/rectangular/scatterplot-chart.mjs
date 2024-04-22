@@ -119,7 +119,7 @@ export default class ScatterPlot extends RectangularChart {
     );
     // Set the color schema
     this._colorScale = scaleOrdinal()
-      .domain(categoryValues.filter((d, i, ns) => ns.indexOf(d) == i))
+      .domain(categoryValues.filter((d, i, ns) => ns.indexOf(d) == i).sort())
       .range(this.categoryConfiguration().colors);
     // );
     // Set the the x axis customizations of format
@@ -138,6 +138,41 @@ export default class ScatterPlot extends RectangularChart {
         this.yAxis[yFormat](customFormat);
       }
     }
+  }
+
+  /**
+   * @description
+   * Add all the series or just one series to the chart.
+   * @param {string} name The name of the serie to draw if one one will be specified.
+   * @returns {void}
+   */
+  #addSeries(name) {
+    const seriesGroup = this._svg
+      .selectAll(".series")
+      .data([null])
+      .join("g")
+      .attr("class", "series");
+
+    this._seriesShown = !name
+      ? this.ySeries
+      : this.ySeries.filter((serie) => serie === name);
+
+    seriesGroup
+      .selectAll(".serie")
+      .data(this.seriesShown)
+      .join("g")
+      .attr("class", (d) => `${d.toLowerCase().replace(" ", "-")} serie`);
+
+    seriesGroup
+      .selectAll(".serie")
+      .selectAll("circle")
+      .data((d) => this.data().map((row) => this.getSerie(row, d)))
+      .join("circle")
+      .attr("class", (d) => `${d.serie.toLowerCase().replace(" ", "-")} point`)
+      .attr("cx", (d) => this.x(d.x))
+      .attr("cy", (d) => this.y(d.y))
+      .attr("r", this.radius())
+      .style("fill", (d) => this.colorScale(d.category));
   }
 
   /**
@@ -167,27 +202,30 @@ export default class ScatterPlot extends RectangularChart {
    *  ...;
    *
    * chart.init();
-   * char.addAllSeries();
+   * chart.addAllSeries();
    * ```
    */
   addAllSeries() {
-    const seriesGroup = this._svg.append("g").attr("class", "series");
-    seriesGroup
-      .selectAll(".serie")
-      .data(this.ySeries)
-      .join("g")
-      .attr("class", (d) => `${d.toLowerCase().replace(" ", "-")} serie`);
+    this.#addSeries("");
+  }
 
-    seriesGroup
-      .selectAll(".serie")
-      .selectAll("circle")
-      .data((d) => this.data().map((row) => this.getSerie(row, d)))
-      .join("circle")
-      .attr("class", (d) => `${d.serie.toLowerCase().replace(" ", "-")} point`)
-      .attr("cx", (d) => this.x(d.x))
-      .attr("cy", (d) => this.y(d.y))
-      .attr("r", this.radius())
-      .style("fill", (d) => this.colorScale(d.category));
+  /**
+   * @description
+   * Create the just one serie in the chart by the given name.
+   * @param {string} name The name of the serie to create.
+   * @returns {void}
+   * @example
+   * ```JavaScript
+   * // Set all the parameters of the chart
+   * const chart = new ScatterPlot()
+   *  ...;
+   *
+   * chart.init();
+   * chart.addSerie();
+   * ```
+   */
+  addSerie(name) {
+    this.#addSeries(name);
   }
 
   /**
@@ -358,7 +396,7 @@ export default class ScatterPlot extends RectangularChart {
    *  ...;
    *
    * chart.init();
-   * char.addTrendingLines();
+   * chart.addTrendingLines();
    * ```
    */
   addTrendingLines() {

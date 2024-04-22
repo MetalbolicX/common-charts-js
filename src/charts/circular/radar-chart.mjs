@@ -158,28 +158,25 @@ export default class RadarChart extends CircleChart {
 
   /**
    * @description
-   * Add the series of the radial chart.
-   * @param {boolean} [isToFill=false] Whether the series will be filled or not by the color of each series. By default, it will not be filled.
-   * @return {void}
-   * @example
-   * ```JavaScript
-   * // Set all the parameters of the chart
-   * const chart = new RadarChart()
-   *  ...;
-   *
-   * chart.init();
-   * chart.addAllSeries();
-   * ```
+   * Add all the series or just one series to the chart.
+   * @param {string} name The name of the serie to draw if one one will be specified.
+   * @returns {void}
    */
-  addAllSeries(isToFill = false) {
+  #addSeries(name) {
     const seriesGroup = this._svg
       .select(".main")
-      .append("g")
+      .selectAll(".series")
+      .data([null])
+      .join("g")
       .attr("class", "series");
+
+    this._seriesShown = !name
+      ? this.ySeries
+      : this.ySeries.filter((serie) => serie === name);
 
     const pathsGroup = seriesGroup
       .selectAll("g")
-      .data(this.ySeries)
+      .data(this.seriesShown)
       .join("g")
       .attr("class", (d) => `${d.toLowerCase().replace(" ", "-")}`);
 
@@ -191,22 +188,66 @@ export default class RadarChart extends CircleChart {
 
     /**
      * @description
-     * Get all vallues of the specified numerical serie and the radians to create the svg path.
+     * The rearranged data to drawn the line chart with the svg path element.
      * @param {string} serie The name of the serie to get the numerical values.
-     * @returns {{y: number, radian: number}[]}
+     * @returns {{serie: string, values: {x: string, y: number, radian: number}[]}[]}
      */
-    const getSerie = (serie) =>
-      this.data().map((row, i, ns) => ({
-        y: row[serie],
-        radian: ((2 * Math.PI) / ns.length) * i,
-      }));
+    const getSerie = (serie) => [
+      {
+        serie,
+        values: this.data().map((row, i, ns) => ({
+          x: row[this.xSerie()],
+          y: row[serie],
+          radian: ((2 * Math.PI) / ns.length) * i,
+        })),
+      },
+    ];
 
     pathsGroup
-      .append("path")
-      .attr("class", (d) => `${d.toLowerCase().replace(" ", "-")} serie`)
-      .attr("d", (d) => pathGenerator(getSerie(d)))
-      .style("stroke", (d) => this.colorScale(d))
-      .style("fill", (d) => (isToFill ? this.colorScale(d) : null));
+      .selectAll("path")
+      .data((d) => getSerie(d))
+      .join("path")
+      .attr("class", (d) => `${d.serie.toLowerCase().replace(" ", "-")} serie`)
+      .attr("d", (d) => pathGenerator(d.values))
+      .style("stroke", (d) => this.colorScale(d.serie))
+      .style("fill", (d) => this.colorScale(d.serie));
+  }
+
+  /**
+   * @description
+   * Add the series of the radial chart.
+   * @return {void}
+   * @example
+   * ```JavaScript
+   * // Set all the parameters of the chart
+   * const chart = new RadarChart()
+   *  ...;
+   *
+   * chart.init();
+   * chart.addAllSeries();
+   * ```
+   */
+  addAllSeries() {
+    this.#addSeries("");
+  }
+
+  /**
+   * @description
+   * Create the just one serie in the chart by the given name.
+   * @param {string} name The name of the serie to create.
+   * @returns {void}
+   * @example
+   * ```JavaScript
+   * // Set all the parameters of the chart
+   * const chart = new MultiLineChart()
+   *  ...;
+   *
+   * chart.init();
+   * chart.addSerie();
+   * ```
+   */
+  addSerie(name) {
+    this.#addSeries(name);
   }
 
   /**
@@ -332,7 +373,7 @@ export default class RadarChart extends CircleChart {
 
     legendGroup
       .selectAll("rect")
-      .data(this.ySeries)
+      .data(this.seriesShown)
       .join("rect")
       .attr("class", (d) => `${d.toLowerCase().replace(" ", "-")} legend`)
       .attr("width", config.size)
@@ -342,7 +383,7 @@ export default class RadarChart extends CircleChart {
 
     legendGroup
       .selectAll("text")
-      .data(this.ySeries)
+      .data(this.seriesShown)
       .join("text")
       .attr("class", (d) => `${d.toLowerCase().replace(" ", "-")} legend-name`)
       .attr("x", config.size + config.spacing)
