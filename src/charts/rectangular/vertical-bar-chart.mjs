@@ -191,6 +191,7 @@ export default class VBarChart extends RectangularChart {
     this._ySeries = Object.keys(
       this._getNumericalRow(this.data().at(0), [this.xConfiguration().serie])
     );
+    this._seriesShown = this.ySeries;
     // Select the svg element container for the chart
     this._setSvg();
     // Set the grant total
@@ -210,7 +211,7 @@ export default class VBarChart extends RectangularChart {
     // Set the band scale for the nain categories
     this._x = this.xConfiguration()
       .scale.domain(this.data().map((row) => row.x))
-      .range([this.margin().right, this.width()])
+      .range([this.margin().left, this.width() - this.margin().right])
       .paddingInner(this.innerPadding());
     // Set the bar chart horizontally
     this._y = this.yConfiguration()

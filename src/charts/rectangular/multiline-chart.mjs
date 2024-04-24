@@ -42,10 +42,12 @@ export default class MultiLineChart extends RectangularChart {
       .scale.domain(Object.values(xSerieRange))
       .range([this.margin().left, this.width() - this.margin().right]);
     // Set the names of the numerical series
-    this._ySeries = Object.keys(this._getNumericalRow(this.data().at(0), [
-      this.xConfiguration().serie,
-      this.categorySerie(),
-    ]));
+    this._ySeries = Object.keys(
+      this._getNumericalRow(this.data().at(0), [
+        this.xConfiguration().serie,
+        this.categorySerie(),
+      ])
+    );
     const ySerieRange = this._serieRange(
       this.data().flatMap((d) => this.ySeries.map((serie) => d[serie]))
     );

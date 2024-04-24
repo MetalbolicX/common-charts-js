@@ -565,7 +565,9 @@ export default class RectangularChart extends Chart {
     config = { widthOffset: 0.85, heightOffset: 0.05, size: 5, spacing: 5 }
   ) {
     const legendGroup = this._svg
-      .append("g")
+      .selectAll(".legends")
+      .data([null])
+      .join("g")
       .attr("class", "legends")
       .attr(
         "transform",
