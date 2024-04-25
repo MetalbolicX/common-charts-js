@@ -13,9 +13,10 @@ export default class MultiAreaChart extends MultiLineChart {
    * @description
    * Add all the series or just one series to the chart.
    * @param {string} name The name of the serie to draw if one one will be specified.
+   * @param {number} duration The duration of the transition.
    * @returns {void}
    */
-  #addSeries(name) {
+  #addSeries(name, duration) {
     const groupSeries = this._svg
       .selectAll(".series")
       .data([null])
@@ -32,7 +33,7 @@ export default class MultiAreaChart extends MultiLineChart {
       .join("g")
       .attr("class", (d) => d.toLowerCase().replace(" ", "-"));
 
-    const pathGenerator = area()
+    const areaGenerator = area()
       .y0(this.y.range().at(0))
       .x((d) => this.x(d.x))
       .y1((d) => this.y(d.y));
@@ -60,7 +61,18 @@ export default class MultiAreaChart extends MultiLineChart {
       .data((d) => rearrangedData(d, this.xConfiguration().serie))
       .join("path")
       .attr("class", (d) => `${d.serie} serie`)
-      .attr("d", (d) => pathGenerator(d.values))
+      .attr("d", (d) => areaGenerator(d.values))
+      .transition()
+      .duration(duration)
+      .delay((d, i) => i * (duration / d.values.length)) // Delay for each point
+      .attrTween("d", function (d) {
+        /** @type {string}*/
+        const areaPath = areaGenerator(d.values);
+        /** @type {number}*/
+        const length = this.getTotalLength();
+        return (/** @type {number}*/ time) =>
+          areaPath.substring(0, length * time); // Trim the path based on time
+      })
       .style("fill", (d) => this.colorScale(d.serie))
       .style("stroke", (d) => this.colorScale(d.serie));
   }
@@ -68,6 +80,7 @@ export default class MultiAreaChart extends MultiLineChart {
   /**
    * @description
    * Create the multiline series graph.
+   * @param {number} [duration=2000] The duration of the transition. By default the time is 2000 miliseconds.
    * @returns {void}
    * @example
    * ```JavaScript
@@ -79,14 +92,15 @@ export default class MultiAreaChart extends MultiLineChart {
    * chart.addAllSeries();
    * ```
    */
-  addAllSeries() {
-    this.#addSeries("");
+  addAllSeries(duration) {
+    this.#addSeries("", duration);
   }
 
   /**
    * @description
    * Create the just one serie in the chart by the given name.
    * @param {string} name The name of the serie to create.
+   * @param {number} [duration=2000] The duration of the transition. By default the time is 2000 miliseconds.
    * @returns {void}
    * @example
    * ```JavaScript
@@ -95,10 +109,10 @@ export default class MultiAreaChart extends MultiLineChart {
    *  ...;
    *
    * chart.init();
-   * chart.addSerie();
+   * chart.addSerie("sales");
    * ```
    */
-  addSerie(name) {
-    this.#addSeries(name);
+  addSerie(name, duration = 2000) {
+    this.#addSeries(name, duration);
   }
 }

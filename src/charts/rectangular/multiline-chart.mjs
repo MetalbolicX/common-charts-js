@@ -101,9 +101,10 @@ export default class MultiLineChart extends RectangularChart {
    * @description
    * Add all the series or just one series to the chart.
    * @param {string} name The name of the serie to draw if one one will be specified.
+   * @param {number} duration The duration of the transition of the seried.
    * @returns {void}
    */
-  #addSeries(name) {
+  #addSeries(name, duration) {
     const groupSeries = this._svg
       .selectAll(".series")
       .data([null])
@@ -120,7 +121,7 @@ export default class MultiLineChart extends RectangularChart {
       .join("g")
       .attr("class", (d) => d.toLowerCase().replace(" ", "-"));
 
-    const pathGenerator = line()
+    const lineGenerator = line()
       .x((d) => this.x(d.x))
       .y((d) => this.y(d.y));
 
@@ -147,14 +148,26 @@ export default class MultiLineChart extends RectangularChart {
       .data((d) => rearrangedData(d, this.xConfiguration().serie))
       .join("path")
       .attr("class", (d) => `${d.serie} serie`)
-      .attr("d", (d) => pathGenerator(d.values))
-      .style("stroke", (d) => this.colorScale(d.serie))
-      .style("fill", "none");
+      .attr("d", (d) => lineGenerator(d.values))
+      .style("fill", "none")
+      .transition() // Add transition
+      .duration(duration) // Duration of transition
+      .delay((d, i) => i * (duration / d.values.length)) // Delay for each point
+      .attrTween("d", function (d) {
+        /** @type {string}*/
+        const linePath = lineGenerator(d.values);
+        /** @type {number}*/
+        const length = this.getTotalLength();
+        return (/** @type {number}*/ time) =>
+          linePath.substring(0, length * time); // Trim the path based on time
+      })
+      .style("stroke", (d) => this.colorScale(d.serie));
   }
 
   /**
    * @description
    * Create the multiline series graph.
+   * @param {number} [duration=2000] The duration of the transition. By default the time is 2000 miliseconds.
    * @returns {void}
    * @example
    * ```JavaScript
@@ -166,14 +179,15 @@ export default class MultiLineChart extends RectangularChart {
    * chart.addAllSeries();
    * ```
    */
-  addAllSeries() {
-    this.#addSeries("");
+  addAllSeries(duration = 2000) {
+    this.#addSeries("", duration);
   }
 
   /**
    * @description
    * Create the just one serie in the chart by the given name.
    * @param {string} name The name of the serie to create.
+   * @param {number} [duration=2000] The duration of the transition of the series.
    * @returns {void}
    * @example
    * ```JavaScript
@@ -182,11 +196,11 @@ export default class MultiLineChart extends RectangularChart {
    *  ...;
    *
    * chart.init();
-   * chart.addSerie();
+   * chart.addSerie("sales");
    * ```
    */
-  addSerie(name) {
-    this.#addSeries(name);
+  addSerie(name, duration = 2000) {
+    this.#addSeries(name, duration);
   }
 
   /**
