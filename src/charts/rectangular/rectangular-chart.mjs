@@ -2,7 +2,16 @@ import Chart from "../chart.mjs";
 
 ("use strict");
 
-const { axisTop, axisRight, axisBottom, axisLeft, format } = d3;
+const {
+  axisTop,
+  axisRight,
+  axisBottom,
+  axisLeft,
+  format,
+  transition,
+  greatestIndex,
+  leastIndex,
+} = d3;
 
 export default class RectangularChart extends Chart {
   #xAxis;
@@ -12,6 +21,7 @@ export default class RectangularChart extends Chart {
   #x;
   #xConfiguration;
   #categorySerie;
+  #criticalPoints;
 
   constructor() {
     super();
@@ -28,6 +38,7 @@ export default class RectangularChart extends Chart {
       customizations: { tickFormat: format(".1f") },
     };
     this.#categorySerie = undefined;
+    this.#criticalPoints = undefined;
   }
 
   /**
@@ -236,6 +247,45 @@ export default class RectangularChart extends Chart {
     return arguments.length && typeof name === "string"
       ? ((this.#categorySerie = name), this)
       : this.#categorySerie;
+  }
+
+  /**
+   * @description
+   * Setter of the critical points (maximum and minimum) of each serie in an object.
+   * @returns {{[key: string]: {serie: string, point: string, x: any, y: number}[]}}
+   */
+  _setCriticalPoints() {
+    this.#criticalPoints = this.ySeries.reduce((group, serie) => {
+      const currentSerie = this.data().map((d) => d[serie]);
+      const maxIndex = greatestIndex(currentSerie);
+      const minIndex = leastIndex(currentSerie);
+      return {
+        ...group,
+        [serie]: [
+          {
+            serie,
+            point: "max",
+            x: this.data().at(maxIndex)[this.xConfiguration().serie],
+            y: Math.max(...currentSerie),
+          },
+          {
+            serie,
+            point: "max",
+            x: this.data().at(minIndex)[this.xConfiguration().serie],
+            y: Math.min(...currentSerie),
+          },
+        ],
+      };
+    }, {});
+  }
+
+  /**
+   * @description
+   * Getter of the critical points (max and min) of each serie.
+   * @returns {{[key: string]: {serie: string, point: string, x: any, y: number}[]}}
+   */
+  get criticalPoints() {
+    return this.#criticalPoints;
   }
 
   /**
@@ -576,11 +626,14 @@ export default class RectangularChart extends Chart {
         })`
       );
 
+    const t = transition().duration(this.duration());
+
     legendGroup
       .selectAll("rect")
       .data(this.seriesShown)
       .join("rect")
       .attr("class", (d) => `${d} legend`)
+      .transition(t)
       .attr("width", config.size)
       .attr("height", config.size)
       .attr("y", (_, i) => (config.size + config.spacing) * i)
@@ -591,6 +644,7 @@ export default class RectangularChart extends Chart {
       .data(this.seriesShown)
       .join("text")
       .attr("class", (d) => `${d} legend-name`)
+      .transition(t)
       .attr("x", config.size + config.spacing)
       .attr("y", (_, i) => (config.size + config.spacing) * i)
       .attr("dy", config.size)

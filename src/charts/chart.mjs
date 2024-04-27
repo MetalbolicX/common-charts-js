@@ -1,4 +1,4 @@
-const { select } = d3;
+const { select, transition } = d3;
 
 ("use strict");
 
@@ -20,6 +20,7 @@ export default class Chart {
   #colorScale;
   #ySeries;
   #seriesShown;
+  #duration;
 
   constructor() {
     this.#bindTo = "svg";
@@ -33,6 +34,7 @@ export default class Chart {
     this.#colorScale = undefined;
     this.#ySeries = undefined;
     this.#seriesShown = undefined;
+    this.#duration = 2000;
   }
 
   /**
@@ -359,5 +361,31 @@ export default class Chart {
    */
   get seriesShown() {
     return this.#seriesShown;
+  }
+
+  /**
+   * @description
+   * Getter ans setter of the duration of the animations.
+   * @param {number} milliseconds The duration of the animation to be executed.
+   * @returns {number|this}
+   * @example
+   * ```JavaScript
+   * const chart = new Chart()
+   *  .duration(5000);
+   * ```
+   */
+  duration(milliseconds) {
+    return arguments.length && milliseconds >= 0
+      ? ((this.#duration = +milliseconds), this)
+      : this.#duration;
+  }
+
+  /**
+   * @description
+   * Gettet of the transition object to set the duration of the animations.
+   * @returns {object}
+   */
+  getTransition() {
+    return transition().duration(this.duration());
   }
 }

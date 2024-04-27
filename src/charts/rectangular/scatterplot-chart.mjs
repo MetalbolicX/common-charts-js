@@ -2,7 +2,7 @@ import RectangularChart from "./rectangular-chart.mjs";
 
 ("use strict");
 
-const { scaleOrdinal } = d3;
+const { scaleOrdinal, transition } = d3;
 
 export default class ScatterPlot extends RectangularChart {
   #radius;
@@ -163,16 +163,35 @@ export default class ScatterPlot extends RectangularChart {
       .join("g")
       .attr("class", (d) => `${d.toLowerCase().replace(" ", "-")} serie`);
 
+    const duration = 2000;
+    const t = transition().duration(duration);
+    const positionCircles = (circles) =>
+      circles
+        .attr("cx", (d) => this.x(d.x))
+        .attr("cy", (d) => this.y(d.y))
+        .style("fill", (d) => this.colorScale(d.category));
+
     seriesGroup
       .selectAll(".serie")
       .selectAll("circle")
       .data((d) => this.data().map((row) => this.getSerie(row, d)))
-      .join("circle")
-      .attr("class", (d) => `${d.serie.toLowerCase().replace(" ", "-")} point`)
-      .attr("cx", (d) => this.x(d.x))
-      .attr("cy", (d) => this.y(d.y))
-      .attr("r", this.radius())
-      .style("fill", (d) => this.colorScale(d.category));
+      .join(
+        (enter) =>
+          enter
+            .append("circle")
+            .call(positionCircles)
+            .attr("r", 0)
+            .call((enter) => enter.transition(t).attr("r", this.radius())),
+        (update) =>
+          update.call((update) =>
+            update
+              .transition(t)
+              .delay((_, i) => i * duration)
+              .call(positionCircles)
+          ),
+        (exit) => exit.remove()
+      )
+      .attr("class", (d) => `${d.serie.toLowerCase().replace(" ", "-")} point`);
   }
 
   /**
@@ -409,19 +428,44 @@ export default class ScatterPlot extends RectangularChart {
     const coordinates = this.calculateCoordinates(this.slopes);
 
     const seriesGroup = this._svg.select(".series");
+
+    const duration = 2000;
+    const t = transition().duration(duration);
+    const positionLines = (lines) =>
+      lines
+        .attr("x1", (d) => this.x(d.xMin))
+        .attr("y1", (d) => this.y(d.yMin))
+        .attr("x2", (d) => this.x(d.xMax))
+        .attr("y2", (d) => this.y(d.yMax));
+
     seriesGroup
       .selectAll("g")
       .selectAll("line")
       .data(coordinates)
-      .join("line")
+      .join(
+        (enter) =>
+          enter
+            .append("line")
+            .call(positionLines)
+            .style("stroke", null)
+            .call((enter) =>
+              enter
+                .transition(t)
+                .style("stroke", (d) => this.colorScale(d.category))
+            ),
+        (update) =>
+          update.call((update) =>
+            update
+              .transition(t)
+              .delay((_, i) => i * duration)
+              .call(positionLines)
+              .style("stroke", (d) => this.colorScale(d))
+          ),
+        (exit) => exit.remove()
+      )
       .attr(
         "class",
         (d) => `${d.category.toLowerCase().replace(" ", "-")} tendency`
-      )
-      .attr("x1", (d) => this.x(d.xMin))
-      .attr("y1", (d) => this.y(d.yMin))
-      .attr("x2", (d) => this.x(d.xMax))
-      .attr("y2", (d) => this.y(d.yMax))
-      .style("stroke", (d) => this.colorScale(d.category));
+      );
   }
 }

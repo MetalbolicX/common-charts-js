@@ -1,6 +1,6 @@
 import RectangularChart from "./rectangular-chart.mjs";
 
-const { line, select, greatestIndex, leastIndex, scaleOrdinal } = d3;
+const { line, select, scaleOrdinal, transition } = d3;
 
 ("use strict");
 
@@ -51,6 +51,7 @@ export default class MultiLineChart extends RectangularChart {
     const ySerieRange = this._serieRange(
       this.data().flatMap((d) => this.ySeries.map((serie) => d[serie]))
     );
+    this._setCriticalPoints();
     // Set the scale for the values in the left position of the y series
     this._y = this.yConfiguration()
       .scale.domain([
@@ -90,21 +91,19 @@ export default class MultiLineChart extends RectangularChart {
    * Callback function to iterate throught a serie in the dataset by the serie name.
    * @param {object} row An object from the dataset.
    * @param {string} serie Name of the serie to get the data from the dataset.
-   * @param {string} xSerieName The name of the x serie in the dataset.
    * @returns {{serie: string, x: number, y: number}}
    */
-  getSerieData(row, serie, xSerieName) {
-    return { serie, x: row[xSerieName], y: row[serie] };
+  getSerieData(row, serie) {
+    return { serie, x: row[this.xConfiguration().serie], y: row[serie] };
   }
 
   /**
    * @description
    * Add all the series or just one series to the chart.
    * @param {string} name The name of the serie to draw if one one will be specified.
-   * @param {number} duration The duration of the transition of the seried.
    * @returns {void}
    */
-  #addSeries(name, duration) {
+  #addSeries(name) {
     const groupSeries = this._svg
       .selectAll(".series")
       .data([null])
@@ -129,45 +128,56 @@ export default class MultiLineChart extends RectangularChart {
      * @description
      * The rearranged data to drawn the line chart with the svg path element.
      * @param {string} serie The serie datum name.
-     * @param {string} xSerieName The name of the x serie in the dataset.
      * @returns {[{serie: string, values: {x: number, y: number}[]}]}
      */
-    const rearrangedData = (serie, xSerieName) => [
+    const rearrangedData = (serie) => [
       {
         serie,
         values: this.data().map((row) => ({
-          x: row[xSerieName],
+          x: row[this.xConfiguration().serie],
           y: row[serie],
         })),
       },
     ];
 
+    const drawSeries = (selection) =>
+      selection
+        .delay((d, i) => i * (this.duration() / d.values.length))
+        .attrTween("d", function (d) {
+          /** @type {string}*/
+          const linePath = lineGenerator(d.values);
+          /** @type {number}*/
+          const length = this.getTotalLength();
+          return (/** @type {number}*/ time) =>
+            linePath.substring(0, length * time); //
+        })
+        .style("stroke", (d) => this.colorScale(d));
+
     groupSeries
       .selectAll("g")
       .selectAll("path")
-      .data((d) => rearrangedData(d, this.xConfiguration().serie))
-      .join("path")
-      .attr("class", (d) => `${d.serie} serie`)
-      .attr("d", (d) => lineGenerator(d.values))
-      .style("fill", "none")
-      .transition() // Add transition
-      .duration(duration) // Duration of transition
-      .delay((d, i) => i * (duration / d.values.length)) // Delay for each point
-      .attrTween("d", function (d) {
-        /** @type {string}*/
-        const linePath = lineGenerator(d.values);
-        /** @type {number}*/
-        const length = this.getTotalLength();
-        return (/** @type {number}*/ time) =>
-          linePath.substring(0, length * time); // Trim the path based on time
-      })
-      .style("stroke", (d) => this.colorScale(d.serie));
+      .data((d) => rearrangedData(d))
+      .join(
+        (enter) =>
+          enter
+            .append("path")
+            .attr("d", (d) => lineGenerator(d.values))
+            .style("fill", "none")
+            .transition(this.getTransition())
+            .call(drawSeries),
+        (update) =>
+          update
+            .style("stroke", null)
+            .transition(this.getTransition())
+            .call(drawSeries),
+        (exit) => exit.remove()
+      )
+      .attr("class", (d) => `${d.serie} serie`);
   }
 
   /**
    * @description
    * Create the multiline series graph.
-   * @param {number} [duration=2000] The duration of the transition. By default the time is 2000 miliseconds.
    * @returns {void}
    * @example
    * ```JavaScript
@@ -179,15 +189,14 @@ export default class MultiLineChart extends RectangularChart {
    * chart.addAllSeries();
    * ```
    */
-  addAllSeries(duration = 2000) {
-    this.#addSeries("", duration);
+  addAllSeries() {
+    this.#addSeries("");
   }
 
   /**
    * @description
    * Create the just one serie in the chart by the given name.
    * @param {string} name The name of the serie to create.
-   * @param {number} [duration=2000] The duration of the transition of the series.
    * @returns {void}
    * @example
    * ```JavaScript
@@ -199,8 +208,8 @@ export default class MultiLineChart extends RectangularChart {
    * chart.addSerie("sales");
    * ```
    */
-  addSerie(name, duration = 2000) {
-    this.#addSeries(name, duration);
+  addSerie(name) {
+    this.#addSeries(name);
   }
 
   /**
@@ -219,18 +228,32 @@ export default class MultiLineChart extends RectangularChart {
    */
   addPoints() {
     const seriesGroup = this._svg.select(".series").selectChildren("g");
+
+    const positionPoints = (selection) =>
+      selection.attr("cx", (d) => this.x(d.x)).attr("cy", (d) => this.y(d.y));
+
     seriesGroup
       .selectAll("circle")
-      .data((d) =>
-        this.data().map((row) =>
-          this.getSerieData(row, d, this.xConfiguration().serie)
-        )
+      .data((d) => this.data().map((row) => this.getSerieData(row, d)))
+      .join(
+        (enter) =>
+          enter
+            .append("circle")
+            .attr("r", 0)
+            .transition(this.getTransition())
+            .attr("r", this.radius())
+            .call(positionPoints),
+        (update) =>
+          update
+            .attr("r", 0)
+            .transition(this.getTransition())
+            .delay((_, i) => i * 100)
+            .attr("r", this.radius())
+            .call(positionPoints),
+        (exit) => exit.remove()
       )
-      .join("circle")
       .attr("class", (d) => `${d.serie} point`)
-      .attr("cx", (d) => this.x(d.x))
-      .attr("cy", (d) => this.y(d.y))
-      .attr("r", this.radius());
+      .style("fill", (d) => this.colorScale(d.serie));
   }
 
   /**
@@ -341,45 +364,31 @@ export default class MultiLineChart extends RectangularChart {
    * ```
    */
   addCriticalPoints() {
-    // What are the max and min point in each series and its x position
-    const criticalPoints = this.ySeries.reduce((acc, serie) => {
-      const currentSerie = this.data().map((d) => d[serie]);
-      const maxIndex = greatestIndex(currentSerie);
-      const minIndex = leastIndex(currentSerie);
-      return {
-        ...acc,
-        [serie]: {
-          max: Math.max(...currentSerie),
-          min: Math.min(...currentSerie),
-          maxPosition: this.data().at(maxIndex)[this.xConfiguration().serie],
-          minPosition: this.data().at(minIndex)[this.xConfiguration().serie],
-        },
-      };
-    }, {});
-
     const groupCritical = this._svg
       .selectAll(".critical-points")
       .data([null])
       .join("g")
       .attr("class", "critical-points");
 
-    for (const key in criticalPoints) {
-      groupCritical
-        .append("text")
-        .attr("class", `${key} max`)
-        .attr("x", this.x(criticalPoints[key].maxPosition))
-        .attr("y", this.y(criticalPoints[key].max))
-        .text(this.yAxis.tickFormat()(criticalPoints[key].max))
-        .style("text-anchor", "middle");
+    const groupPoints = groupCritical
+      .selectAll("g")
+      .data(this.seriesShown)
+      .join("g")
+      .attr("class", (d) => `${d.toLowerCase().replace(" ", "-")} max-and-min`);
 
-      groupCritical
-        .append("text")
-        .attr("class", `${key} min`)
-        .attr("x", this.x(criticalPoints[key].minPosition))
-        .attr("y", this.y(criticalPoints[key].min))
-        .text(this.yAxis.tickFormat()(criticalPoints[key].min))
-        .style("text-anchor", "middle");
-    }
+    groupPoints
+      .selectAll("text")
+      .data((d) => this.criticalPoints[d])
+      .join("text")
+      .attr(
+        "class",
+        (d) => `${d.serie.toLowerCase().replace(" ", "-")} ${d.point}`
+      )
+      .transition(this.getTransition())
+      .attr("x", (d) => this.x(d.x))
+      .attr("y", (d) => this.y(d.y))
+      .text((d) => this.yAxis.tickFormat()(d.y))
+      .style("text-anchor", "middle");
   }
 
   /**
@@ -400,11 +409,7 @@ export default class MultiLineChart extends RectangularChart {
     const seriesGroup = this._svg.selectAll(".series").selectChildren("g");
     seriesGroup
       .selectAll("text")
-      .data((d) =>
-        this.data().map((row) =>
-          this.getSerieData(row, d, this.xConfiguration().serie)
-        )
-      )
+      .data((d) => this.data().map((row) => this.getSerieData(row, d)))
       .join("text")
       .attr("class", (d) => `${d.serie} label`)
       .attr("x", (d) => this.x(d.x))
