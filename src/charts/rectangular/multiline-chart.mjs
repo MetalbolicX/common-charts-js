@@ -229,8 +229,11 @@ export default class MultiLineChart extends RectangularChart {
   addPoints() {
     const seriesGroup = this._svg.select(".series").selectChildren("g");
 
-    const positionPoints = (selection) =>
-      selection.attr("cx", (d) => this.x(d.x)).attr("cy", (d) => this.y(d.y));
+    const positionCircles = (selection) =>
+      selection
+        .attr("r", 0)
+        .attr("cx", (d) => this.x(d.x))
+        .attr("cy", (d) => this.y(d.y));
 
     seriesGroup
       .selectAll("circle")
@@ -239,17 +242,15 @@ export default class MultiLineChart extends RectangularChart {
         (enter) =>
           enter
             .append("circle")
-            .attr("r", 0)
+            .call(positionCircles)
             .transition(this.getTransition())
-            .attr("r", this.radius())
-            .call(positionPoints),
+            .attr("r", this.radius()),
         (update) =>
           update
-            .attr("r", 0)
+            .call(positionCircles)
             .transition(this.getTransition())
             .delay((_, i) => i * 100)
-            .attr("r", this.radius())
-            .call(positionPoints),
+            .attr("r", this.radius()),
         (exit) => exit.remove()
       )
       .attr("class", (d) => `${d.serie} point`)
