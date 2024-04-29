@@ -43,10 +43,10 @@ export default class MultiLineChart extends RectangularChart {
       .range([this.margin().left, this.width() - this.margin().right]);
     // Set the names of the numerical series
     this._setFieldsTypes = this.data().at(0);
-    this._ySeries = this._getNumericalFieldsToUse([
-      this.xConfiguration().serie,
-      this.categorySerie(),
-    ]);
+    // Set categorical fields
+    this._categoricalSeries = this._getCategoricalSeries();
+    // Set the numerical series to use
+    this._ySeries = this._getNumericalFieldsToUse(this.xConfiguration().serie);
     // Which are the range of values for the y scale
     const ySerieRange = this._serieRange(
       this.data().flatMap((d) => this.ySeries.map((serie) => d[serie]))

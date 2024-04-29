@@ -23,6 +23,7 @@ export default class Chart {
   #duration;
   #listeners;
   #fieldsTypes;
+  #categoricalSeries;
 
   constructor() {
     this.#bindTo = "svg";
@@ -39,6 +40,7 @@ export default class Chart {
     this.#duration = 2000;
     this.#listeners = dispatch("mouseover", "mouseout");
     this.#fieldsTypes = undefined;
+    this.#categoricalSeries = undefined;
   }
 
   /**
@@ -332,17 +334,15 @@ export default class Chart {
   /**
    * @description
    * Transform a row of the dataset into just numerical series data.
-   * @param {string[]} columnsToExclude The names of columns to exclude for the numerical fields.
+   * @param {string} fieldToExclude The names of the column to exclude for the numerical fields.
    * @access @protected
-   * @returns {object.<string, number>}
+   * @returns {string[]}
    */
-  _getNumericalFieldsToUse(columnsToExclude) {
+  _getNumericalFieldsToUse(fieldToExclude) {
     return [...this.fieldsTypes]
       .filter(
         ([field, type]) =>
-          type === "numerical" &&
-          field.length &&
-          !columnsToExclude.includes(field)
+          type === "numerical" && field.length && field !== fieldToExclude
       )
       .map(([field, _]) => field);
   }
@@ -436,6 +436,7 @@ export default class Chart {
    * Setter function to set the types of fields in the dataset.
    * If the provided sample is an object, it determines whether each field is numerical or categorical.
    * @param {object} row - The row object representing the dataset.
+   * @access @protected
    * @returns {void}
    */
   set _setFieldsTypes(row) {
@@ -464,5 +465,41 @@ export default class Chart {
    */
   get fieldsTypes() {
     return this.#fieldsTypes;
+  }
+
+  /**
+   * @description
+   * Retrieves the names of categorical series from the fieldsTypes map.
+   * @access @protected
+   * @returns {string[]} An array containing the names of categorical series.
+   */
+  _getCategoricalSeries() {
+    return [...this.#fieldsTypes]
+      .filter(([field, type]) => type === "categorical" && field.length)
+      .map(([field, _]) => field);
+  }
+
+  /**
+   * @description
+   * Setter function to define the names of categorical series.
+   * @param {string[]} series An array of strings representing the names of categorical series.
+   * @access @protected
+   * @returns {void}
+   */
+  set _categoricalSeries(series) {
+    if (series.length && series.every((serie) => typeof serie === "string")) {
+      this.#categoricalSeries = [...series];
+    } else {
+      console.error("The field names muest be string type");
+    }
+  }
+
+  /**
+   * @description
+   * Getter function to access the names of categorical series.
+   * @returns {string[]} An array containing the names of categorical series.
+   */
+  get categoricalSeries() {
+    return this.#categoricalSeries;
   }
 }

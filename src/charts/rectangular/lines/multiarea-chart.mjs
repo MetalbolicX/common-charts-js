@@ -55,18 +55,14 @@ export default class MultiAreaChart extends MultiLineChart {
       },
     ];
 
-    const drawSerie = (selection) =>
-      selection
+    const initializeAreas = (areas) =>
+      areas.attr("d", (d) => areaGenerator(d.values)).style("opacity", 0);
+
+    const drawSeriesPaths = (paths) =>
+      paths
+        .transition(this.getTransition())
         .delay((d, i) => i * (this.duration() / d.values.length))
-        .attrTween("d", function (d) {
-          /** @type {string}*/
-          const areaPath = areaGenerator(d.values);
-          /** @type {number}*/
-          const length = this.getTotalLength();
-          return (/** @type {number}*/ time) =>
-            areaPath.substring(0, length * time); //
-        })
-        .style("fill", (d) => this.colorScale(d));
+        .style("opacity", 0.5);
 
     groupSeries
       .selectAll("g")
@@ -76,18 +72,16 @@ export default class MultiAreaChart extends MultiLineChart {
         (enter) =>
           enter
             .append("path")
-            .style("fill", "none")
-            .attr("d", (d) => areaGenerator(d.values))
-            .transition(this.getTransition())
-            .call(drawSerie),
+            .call(initializeAreas)
+            .call(drawSeriesPaths),
         (update) =>
           update
-            .style("fill", "none")
-            .transition(this.getTransition())
-            .call(drawSerie),
+            .call(initializeAreas)
+            .call(drawSeriesPaths),
         (exit) => exit.remove()
       )
-      .attr("class", (d) => `${d.serie} serie`);
+      .attr("class", (d) => `${d.serie} serie`)
+      .style("fill", (d) => this.colorScale(d.serie));
   }
 
   /**
