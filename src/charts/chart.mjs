@@ -1,4 +1,4 @@
-const { select, transition } = d3;
+const { select, transition, dispatch } = d3;
 
 ("use strict");
 
@@ -21,6 +21,8 @@ export default class Chart {
   #ySeries;
   #seriesShown;
   #duration;
+  #listeners;
+  #fieldsTypes;
 
   constructor() {
     this.#bindTo = "svg";
@@ -35,6 +37,8 @@ export default class Chart {
     this.#ySeries = undefined;
     this.#seriesShown = undefined;
     this.#duration = 2000;
+    this.#listeners = dispatch("mouseover", "mouseout");
+    this.#fieldsTypes = undefined;
   }
 
   /**
@@ -328,15 +332,19 @@ export default class Chart {
   /**
    * @description
    * Transform a row of the dataset into just numerical series data.
-   * @param {object} row An object of the dataset for the chart.
    * @param {string[]} columnsToExclude The names of columns to exclude for the numerical fields.
    * @access @protected
    * @returns {object.<string, number>}
    */
-  _getNumericalRow(row, columnsToExclude) {
-    return Object.entries(row)
-      .filter(([key, _]) => !columnsToExclude.includes(key) && key.length)
-      .reduce((group, [key, value]) => ({ ...group, [key]: value }), {});
+  _getNumericalFieldsToUse(columnsToExclude) {
+    return [...this.fieldsTypes]
+      .filter(
+        ([field, type]) =>
+          type === "numerical" &&
+          field.length &&
+          !columnsToExclude.includes(field)
+      )
+      .map(([field, _]) => field);
   }
 
   /**
@@ -387,5 +395,74 @@ export default class Chart {
    */
   getTransition() {
     return transition().duration(this.duration());
+  }
+
+  /**
+   * @description
+   * Attaches event listeners to the chart.
+   * @param {...*} args - Arguments to be passed to the event listener.
+   * @returns {callback|this} Returns the Chart instance if no additional function is returned, otherwise returns the function returned by the event listener.
+   */
+  on() {
+    /**
+     * @description
+     * The function returned by the event listener.
+     * @typedef {callback} ListenerFunction
+     */
+
+    /**
+     * @description
+     * Calls the "on" method of the listeners object with the provided arguments.
+     * @type {ListenerFunction|this}
+     */
+    const fn = this.listeners.on.apply(this.listeners, arguments);
+    // If the returned function is the same as the listeners object, return the Chart instance,
+    // otherwise return the returned function
+    return fn === this.listeners ? this : fn;
+  }
+
+  /**
+   * @description
+   * Getter function to access the listeners object.
+   * @readonly
+   * @returns {object} The listeners object.
+   */
+  get listeners() {
+    return this.#listeners;
+  }
+
+  /**
+   * @description
+   * Setter function to set the types of fields in the dataset.
+   * If the provided sample is an object, it determines whether each field is numerical or categorical.
+   * @param {object} row - The row object representing the dataset.
+   * @returns {void}
+   */
+  set _setFieldsTypes(row) {
+    if (typeof row === "object") {
+      /**
+       * @description
+       * Map storing the types of fields in the dataset.
+       * Keys represent field names, values represent field types (either "numerical" or "categorical").
+       * @type {Map<string, string>}
+       */
+      this.#fieldsTypes = new Map(
+        Object.entries(row).map(([field, value]) => [
+          field,
+          typeof value === "number" ? "numerical" : "categorical",
+        ])
+      );
+    } else {
+      console.error("Invalid dataset, it must be an array of objects");
+    }
+  }
+
+  /**
+   * @description
+   * Getter function to access the types of fields in the dataset.
+   * @returns {Map<string, string>} The map containing field names and their corresponding types.
+   */
+  get fieldsTypes() {
+    return this.#fieldsTypes;
   }
 }
