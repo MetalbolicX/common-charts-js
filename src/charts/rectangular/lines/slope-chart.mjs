@@ -37,21 +37,17 @@ export default class SlopeChart extends RectangularChart {
     // Select the svg element container for the chart
     this._setSvg();
     // Add the name of the numberical series
-    const dataSample = this._getNumericalRow(this.data().at(0), [
-      this.xConfiguration().serie,
-      "expense",
-    ]);
-    this._ySeries = Object.keys(dataSample);
+    this._fieldsTypes = this.data().at(0);
+    this._categoricalSeries = this._getCategoricalSeries();
+    this._ySeries = this._getNumericalFieldsToUse(this.xConfiguration().serie);
     // Set the horizontal values of the x axis
     this._x = this.xConfiguration()
       .scale.domain(this.ySeries)
       .range([this.margin().left, this.width() - this.margin().right]);
-
-    /** @type {number[]} */
-    const yValues = this.data().flatMap((row) =>
-      this.ySeries.map((serie) => row[serie])
+    // Set the y scale values
+    const ySerieRange = this._serieRange(
+      this.data().flatMap((row) => this.ySeries.map((serie) => row[serie]))
     );
-    const ySerieRange = this._serieRange(yValues);
     // Set the scale for the values in the left position of the y series
     this._y = this.yConfiguration()
       .scale.domain([0, (1 + this.yAxisOffset()) * ySerieRange.max])
@@ -84,6 +80,8 @@ export default class SlopeChart extends RectangularChart {
       .selectAll(".series")
       .data([null])
       .join("g")
+      .on("mouseover", (e) => this.listeners.call("mouseover", this, e))
+      .on("mouseout", (e) => this.listeners.call("mouseout", this, e))
       .attr("class", "series");
 
     this._seriesShown = !name
@@ -246,7 +244,9 @@ export default class SlopeChart extends RectangularChart {
     config = { widthOffset: 0.85, heightOffset: 0.05, size: 5, spacing: 5 }
   ) {
     const legendGroup = this._svg
-      .append("g")
+      .selectAll(".legends")
+      .data([null])
+      .join("g")
       .attr("class", "legends")
       .attr(
         "transform",

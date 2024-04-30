@@ -439,7 +439,7 @@ export default class Chart {
    * @access @protected
    * @returns {void}
    */
-  set _setFieldsTypes(row) {
+  set _fieldsTypes(row) {
     if (typeof row === "object") {
       /**
        * @description
