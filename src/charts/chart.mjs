@@ -64,14 +64,59 @@ export default class Chart {
    * @type {number}
    */
   #yAxisOffset;
+  /**
+   * @description
+   * The D3 js ordinal scale to set the function that color any categorical set of values.
+   * @type {D3Scale}
+   */
   #colorScale;
+  /**
+   * @description
+   * The array of the names of the numerical series to be used to draw the chart.
+   * @type {string[]}
+   */
   #ySeries;
+  /**
+   * @description
+   * The array of the names of the numerical series to displat in the chart. This can you all the ySeries or just one at a time.
+   * @type {string[]}
+   */
   #seriesShown;
+  /**
+   * @description
+   * The durantion of any transition in the chart measure in milliseconds.
+   * @type {number}
+   */
   #duration;
+  /**
+   * @description
+   * The D3 js dispatcher to set the custom event listeners for the chart.
+   * @type {D3Dispatcher}
+   */
   #listeners;
+  /**
+   * @description
+   * The array with the names of the fields of the dataset and the type of the data.
+   * @type {string[]}
+   */
   #fieldsTypes;
+  /**
+   * @description
+   * The name of the fields in the dataset which are categorical type.
+   * @type {string[]}
+   */
   #categoricalSeries;
+  /**
+   * @description
+   * The name of the fields in the dataset which are numerical type.
+   * @type {string[]}
+   */
   #numericalSeries;
+  /**
+   * @description
+   * The object with the maximum and minimum values per each numerical serie in the dataset.
+   * @type {{[key: string]: {serie: string, point: string, x: number, y: number}[]}}
+   */
   #criticalPoints;
 
   /**

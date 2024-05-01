@@ -11,12 +11,47 @@ const { axisTop, axisRight, axisBottom, axisLeft, format } = d3;
  * @extends Chart
  */
 export default class RectangularChart extends Chart {
+  /**
+   * @description
+   * The D3 js function generator which sets the x axis.
+   * @type {D3Axis}
+   */
   #xAxis;
+  /**
+   * @description
+   * The D3 js function generator which sets the y axis.
+   * @type {D3Axis}
+   */
   #yAxis;
+  /**
+   * @description
+   * The object with parameters to position the y axis and the customizations such as format, etc.
+   * @type {{position: string, customizations: object}}
+   */
   #yAxisConfiguration;
+  /**
+   * @description
+   * The object with parameters to position the x axis and the customizations such as format, etc.
+   * @type {{position: string, customizations: object}}
+   */
   #xAxisConfiguration;
+ /**
+   * @description
+   * The scale function to compute the data for the x values to set the position in screen.
+   * @type {D3Scale}
+   */
   #x;
+    /**
+   * @description
+   * The configuration for the x values of the chart. The name of the serie for the x values and the scale to be used.
+   * @type {{serie: string, scale: D3Scale}}
+   */
   #xConfiguration;
+      /**
+   * @description
+   * The name of the serie to analyze a serie with categorical values.
+   * @type {string}
+   */
   #categorySerie;
 
   /**

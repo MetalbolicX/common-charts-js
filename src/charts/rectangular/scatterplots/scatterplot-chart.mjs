@@ -15,6 +15,11 @@ export default class ScatterPlot extends RectangularChart {
    * @type {number}
    */
   #radius;
+  /**
+   * @description
+   * The serie to set analyze per category and the color to be used to differenciate each category.
+   * @type {{serie: string, colors: string[]}}
+   */
   #categoryConfiguration;
   /**
    * @description
