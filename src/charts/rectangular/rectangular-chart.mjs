@@ -2,16 +2,7 @@ import Chart from "../chart.mjs";
 
 ("use strict");
 
-const {
-  axisTop,
-  axisRight,
-  axisBottom,
-  axisLeft,
-  format,
-  transition,
-  greatestIndex,
-  leastIndex,
-} = d3;
+const { axisTop, axisRight, axisBottom, axisLeft, format } = d3;
 
 export default class RectangularChart extends Chart {
   #xAxis;
@@ -21,10 +12,29 @@ export default class RectangularChart extends Chart {
   #x;
   #xConfiguration;
   #categorySerie;
-  #criticalPoints;
 
-  constructor() {
-    super();
+  /**
+   * @description
+   * Create a new instance of a RectangularChart object.
+   * @constructor
+   * @param {object} config The object for the constructor parameters.
+   * @param {string} config.bindTo The css selector for the svg container to draw the chart.
+   * @param {object[]} config.dataset The dataset to create the chart.
+   * @example
+   * ```JavaScript
+   * const dataset = [
+   *    { date: "12-Feb-12", europe: 52, asia: 40, america: 65 },
+   *    { date: "27-Feb-12", europe: 56, asia: 35, america: 70 }
+   * ];
+   *
+   * const chart = new RectangularChart({
+   *    bindTo: "svg.chart",
+   *    dataset
+   * });
+   * ```
+   */
+  constructor({ bindTo, dataset }) {
+    super({ bindTo, dataset });
     this.#xAxis = undefined;
     this.#yAxis = undefined;
     this.#x = undefined;
@@ -38,7 +48,6 @@ export default class RectangularChart extends Chart {
       customizations: { tickFormat: format(".1f") },
     };
     this.#categorySerie = undefined;
-    this.#criticalPoints = undefined;
   }
 
   /**
@@ -50,11 +59,14 @@ export default class RectangularChart extends Chart {
    * @returns {{serieName: string, scale: () => any}|this}
    * @example
    * ```JavaScript
-   * const chart = new RectangularChart()
-   *  .xConfiguration({
+   * const chart = new RectangularChart({
+   *    bindTo: "svg.chart",
+   *    dataset
+   * })
+   * .xConfiguration({
    *    serie: "date",
    *    scale: d3.scaleLinear()
-   *  });
+   * });
    * ```
    */
   xConfiguration(config) {
@@ -81,8 +93,11 @@ export default class RectangularChart extends Chart {
    * @see {@link https://d3js.org/d3-scale}
    * @example
    * ```JavaScript
-   * const chart = new RectangularChart()
-   *  .yAxisConfig({
+   * const chart = new RectangularChart({
+   *    bindTo: "svg.chart",
+   *    dataset
+   * })
+   * .yAxisConfig({
    *    position: "right",
    *    customizations: { tickFormat: d3.format(".1f") }
    * });
@@ -112,8 +127,11 @@ export default class RectangularChart extends Chart {
    * @see {@link https://d3js.org/d3-scale}
    * @example
    * ```JavaScript
-   * const chart = new RectangularChart()
-   *  .xAxisConfig({
+   * const chart = new RectangularChart({
+   *    bindTo: "svg.chart",
+   *    dataset
+   * })
+   * .xAxisConfig({
    *    position: "top",
    *    customizations: { tickFormat: d3.format(".1f") }
    * });
@@ -235,12 +253,11 @@ export default class RectangularChart extends Chart {
    * @returns {string|this}
    * @example
    * ```JavaScript
-   * const chart = new CircleChart()
-   *  .data([
-   *    { date: "12-Feb-12", europe: 52, asia: 40, america: 65 },
-   *    { date: "27-Feb-12", europe: 56, asia: 35, america: 70 }
-   *  ])
-   *  .categorySerie("date");
+   * const chart = new RectangularChart({
+   *    bindTo: "svg.chart",
+   *    dataset
+   * })
+   * .categorySerie("date");
    * ```
    */
   categorySerie(name) {
@@ -251,52 +268,16 @@ export default class RectangularChart extends Chart {
 
   /**
    * @description
-   * Setter of the critical points (maximum and minimum) of each serie in an object.
-   * @returns {{[key: string]: {serie: string, point: string, x: any, y: number}[]}}
-   */
-  _setCriticalPoints() {
-    this.#criticalPoints = this.ySeries.reduce((group, serie) => {
-      const currentSerie = this.data().map((d) => d[serie]);
-      const maxIndex = greatestIndex(currentSerie);
-      const minIndex = leastIndex(currentSerie);
-      return {
-        ...group,
-        [serie]: [
-          {
-            serie,
-            point: "max",
-            x: this.data().at(maxIndex)[this.xConfiguration().serie],
-            y: Math.max(...currentSerie),
-          },
-          {
-            serie,
-            point: "max",
-            x: this.data().at(minIndex)[this.xConfiguration().serie],
-            y: Math.min(...currentSerie),
-          },
-        ],
-      };
-    }, {});
-  }
-
-  /**
-   * @description
-   * Getter of the critical points (max and min) of each serie.
-   * @returns {{[key: string]: {serie: string, point: string, x: any, y: number}[]}}
-   */
-  get criticalPoints() {
-    return this.#criticalPoints;
-  }
-
-  /**
-   * @description
    * Add the x axis to the chart.
    * @returns {void}
    * @example
    * ```JavaScript
    * // Set all the parameters of the chart
-   * const chart = new RectangularChart()
-   *  ...;
+   * const chart = new RectangularChart({
+   *    bindTo: "svg.chart",
+   *    dataset
+   * })
+   * ...;
    *
    * chart.init();
    * chart.addXAxis();
@@ -304,7 +285,7 @@ export default class RectangularChart extends Chart {
    */
   addXAxis() {
     const translation = this.#translateAxis(this.xAxisConfig().position);
-    this._svg
+    this.svg
       .append("g")
       .attr("class", "x axis")
       .attr("transform", translation)
@@ -318,8 +299,11 @@ export default class RectangularChart extends Chart {
    * @example
    * ```JavaScript
    * // Set all the parameters of the chart
-   * const chart = new RectangularChart()
-   *  ...;
+   * const chart = new RectangularChart({
+   *    bindTo: "svg.chart",
+   *    dataset
+   * })
+   * ...;
    *
    * chart.init();
    * chart.addYAxis();
@@ -327,7 +311,7 @@ export default class RectangularChart extends Chart {
    */
   addYAxis() {
     const translation = this.#translateAxis(this.yAxisConfig().position);
-    this._svg
+    this.svg
       .append("g")
       .attr("class", "y axis")
       .attr("transform", translation)
@@ -341,15 +325,18 @@ export default class RectangularChart extends Chart {
    * @example
    * ```JavaScript
    * // Set all the parameters of the chart
-   * const chart = new RectangularChart()
-   *  ...;
+   * const chart = new RectangularChart({
+   *    bindTo: "svg.chart",
+   *    dataset
+   * })
+   * ...;
    *
    * chart.init();
    * chart.xGrid();
    * ```
    */
   xGrid() {
-    const xGridGroup = this._svg.append("g").attr("class", "x grid");
+    const xGridGroup = this.svg.append("g").attr("class", "x grid");
     xGridGroup
       .selectAll("line")
       .data(this.x.ticks())
@@ -367,15 +354,18 @@ export default class RectangularChart extends Chart {
    * @example
    * ```JavaScript
    * // Set all the parameters of the chart
-   * const chart = new RectangularChart()
-   *  ...;
+   * const chart = new RectangularChart({
+   *    bindTo: "svg.chart",
+   *    dataset
+   * })
+   * ...;
    *
    * chart.init();
    * chart.yGrid();
    * ```
    */
   yGrid() {
-    const yGridGroup = this._svg.append("g").attr("class", "y grid");
+    const yGridGroup = this.svg.append("g").attr("class", "y grid");
     yGridGroup
       .selectAll("line")
       .data(this.y.ticks())
@@ -393,15 +383,18 @@ export default class RectangularChart extends Chart {
    * @example
    * ```JavaScript
    * // Set all the parameters of the chart
-   * const chart = new RectangularChart()
-   *  ...;
+   * const chart = new RectangularChart({
+   *    bindTo: "svg.chart",
+   *    dataset
+   * })
+   * ...;
    *
    * chart.init();
    * chart.xAxisArrow();
    * ```
    */
   xAxisArrow() {
-    const arrowGroup = this._svg
+    const arrowGroup = this.svg
       .selectAll(".axis.arrows")
       .data([null])
       .join("g")
@@ -427,15 +420,18 @@ export default class RectangularChart extends Chart {
    * @example
    * ```JavaScript
    * // Set all the parameters of the chart
-   * const chart = new RectangularChart()
-   *  ...;
+   * const chart = new RectangularChart({
+   *    bindTo: "svg.chart",
+   *    dataset
+   * })
+   * ...;
    *
    * chart.init();
    * chart.yAxisArrow();
    * ```
    */
   yAxisArrow() {
-    const arrowGroup = this._svg
+    const arrowGroup = this.svg
       .selectAll(".axis.arrows")
       .data([null])
       .join("g")
@@ -466,8 +462,11 @@ export default class RectangularChart extends Chart {
    * @example
    * ```JavaScript
    * // Set all the parameters of the chart
-   * const chart = new RectangularChart()
-   *  ...;
+   * const chart = new RectangularChart({
+   *    bindTo: "svg.chart",
+   *    dataset
+   * })
+   * ...;
    *
    * chart.init();
    * chart.xAxisName({
@@ -486,7 +485,7 @@ export default class RectangularChart extends Chart {
       deltaY: this.margin().bottom,
     }
   ) {
-    const axisNameGroup = this._svg
+    const axisNameGroup = this.svg
       .selectAll(".axes-name")
       .data([null])
       .join("g")
@@ -519,8 +518,11 @@ export default class RectangularChart extends Chart {
    * @example
    * ```JavaScript
    * // Set all the parameters of the chart
-   * const chart = new RectangularChart()
-   *  ...;
+   * const chart = new RectangularChart({
+   *    bindTo: "svg.chart",
+   *    dataset
+   * })
+   * ...;
    *
    * chart.init();
    * chart.yAxisName({
@@ -534,7 +536,7 @@ export default class RectangularChart extends Chart {
   yAxisName(
     config = { title: "[y axis]", heightOffset: 0.5, deltaX: 0, deltaY: 0 }
   ) {
-    const axisNameGroup = this._svg
+    const axisNameGroup = this.svg
       .selectAll(".axes-name")
       .data([null])
       .join("g")
@@ -566,8 +568,11 @@ export default class RectangularChart extends Chart {
    * @example
    * ```JavaScript
    * // Set all the parameters of the chart
-   * const chart = new RectangularChart()
-   *  ...;
+   * const chart = new RectangularChart({
+   *    bindTo: "svg.chart",
+   *    dataset
+   * })
+   * ...;
    *
    * chart.init();
    * chart.addTitle({
@@ -578,7 +583,7 @@ export default class RectangularChart extends Chart {
    * ```
    */
   addTitle(config) {
-    const titleGroup = this._svg.append("g").attr("class", "chart-title");
+    const titleGroup = this.svg.append("g").attr("class", "chart-title");
     titleGroup
       .append("text")
       .attr("x", this.width() * config.widthOffset)
@@ -599,8 +604,11 @@ export default class RectangularChart extends Chart {
    * @example
    * ```JavaScript
    * // Set all the parameters of the chart
-   * const chart = new RectangularChart()
-   *  ...;
+   * const chart = new RectangularChart({
+   *    bindTo: "svg.chart",
+   *    dataset
+   * })
+   * ...;
    *
    * chart.init();
    * chart.addLegend({
@@ -614,7 +622,7 @@ export default class RectangularChart extends Chart {
   addLegend(
     config = { widthOffset: 0.85, heightOffset: 0.05, size: 5, spacing: 5 }
   ) {
-    const legendGroup = this._svg
+    const legendGroup = this.svg
       .selectAll(".legends")
       .data([null])
       .join("g")
@@ -626,14 +634,12 @@ export default class RectangularChart extends Chart {
         })`
       );
 
-    const t = transition().duration(this.duration());
-
     legendGroup
       .selectAll("rect")
       .data(this.seriesShown)
       .join("rect")
       .attr("class", (d) => `${d} legend`)
-      .transition(t)
+      .transition(this.getTransition())
       .attr("width", config.size)
       .attr("height", config.size)
       .attr("y", (_, i) => (config.size + config.spacing) * i)
@@ -644,7 +650,7 @@ export default class RectangularChart extends Chart {
       .data(this.seriesShown)
       .join("text")
       .attr("class", (d) => `${d} legend-name`)
-      .transition(t)
+      .transition(this.getTransition())
       .attr("x", config.size + config.spacing)
       .attr("y", (_, i) => (config.size + config.spacing) * i)
       .attr("dy", config.size)

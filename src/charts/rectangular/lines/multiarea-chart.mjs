@@ -1,12 +1,32 @@
 import MultiLineChart from "./multiline-chart.mjs";
 
-const { area } = d3;
-
 ("use strict");
 
+const { area } = d3;
+
 export default class MultiAreaChart extends MultiLineChart {
-  constructor() {
-    super();
+    /**
+   * @description
+   * Create a new instance of a MultiAreaChart object.
+   * @constructor
+   * @param {object} config The object for the constructor parameters.
+   * @param {string} config.bindTo The css selector for the svg container to draw the chart.
+   * @param {object[]} config.dataset The dataset to create the chart.
+   * @example
+   * ```JavaScript
+   * const dataset = [
+   *    { date: "12-Feb-12", europe: 52, asia: 40, america: 65 },
+   *    { date: "27-Feb-12", europe: 56, asia: 35, america: 70 }
+   * ];
+   *
+   * const chart = new MultiAreaChart({
+   *    bindTo: "svg.chart",
+   *    dataset
+   * });
+   * ```
+   */
+  constructor({ bindTo, dataset}) {
+    super({ bindTo, dataset });
   }
 
   /**
@@ -16,7 +36,7 @@ export default class MultiAreaChart extends MultiLineChart {
    * @returns {void}
    */
   #addSeries(name) {
-    const groupSeries = this._svg
+    const groupSeries = this.svg
       .selectAll(".series")
       .data([null])
       .join("g")
@@ -48,7 +68,7 @@ export default class MultiAreaChart extends MultiLineChart {
     const rearrangedData = (serie) => [
       {
         serie,
-        values: this.data().map((row) => ({
+        values: this.dataset.map((row) => ({
           x: row[this.xConfiguration().serie],
           y: row[serie],
         })),
@@ -91,8 +111,11 @@ export default class MultiAreaChart extends MultiLineChart {
    * @example
    * ```JavaScript
    * // Set all the parameters of the chart
-   * const chart = new MultiAreaChart()
-   *  ...;
+   * const chart = new MultiAreaChart({
+   *    bindTo: "svg.chart",
+   *    dataset
+   * })
+   * ...;
    *
    * chart.init();
    * chart.addAllSeries();
@@ -110,8 +133,11 @@ export default class MultiAreaChart extends MultiLineChart {
    * @example
    * ```JavaScript
    * // Set all the parameters of the chart
-   * const chart = new MultiAreaChart()
-   *  ...;
+   * const chart = new MultiAreaChart({
+   *    bindTo: "svg.chart",
+   *    dataset
+   * })
+   * ...;
    *
    * chart.init();
    * chart.addSerie("sales");

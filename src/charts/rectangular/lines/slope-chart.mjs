@@ -6,8 +6,28 @@ const { scaleOrdinal } = d3;
 
 export default class SlopeChart extends RectangularChart {
   #radius;
-  constructor() {
-    super();
+    /**
+   * @description
+   * Create a new instance of a SlopeChart object.
+   * @constructor
+   * @param {object} config The object for the constructor parameters.
+   * @param {string} config.bindTo The css selector for the svg container to draw the chart.
+   * @param {object[]} config.dataset The dataset to create the chart.
+   * @example
+   * ```JavaScript
+   * const dataset = [
+   *    { date: "12-Feb-12", europe: 52, asia: 40, america: 65 },
+   *    { date: "27-Feb-12", europe: 56, asia: 35, america: 70 }
+   * ];
+   *
+   * const chart = new SlopeChart({
+   *    bindTo: "svg.chart",
+   *    dataset
+   * });
+   * ```
+   */
+  constructor({ bindTo, dataset}) {
+    super({ bindTo, dataset});
     this.#radius = 3;
   }
 
@@ -18,8 +38,11 @@ export default class SlopeChart extends RectangularChart {
    * @returns {number|this}
    * @example
    * ```JavaScript
-   * const chart = new SlopeChart()
-   *  .radius(5);
+   * const chart = new SlopeChart({
+   *    bindTo: "svg.chart",
+   *    dataset
+   * })
+   * .radius(5);
    * ```
    */
   radius(value) {
@@ -34,19 +57,14 @@ export default class SlopeChart extends RectangularChart {
    * @returns {void}
    */
   init() {
-    // Select the svg element container for the chart
-    this._setSvg();
-    // Add the name of the numberical series
-    this._fieldsTypes = this.data().at(0);
-    this._categoricalSeries = this._getCategoricalSeries();
-    this._ySeries = this._getNumericalFieldsToUse(this.xConfiguration().serie);
+    this._ySeries = this._getNumericalFieldsToUse("");
     // Set the horizontal values of the x axis
     this._x = this.xConfiguration()
       .scale.domain(this.ySeries)
       .range([this.margin().left, this.width() - this.margin().right]);
     // Set the y scale values
     const ySerieRange = this._serieRange(
-      this.data().flatMap((row) => this.ySeries.map((serie) => row[serie]))
+      this.dataset.flatMap((row) => this.ySeries.map((serie) => row[serie]))
     );
     // Set the scale for the values in the left position of the y series
     this._y = this.yConfiguration()
@@ -57,7 +75,7 @@ export default class SlopeChart extends RectangularChart {
     this._yAxis = this._D3Axis(this.yAxisConfig().position).scale(this.y);
     // Set the color schema
     this._colorScale = scaleOrdinal()
-      .domain(this.data().map((row) => row[this.xConfiguration().serie]))
+      .domain(this.dataset.map((row) => row[this.xConfiguration().serie]))
       .range(this.yConfiguration().colorSeries);
     // Set the y axis customizations of the y axis.
     if (this.yAxisConfig().customizations) {
@@ -76,7 +94,7 @@ export default class SlopeChart extends RectangularChart {
    * @returns {void}
    */
   #addSeries(name) {
-    const groupSeries = this._svg
+    const groupSeries = this.svg
       .selectAll(".series")
       .data([null])
       .join("g")
@@ -93,7 +111,7 @@ export default class SlopeChart extends RectangularChart {
      * The rearranged data to create the g elements per category
      * @type {{x: string, values: {serie: string, x: number, y: number}[]}[]}
      */
-    const series = this.data().map((row) => ({
+    const series = this.dataset.map((row) => ({
       x: row[this.xConfiguration().serie],
       values: this.ySeries.map((serie) => ({
         serie,
@@ -108,15 +126,35 @@ export default class SlopeChart extends RectangularChart {
       .join("g")
       .attr("class", (d) => d.x.toLowerCase().replace(" ", "-"));
 
+    const startPositionLines = (lines) =>
+      lines
+        .attr("x1", (d) => this.x(d.values.at(0).serie))
+        .attr("y1", (d) => this.y(d.values.at(0).y))
+        .attr("x2", (d) => this.x(d.values.at(0).serie))
+        .attr("y2", (d) => this.y(d.values.at(0).y));
+
+    const finishPositionLines = (lines) =>
+      lines
+        .transition(this.getTransition())
+        .attr("x2", (d) => this.x(d.values.at(-1).serie))
+        .attr("y2", (d) => this.y(d.values.at(-1).y))
+        .style("stroke-dasharray", "5")
+        .transition(this.getTransition())
+        .style("stroke-dasharray", null);
+
     groupSerie
       .selectAll("line")
       .data((d) => [d])
-      .join("line")
+      .join(
+        (enter) =>
+          enter
+            .append("line")
+            .call(startPositionLines)
+            .call(finishPositionLines),
+        (update) => update.call(startPositionLines).call(finishPositionLines),
+        (exit) => exit.remove()
+      )
       .attr("class", (d) => `${d.x.toLowerCase().replace(" ", "-")} serie`)
-      .attr("x1", (d) => this.x(d.values.at(0).serie))
-      .attr("y1", (d) => this.y(d.values.at(0).y))
-      .attr("x2", (d) => this.x(d.values.at(-1).serie))
-      .attr("y2", (d) => this.y(d.values.at(-1).y))
       .style("stroke", (d) => this.colorScale(d.x));
   }
 
@@ -127,8 +165,11 @@ export default class SlopeChart extends RectangularChart {
    * @example
    * ```JavaScript
    * // Set all the parameters of the chart
-   * const chart = new SlopeChart()
-   *  ...;
+   * const chart = new SlopeChart({
+   *    bindTo: "svg.chart",
+   *    dataset
+   * })
+   * ...;
    *
    * chart.init();
    * chart.addAllSeries();
@@ -146,11 +187,14 @@ export default class SlopeChart extends RectangularChart {
    * @example
    * ```JavaScript
    * // Set all the parameters of the chart
-   * const chart = new SlopeChart()
-   *  ...;
+   * const chart = new SlopeChart({
+   *    bindTo: "svg.chart",
+   *    dataset
+   * })
+   * ...;
    *
    * chart.init();
-   * chart.addSerie();
+   * chart.addSerie("sales");
    * ```
    */
   addSerie(name) {
@@ -164,25 +208,46 @@ export default class SlopeChart extends RectangularChart {
    * @example
    * ```JavaScript
    * // Set all the parameters of the chart
-   * const chart = new SlopeChart()
-   *  ...;
+   * const chart = new SlopeChart({
+   *    bindTo: "svg.chart",
+   *    dataset
+   * })
+   * ...;
    *
    * chart.init();
    * chart.addPoints();
    * ```
    */
   addPoints() {
-    const groupSeries = this._svg.select(".series");
+    const groupSeries = this.svg.select(".series");
+
+    const positionCircles = (circles) =>
+      circles
+        .attr("cx", (d) => this.x(d.serie))
+        .attr("cy", (d) => this.y(d.y))
+        .style("fill", "none");
+
+    const growRadius = (circles) =>
+      circles
+        .transition(this.getTransition())
+        .style("fill", (d) => this.colorScale(d.x))
+        .attr("r", this.radius());
+
     groupSeries
       .selectAll("g")
       .selectAll("circle")
       .data((d) => d.values)
-      .join("circle")
-      .attr("class", (d) => `${d.x.toLowerCase().replace(" ", "-")} point`)
-      .attr("cx", (d) => this.x(d.serie))
-      .attr("cy", (d) => this.y(d.y))
-      .attr("r", this.radius())
-      .style("fill", (d) => this.colorScale(d.x));
+      .join(
+        (enter) =>
+          enter
+            .append("circle")
+            .attr("r", 0)
+            .call(positionCircles)
+            .call(growRadius),
+        (update) => update.call(positionCircles).call(growRadius),
+        (exit) => exit.remove()
+      )
+      .attr("class", (d) => `${d.x.toLowerCase().replace(" ", "-")} point`);
   }
 
   /**
@@ -193,15 +258,18 @@ export default class SlopeChart extends RectangularChart {
    * @example
    * ```JavaScript
    * // Set all the parameters of the chart
-   * const chart = new SlopeChart()
-   *  ...;
+   * const chart = new SlopeChart({
+   *    bindTo: "svg.chart",
+   *    dataset
+   * })
+   * ...;
    *
    * chart.init();
    * chart.addLabels(-10);
    * ```
    */
   addLabels(deltaY = -5) {
-    const groupSeries = this._svg.select(".series");
+    const groupSeries = this.svg.select(".series");
     groupSeries
       .selectAll("g")
       .selectAll("text")
@@ -228,8 +296,11 @@ export default class SlopeChart extends RectangularChart {
    * @example
    * ```JavaScript
    * // Set all the parameters of the chart
-   * const chart = new SlopeChart()
-   *  ...;
+   * const chart = new SlopeChart({
+   *    bindTo: "svg.chart",
+   *    dataset
+   * })
+   * ...;
    *
    * chart.init();
    * chart.addLegend({
@@ -243,7 +314,7 @@ export default class SlopeChart extends RectangularChart {
   addLegend(
     config = { widthOffset: 0.85, heightOffset: 0.05, size: 5, spacing: 5 }
   ) {
-    const legendGroup = this._svg
+    const legendGroup = this.svg
       .selectAll(".legends")
       .data([null])
       .join("g")

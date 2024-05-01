@@ -1,8 +1,8 @@
-import RectangularChart from "./rectangular-chart.mjs";
+import RectangularChart from "../rectangular-chart.mjs";
 
 ("use strict");
 
-const { scaleOrdinal, transition } = d3;
+const { scaleOrdinal } = d3;
 
 export default class ScatterPlot extends RectangularChart {
   #radius;
@@ -13,8 +13,28 @@ export default class ScatterPlot extends RectangularChart {
    * @type {{category: string, xMax: number, xMin: number, slope: number, b: number}[]}
    */
   #slopes;
-  constructor() {
-    super();
+  /**
+   * @description
+   * Create a new instance of a ScatterPlot object.
+   * @constructor
+   * @param {object} config The object for the constructor parameters.
+   * @param {string} config.bindTo The css selector for the svg container to draw the chart.
+   * @param {object[]} config.dataset The dataset to create the chart.
+   * @example
+   * ```JavaScript
+   * const dataset = [
+   *    { date: "12-Feb-12", europe: 52, asia: 40, america: 65 },
+   *    { date: "27-Feb-12", europe: 56, asia: 35, america: 70 }
+   * ];
+   *
+   * const chart = new ScatterPlot({
+   *    bindTo: "svg.chart",
+   *    dataset
+   * });
+   * ```
+   */
+  constructor({ bindTo, dataset }) {
+    super({ bindTo, dataset });
     this.#radius = 1;
     this.#slopes = undefined;
     this.#categoryConfiguration = undefined;
@@ -27,8 +47,11 @@ export default class ScatterPlot extends RectangularChart {
    * @returns {number|this}
    * @example
    * ```JavaScript
-   * const chart = new ScatterPlot()
-   *  .radius(5);
+   * const chart = new ScatterPlot({
+   *    bindTo: "svg.chart",
+   *    dataset
+   * })
+   * .radius(5);
    * ```
    */
   radius(value) {
@@ -46,11 +69,14 @@ export default class ScatterPlot extends RectangularChart {
    * @returns {{serie: string, colors: string[]}|this}
    * @example
    * ```JavaScript
-   * const chart = new ScatterPlot()
-   *  .categoryConfiguration({
+   * const chart = new ScatterPlot({
+   *    bindTo: "svg.chart",
+   *    dataset
+   * })
+   * .categoryConfiguration({
    *    serie: "group",
    *    colors: ["black", "green", "yellow"]
-   *  });
+   * });
    * ```
    */
   categoryConfiguration(config) {
@@ -85,20 +111,16 @@ export default class ScatterPlot extends RectangularChart {
    */
   init() {
     const xSerieRange = this._serieRange(
-      this.data().map((d) => d[this.xConfiguration().serie])
+      this.dataset.map((d) => d[this.xConfiguration().serie])
     );
     // Set the scale for the values in the bottom position of the x axis
     this._x = this.xConfiguration()
       .scale.domain(Object.values(xSerieRange))
       .range([this.margin().left, this.width() - this.margin().right]);
     // Get the numerical fields names
-    const dataSample = this._getNumericalRow(this.data().at(0), [
-      this.xConfiguration().serie,
-      this.categoryConfiguration().serie,
-    ]);
-    this._ySeries = Object.keys(dataSample);
+    this._ySeries = this._getNumericalFieldsToUse(this.xConfiguration().serie);
     const ySerieRange = this._serieRange(
-      this.data().flatMap((d) => this.ySeries.map((serie) => d[serie]))
+      this.dataset.flatMap((d) => this.ySeries.map((serie) => d[serie]))
     );
     // Set the scale for the values in the left position of the y series
     this._y = this.yConfiguration()
@@ -107,21 +129,17 @@ export default class ScatterPlot extends RectangularChart {
         (1 + this.yAxisOffset()) * ySerieRange.max,
       ])
       .range([this.height() - this.margin().bottom, this.margin().top]);
-
     // Set the axes
     this._xAxis = this._D3Axis(this.xAxisConfig().position).scale(this.x);
     this._yAxis = this._D3Axis(this.yAxisConfig().position).scale(this.y);
-    // Set the svg container of the chart
-    this._setSvg();
     // Set the categories of the dataset
-    const categoryValues = this.data().map(
+    const categoryValues = this.dataset.map(
       (d) => d[this.categoryConfiguration().serie]
     );
     // Set the color schema
     this._colorScale = scaleOrdinal()
       .domain(categoryValues.filter((d, i, ns) => ns.indexOf(d) == i).sort())
       .range(this.categoryConfiguration().colors);
-    // );
     // Set the the x axis customizations of format
     if (this.xAxisConfig().customizations) {
       for (const [xFormat, customFormat] of Object.entries(
@@ -147,7 +165,7 @@ export default class ScatterPlot extends RectangularChart {
    * @returns {void}
    */
   #addSeries(name) {
-    const seriesGroup = this._svg
+    const seriesGroup = this.svg
       .selectAll(".series")
       .data([null])
       .join("g")
@@ -163,8 +181,6 @@ export default class ScatterPlot extends RectangularChart {
       .join("g")
       .attr("class", (d) => `${d.toLowerCase().replace(" ", "-")} serie`);
 
-    const duration = 2000;
-    const t = transition().duration(duration);
     const positionCircles = (circles) =>
       circles
         .attr("cx", (d) => this.x(d.x))
@@ -174,21 +190,21 @@ export default class ScatterPlot extends RectangularChart {
     seriesGroup
       .selectAll(".serie")
       .selectAll("circle")
-      .data((d) => this.data().map((row) => this.getSerie(row, d)))
+      .data((d) => this.dataset.map((row) => this.getSerie(row, d)))
       .join(
         (enter) =>
           enter
             .append("circle")
             .call(positionCircles)
             .attr("r", 0)
-            .call((enter) => enter.transition(t).attr("r", this.radius())),
+            .call((enter) =>
+              enter.transition(this.getTransition()).attr("r", this.radius())
+            ),
         (update) =>
-          update.call((update) =>
-            update
-              .transition(t)
-              .delay((_, i) => i * duration)
-              .call(positionCircles)
-          ),
+          update
+            .transition(this.getTransition())
+            .delay((_, i) => i * this.duration())
+            .call(positionCircles),
         (exit) => exit.remove()
       )
       .attr("class", (d) => `${d.serie.toLowerCase().replace(" ", "-")} point`);
@@ -217,8 +233,10 @@ export default class ScatterPlot extends RectangularChart {
    * @example
    * ```JavaScript
    * // Set all the parameters of the chart
-   * const chart = new ScatterPlot()
-   *  ...;
+   * const chart = new ScatterPlot({
+   *    bindTo: "svg.chart",
+   *    dataset
+   * });
    *
    * chart.init();
    * chart.addAllSeries();
@@ -236,11 +254,13 @@ export default class ScatterPlot extends RectangularChart {
    * @example
    * ```JavaScript
    * // Set all the parameters of the chart
-   * const chart = new ScatterPlot()
-   *  ...;
+   * const chart = new ScatterPlot({
+   *    bindTo: "svg.chart",
+   *    dataset
+   * })
    *
    * chart.init();
-   * chart.addSerie();
+   * chart.addSerie("sales");
    * ```
    */
   addSerie(name) {
@@ -259,8 +279,10 @@ export default class ScatterPlot extends RectangularChart {
    * @example
    * ```JavaScript
    * // Set all the parameters of the chart
-   * const chart = new ScatterPlot()
-   *  ...;
+   * const chart = new ScatterPlot({
+   *    bindTo: "svg.chart",
+   *    dataset
+   * });
    *
    * chart.init();
    * chart.addLegend({
@@ -274,7 +296,7 @@ export default class ScatterPlot extends RectangularChart {
   addLegend(
     config = { widthOffset: 0.85, heightOffset: 0.05, size: 5, spacing: 5 }
   ) {
-    const legendGroup = this._svg
+    const legendGroup = this.svg
       .append("g")
       .attr("class", "legends")
       .attr(
@@ -411,8 +433,10 @@ export default class ScatterPlot extends RectangularChart {
    * @example
    * ```JavaScript
    * // Set all the parameters of the chart
-   * const chart = new ScatterPlot()
-   *  ...;
+   * const chart = new ScatterPlot({
+   *    bindTo: "svg.chart",
+   *    dataset
+   * });
    *
    * chart.init();
    * chart.addTrendingLines();
@@ -420,17 +444,15 @@ export default class ScatterPlot extends RectangularChart {
    */
   addTrendingLines() {
     const categories = this.groupBy(
-      this.data(),
+      this.dataset,
       this.categoryConfiguration().serie
     );
     const leastSquaresCalcs = this.leastSquares(categories);
     this.#slopes = this.calculateSlopes(leastSquaresCalcs);
     const coordinates = this.calculateCoordinates(this.slopes);
 
-    const seriesGroup = this._svg.select(".series");
+    const seriesGroup = this.svg.select(".series");
 
-    const duration = 2000;
-    const t = transition().duration(duration);
     const positionLines = (lines) =>
       lines
         .attr("x1", (d) => this.x(d.xMin))
@@ -450,17 +472,15 @@ export default class ScatterPlot extends RectangularChart {
             .style("stroke", null)
             .call((enter) =>
               enter
-                .transition(t)
+                .transition(this.getTransition())
                 .style("stroke", (d) => this.colorScale(d.category))
             ),
         (update) =>
-          update.call((update) =>
-            update
-              .transition(t)
-              .delay((_, i) => i * duration)
-              .call(positionLines)
-              .style("stroke", (d) => this.colorScale(d))
-          ),
+          update
+            .transition(this.getTransition())
+            .delay((_, i) => i * this.duration())
+            .call(positionLines)
+            .style("stroke", (d) => this.colorScale(d)),
         (exit) => exit.remove()
       )
       .attr(

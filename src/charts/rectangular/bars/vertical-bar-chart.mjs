@@ -1,4 +1,4 @@
-import RectangularChart from "./rectangular-chart.mjs";
+import RectangularChart from "../rectangular-chart.mjs";
 
 const { scaleBand, scaleOrdinal } = d3;
 

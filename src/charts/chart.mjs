@@ -1,6 +1,6 @@
-const { select, transition, dispatch } = d3;
-
 ("use strict");
+
+const { select, transition, dispatch, greatestIndex, leastIndex } = d3;
 
 /**
  * @description
@@ -8,12 +8,11 @@ const { select, transition, dispatch } = d3;
  * @class
  */
 export default class Chart {
-  #bindTo;
   #svg;
   #width;
   #height;
   #margin;
-  #data;
+  #dataset;
   #yConfiguration;
   #y;
   #yAxisOffset;
@@ -24,14 +23,47 @@ export default class Chart {
   #listeners;
   #fieldsTypes;
   #categoricalSeries;
+  #numericalSeries;
+  #criticalPoints;
 
-  constructor() {
-    this.#bindTo = "svg";
-    this.#svg = undefined;
-    this.#width = 800;
-    this.#height = 600;
+  /**
+   * @description
+   * Create a new instance of a Chart object.
+   * @constructor
+   * @param {object} config The object for the constructor parameters.
+   * @param {string} config.bindTo The css selector for the svg container to draw the chart.
+   * @param {object[]} config.dataset The dataset to create the chart.
+   * @example
+   * ```JavaScript
+   * const dataset = [
+   *    { date: "12-Feb-12", europe: 52, asia: 40, america: 65 },
+   *    { date: "27-Feb-12", europe: 56, asia: 35, america: 70 }
+   * ];
+   *
+   * const chart = new Chart({
+   *    bindTo: "svg.chart",
+   *    dataset
+   * });
+   * ```
+   */
+  constructor({ bindTo, dataset }) {
+    // Set the D3 js selection pf the svg element container
+    this._svg = bindTo;
+    this._dataset = dataset;
+    // Set the metadata of the fields
+    this._fieldsTypes = dataset.at(0);
+    this._categoricalSeries = [...this.fieldsTypes]
+      .filter(([field, type]) => type === "categorical" && field.length)
+      .map(([field, _]) => field);
+    this._numericalSeries = [...this.fieldsTypes]
+      .filter(([field, type]) => type === "numerical" && field.length)
+      .map(([field, _]) => field);
+    // The minimum and maximum values per series
+    this._criticalPoints = dataset;
+    // Set the values of the svg element width and height
+    this.#width = this.svg?.node().getBoundingClientRect().width || 800;
+    this.#height = this.svg?.node().getBoundingClientRect().height || 600;
     this.#margin = { top: 0, right: 0, bottom: 0, left: 0 };
-    this.#data = undefined;
     this.#yAxisOffset = 0.05;
     this.#yConfiguration = undefined;
     this.#colorScale = undefined;
@@ -39,25 +71,6 @@ export default class Chart {
     this.#seriesShown = undefined;
     this.#duration = 2000;
     this.#listeners = dispatch("mouseover", "mouseout");
-    this.#fieldsTypes = undefined;
-    this.#categoricalSeries = undefined;
-  }
-
-  /**
-   * @description
-   * Getter and setter for the svg element where the chart is displayed.
-   * @param {string} selector The CSS selector of the svg where the chart will be drawn.
-   * @returns {string|this}
-   * @example
-   * ```JavaScript
-   * const chart = new Chart()
-   *  .bindTo("svg.chart");
-   * ```
-   */
-  bindTo(selector) {
-    return arguments.length && typeof selector === "string"
-      ? ((this.#bindTo = selector), this)
-      : this.#bindTo;
   }
 
   /**
@@ -67,8 +80,11 @@ export default class Chart {
    * @returns {number|this}
    * @example
    * ```JavaScript
-   * const chart = new Chart()
-   *  .height(500);
+   * const chart = new Chart({
+   *    bindTo: "svg.chart",
+   *    dataset
+   * })
+   * .height(500);
    * ```
    */
   height(value) {
@@ -84,8 +100,11 @@ export default class Chart {
    * @returns {number|this}
    * @example
    * ```JavaScript
-   * const chart = new Chart()
-   *  .width(500);
+   * const chart = new Chart({
+   *    bindTo: "svg.chart",
+   *    dataset
+   * })
+   * .width(500);
    * ```
    */
   width(value) {
@@ -106,13 +125,16 @@ export default class Chart {
    * @returns {{top: number, right: number, bottom: number, left: number}|this}
    * @example
    * ```JavaScript
-   * const chart = new Chart()
-   *  .margin({
-   *      top: 30,
-   *      right: 50,
-   *      bottom: 30,
-   *      left: 50
-   *   });
+   * const chart = new Chart({
+   *    bindTo: "svg.chart",
+   *    dataset
+   * })
+   * .margin({
+   *    top: 30,
+   *    right: 50,
+   *    bottom: 30,
+   *    left: 50
+   * });
    * ```
    */
   margin(margins) {
@@ -138,31 +160,28 @@ export default class Chart {
 
   /**
    * @description
-   * Getter and setter for the data to draw the chart.
+   * Setter for the data to draw the chart.
    * @param {object[]} dataset The dataset to draw the chart as an array of objects.
-   * @returns {object[]|this}
-   * @example
-   * ```JavaScript
-   * const chart = new Chart()
-   *  .data([
-   *    { date: "12-Feb-12", europe: 52, asia: 40, america: 65 },
-   *    { date: "27-Feb-12", europe: 56, asia: 35, america: 70 }
-   *  ]);
-   * ```
+   * @returns {void}
+   * @access @protected
    */
-  data(dataset) {
-    if (!arguments.length) {
-      return this.#data;
-    }
-    if (
-      Array.isArray(dataset) &&
-      dataset.every((obj) => typeof obj === "object")
-    ) {
-      this.#data = [...dataset];
+  set _dataset(dataset) {
+    if (Array.isArray(dataset) && dataset.every((d) => typeof d === "object")) {
+      this.#dataset = [...dataset];
     } else {
       throw new Error("The only dataset allowed is an array of objects");
     }
-    return this;
+  }
+
+  /**
+   * @description
+   * Getter for the data to draw the chart.
+   * @returns {object[]} The dataset to draw the chart as an array of objects.
+   * @access @protected
+   * @example
+   */
+  get dataset() {
+    return this.#dataset;
   }
 
   /**
@@ -174,11 +193,14 @@ export default class Chart {
    * @returns {{colorSeries: string[], scale: () => any}|this}
    * @example
    * ```JavaScript
-   * const chart = new Chart()
-   *  .yConfiguration({
+   * const chart = new Chart({
+   *    bindTo: "svg.chart",
+   *    dataset
+   * })
+   * .yConfiguration({
    *    colorSeries: ["black", "pink", "#aaa"]
    *    scale: d3.scaleLinear()
-   *  });
+   * });
    * ```
    */
   yConfiguration(config) {
@@ -202,6 +224,7 @@ export default class Chart {
    * @description
    * Setter of the y numerical series names of the dataset.
    * @param {string[]} series The list of names of the y series
+   * @returns {void}
    * @access @protected
    */
   set _ySeries(series) {
@@ -228,8 +251,11 @@ export default class Chart {
    * @returns {number|this}
    * @example
    * ```JavaScript
-   * const chart = new Chart()
-   *  .yAxisOffset(0.05);
+   * const chart = new Chart({
+   *    bindTo: "svg.chart",
+   *    dataset
+   * })
+   * .yAxisOffset(0.05);
    * ```
    */
   yAxisOffset(percentage) {
@@ -249,16 +275,13 @@ export default class Chart {
 
   /**
    * @description
-   * Set the svg element container for the chart.
+   * Set the svg element container for drawing the chart in the DOM.
+   * @param {string} bindTo The css selector for the svg element to draw the chart.
    * @returns {void}
    * @access @protected
    */
-  _setSvg() {
-    if (this.constructor === Chart) {
-      console.error("Not access allowed");
-      return;
-    }
-    const svgContainer = document.querySelector(this.bindTo());
+  set _svg(bindTo) {
+    const svgContainer = document.querySelector(bindTo);
     if (!svgContainer) {
       throw new Error("Cannot find SVG element container for the chart");
     }
@@ -271,7 +294,7 @@ export default class Chart {
    * @returns {D3Selection}
    * @access @protected
    */
-  get _svg() {
+  get svg() {
     return this.#svg;
   }
 
@@ -297,6 +320,7 @@ export default class Chart {
    * @description
    * Setter of the D3 js scale function generator for the y to transform data.
    * @param {D3Scale} scale The D3 js scale for the y series.
+   * @returns {void}
    * @access @protected
    */
   set _y(scale) {
@@ -316,6 +340,7 @@ export default class Chart {
    * @description
    * Setter of the color scale D3 js scale for the color.
    * @param {D3Scale} scale The D3 js scale for the color.
+   * @returns {void}
    * @access @protected
    */
   set _colorScale(scale) {
@@ -335,24 +360,19 @@ export default class Chart {
    * @description
    * Transform a row of the dataset into just numerical series data.
    * @param {string} fieldToExclude The names of the column to exclude for the numerical fields.
-   * @access @protected
    * @returns {string[]}
+   * @access @protected
    */
   _getNumericalFieldsToUse(fieldToExclude) {
-    return [...this.fieldsTypes]
-      .filter(
-        ([field, type]) =>
-          type === "numerical" && field.length && field !== fieldToExclude
-      )
-      .map(([field, _]) => field);
+    return this.numericalSeries.filter((serie) => serie !== fieldToExclude);
   }
 
   /**
    * @description
    * Setter for the series display in the chart.
    * @param {string[]} series The series to show in the chart.
-   * @access @protected
    * @returns {void}
+   * @access @protected
    */
   set _seriesShown(series) {
     if (series.length && series.every((serie) => typeof serie === "string")) {
@@ -424,7 +444,6 @@ export default class Chart {
   /**
    * @description
    * Getter function to access the listeners object.
-   * @readonly
    * @returns {object} The listeners object.
    */
   get listeners() {
@@ -436,8 +455,8 @@ export default class Chart {
    * Setter function to set the types of fields in the dataset.
    * If the provided sample is an object, it determines whether each field is numerical or categorical.
    * @param {object} row - The row object representing the dataset.
-   * @access @protected
    * @returns {void}
+   * @access @protected
    */
   set _fieldsTypes(row) {
     if (typeof row === "object") {
@@ -469,28 +488,16 @@ export default class Chart {
 
   /**
    * @description
-   * Retrieves the names of categorical series from the fieldsTypes map.
-   * @access @protected
-   * @returns {string[]} An array containing the names of categorical series.
-   */
-  _getCategoricalSeries() {
-    return [...this.#fieldsTypes]
-      .filter(([field, type]) => type === "categorical" && field.length)
-      .map(([field, _]) => field);
-  }
-
-  /**
-   * @description
    * Setter function to define the names of categorical series.
    * @param {string[]} series An array of strings representing the names of categorical series.
-   * @access @protected
    * @returns {void}
+   * @access @protected
    */
   set _categoricalSeries(series) {
     if (series.length && series.every((serie) => typeof serie === "string")) {
       this.#categoricalSeries = [...series];
     } else {
-      console.error("The field names muest be string type");
+      console.error("The field names must be string type");
     }
   }
 
@@ -501,5 +508,124 @@ export default class Chart {
    */
   get categoricalSeries() {
     return this.#categoricalSeries;
+  }
+
+  /**
+   * @description
+   * Setter function to define the names of numerical series.
+   * @param {string[]} series An array of strings representing the names of numerical series.
+   * @returns {void}
+   * @access @protected
+   */
+  set _numericalSeries(series) {
+    if (series.length && series.every((serie) => typeof serie === "string")) {
+      this.#numericalSeries = [...series];
+    } else {
+      console.error("The field names must be string type");
+    }
+  }
+
+  /**
+   * @description
+   * Getter function to access the names of numerical series.
+   * @returns {string[]} An array containing the names of numerical series.
+   */
+  get numericalSeries() {
+    return this.#numericalSeries;
+  }
+
+  /**
+   * @description
+   * Setter of the critical points (maximum and minimum) of each serie in an object.
+   * @param {object[]} dataset The dataset to get the critical points of the numerical series
+   * @returns {{[key: string]: {serie: string, point: string, x: number, y: number}[]}}
+   * @access @protected
+   */
+  set _criticalPoints(dataset) {
+    this.#criticalPoints = this.numericalSeries.reduce((group, serie) => {
+      const currentSerie = dataset.map((d) => d[serie]);
+      return {
+        ...group,
+        [serie]: [
+          {
+            serie,
+            point: "max",
+            x: greatestIndex(currentSerie),
+            y: Math.max(...currentSerie),
+          },
+          {
+            serie,
+            point: "min",
+            x: leastIndex(currentSerie),
+            y: Math.min(...currentSerie),
+          },
+        ],
+      };
+    }, {});
+  }
+
+  /**
+   * @description
+   * Getter of the critical points (max and min) of each serie.
+   * @returns {{[key: string]: {serie: string, point: string, x: number, y: number}[]}}
+   */
+  get criticalPoints() {
+    return this.#criticalPoints;
+  }
+
+  /**
+   * @description
+   * Add the div elements to the DOM, so that it can be used to display the tooltip.
+   * @param {object} tooltipStyles The object literal with the CSS styles to apply to the tooltip.
+   * @returns {void}
+   * @example
+   * ```JavaScript
+   * // Set all the parameters of the chart
+   * const chart = new Chart({
+   *    bindTo: "svg.chart",
+   *    dataset
+   * })
+   * ...;
+   *
+   * chart.init();
+   * chart.addTooltip({
+   *      opacity: "0",
+   *      background: "#eeeeee",
+   *      pointerEvents: "none",
+   *      borderRadius: "2px",
+   *      padding: "5px",
+   *      position: "absolute",
+   *      top: "0",
+   *      left: "0",
+   *      zIndex: "1",
+   * });
+   * ```
+   */
+  addTooltip(
+    tooltipStyles = {
+      opacity: "0",
+      background: "#eeeeee",
+      pointerEvents: "none",
+      borderRadius: "2px",
+      padding: "5px",
+      position: "absolute",
+      top: "0",
+      left: "0",
+      zIndex: "1",
+    }
+  ) {
+    let tooltip = document.querySelector("#tooltip");
+    // In case the tooltip element exists
+    if (tooltip) {
+      return;
+    }
+    // If the tooltip element does not exist then create it
+    tooltip = document.createElement("div");
+    tooltip.setAttribute("id", "tooltip");
+    // Apply the styles for the tooltip
+    for (const cssStyle in tooltipStyles) {
+      tooltip.style[cssStyle] = tooltipStyles[cssStyle];
+    }
+    document.body.append(tooltip);
   }
 }
