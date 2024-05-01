@@ -1,20 +1,68 @@
 ("use strict");
 
-const { select, transition, dispatch, greatestIndex, leastIndex } = d3;
+const {
+  select,
+  transition,
+  dispatch,
+  greatestIndex,
+  leastIndex,
+  scaleOrdinal,
+} = d3;
 
 /**
  * @description
- * Chart is a class to set a basic D3 js chart.
+ * Chart is the base parent class with common properties to build any D3 js chart.
  * @class
  */
 export default class Chart {
+  /**
+   * @description
+   * D3 js selection of the svg element container to draw the chart.
+   * @type {Selection}
+   */
   #svg;
+  /**
+   * @description
+   * The size of width the svg element container.
+   * @type {number}
+   */
   #width;
+  /**
+   * @description
+   * The size of height the svg element container.
+   * @type {number}
+   */
   #height;
+  /**
+   * @description
+   * The object that contains the margins necessary to set in the chart drawn in the svg container.
+   * @see {@link https://observablehq.com/@d3/margin-convention}
+   * @type {{top: number, right: number, bottom: number, left: number}}
+   */
   #margin;
+  /**
+   * @description
+   * The array of objects that contains the data necessary to draw the chart.
+   * @type {object[]}
+   */
   #dataset;
+  /**
+   * @description
+   * The configuration for the y values of the chart. The object holds the color of the series and the D3 js scake to compute the numerical data.
+   * @type {{colorSeries: string[], scale: D3Scale}}
+   */
   #yConfiguration;
+  /**
+   * @description
+   * The scale function to compute the numerical data to set the position in screen.
+   * @type {D3Scale}
+   */
   #y;
+  /**
+   * @description
+   * The numerical vvalue in percentage to add an offset in the y scale extreme points of the domain.
+   * @type {number}
+   */
   #yAxisOffset;
   #colorScale;
   #ySeries;
@@ -52,9 +100,11 @@ export default class Chart {
     this._dataset = dataset;
     // Set the metadata of the fields
     this._fieldsTypes = dataset.at(0);
+    // Which are the categorical fields in the dataset
     this._categoricalSeries = [...this.fieldsTypes]
       .filter(([field, type]) => type === "categorical" && field.length)
       .map(([field, _]) => field);
+    // Which are the numerical fields in the dataset
     this._numericalSeries = [...this.fieldsTypes]
       .filter(([field, type]) => type === "numerical" && field.length)
       .map(([field, _]) => field);
@@ -66,7 +116,7 @@ export default class Chart {
     this.#margin = { top: 0, right: 0, bottom: 0, left: 0 };
     this.#yAxisOffset = 0.05;
     this.#yConfiguration = undefined;
-    this.#colorScale = undefined;
+    this._colorScale = scaleOrdinal();
     this.#ySeries = undefined;
     this.#seriesShown = undefined;
     this.#duration = 2000;
@@ -77,7 +127,7 @@ export default class Chart {
    * @description
    * Getter and setter for the height property.
    * @param {number} value The value of the height of the chart.
-   * @returns {number|this}
+   * @returns {number|Chart}
    * @example
    * ```JavaScript
    * const chart = new Chart({
@@ -97,7 +147,7 @@ export default class Chart {
    * @description
    * Getter and setter for the width property.
    * @param {number} value The value of the width of the chart.
-   * @returns {number|this}
+   * @returns {number|Chart}
    * @example
    * ```JavaScript
    * const chart = new Chart({
@@ -122,7 +172,7 @@ export default class Chart {
    * @param {number} margins.right The right margin pixels for the plot.
    * @param {number} margins.bottom The bottom margin pixels for the plot.
    * @param {number} margins.left The left margin pixels for the plot.
-   * @returns {{top: number, right: number, bottom: number, left: number}|this}
+   * @returns {{top: number, right: number, bottom: number, left: number}|Chart}
    * @example
    * ```JavaScript
    * const chart = new Chart({
@@ -189,8 +239,8 @@ export default class Chart {
    * Getter and setter of the configuration of the y numerical values to draw in the chart.
    * @param {object} config The configuration to give to the y (numerical) values series.
    * @param {string[]} config.colorSeries The string of the color to classify a each of the datasets.
-   * @param {D3Scale} config.scale The D3 js function to process the numerical data.
-   * @returns {{colorSeries: string[], scale: () => any}|this}
+   * @param {D3SCale} config.scale The D3 js function to process the numerical data.
+   * @returns {{colorSeries: string[], scale: D3Scale}|Chart}
    * @example
    * ```JavaScript
    * const chart = new Chart({
@@ -248,7 +298,7 @@ export default class Chart {
    * @description
    * Add a percentage offset value to the maximum and minimum value for the domain limiits of the chart.
    * @param {number} percentage The pecentage number to offset the y axis minimum and maximum values. The value must be between 0 and 1.
-   * @returns {number|this}
+   * @returns {number|Chart}
    * @example
    * ```JavaScript
    * const chart = new Chart({
@@ -291,7 +341,7 @@ export default class Chart {
   /**
    * @description
    * Getter for the svg container of the chart.
-   * @returns {D3Selection}
+   * @returns {Selection}
    * @access @protected
    */
   get svg() {
@@ -395,7 +445,7 @@ export default class Chart {
    * @description
    * Getter ans setter of the duration of the animations.
    * @param {number} milliseconds The duration of the animation to be executed.
-   * @returns {number|this}
+   * @returns {number|Chart}
    * @example
    * ```JavaScript
    * const chart = new Chart()
@@ -421,7 +471,7 @@ export default class Chart {
    * @description
    * Attaches event listeners to the chart.
    * @param {...*} args - Arguments to be passed to the event listener.
-   * @returns {callback|this} Returns the Chart instance if no additional function is returned, otherwise returns the function returned by the event listener.
+   * @returns {callback|Chart} Returns the Chart instance if no additional function is returned, otherwise returns the function returned by the event listener.
    */
   on() {
     /**
@@ -433,7 +483,7 @@ export default class Chart {
     /**
      * @description
      * Calls the "on" method of the listeners object with the provided arguments.
-     * @type {ListenerFunction|this}
+     * @type {ListenerFunction|Chart}
      */
     const fn = this.listeners.on.apply(this.listeners, arguments);
     // If the returned function is the same as the listeners object, return the Chart instance,

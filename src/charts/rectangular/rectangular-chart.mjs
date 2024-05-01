@@ -4,6 +4,12 @@ import Chart from "../chart.mjs";
 
 const { axisTop, axisRight, axisBottom, axisLeft, format } = d3;
 
+/**
+ * @description
+ * RectangleChart represents any chart that needs rectangular coordinates such as a Cartesina plane of x and y coordinates.
+ * @class
+ * @extends Chart
+ */
 export default class RectangularChart extends Chart {
   #xAxis;
   #yAxis;
@@ -56,7 +62,7 @@ export default class RectangularChart extends Chart {
    * @param {object} config The configuration to give to the x values series.
    * @param {string} config.serie The name of the serie for the x axis.
    * @param {D3Scale} config.scale The D3 js function to process the x data.
-   * @returns {{serieName: string, scale: () => any}|this}
+   * @returns {{serie: string, scale: D3Scale}|ReectangularChart}
    * @example
    * ```JavaScript
    * const chart = new RectangularChart({
@@ -89,7 +95,7 @@ export default class RectangularChart extends Chart {
    * @param {object} config Configuration object of the y axis position and customizations.
    * @param {string} config.position The position of the y axis. It can only be top, right, bottom or left inputs.
    * @param {object} config.customizations The customizations of the y axis according to the D3 js axis.
-   * @returns {{position: string, customizations: object}|this}
+   * @returns {{position: string, customizations: object}|ReectangularChart}
    * @see {@link https://d3js.org/d3-scale}
    * @example
    * ```JavaScript
@@ -123,7 +129,7 @@ export default class RectangularChart extends Chart {
    * @param {object} config Configuration object of the x axis position and customizations.
    * @param {string} config.position The position of the x axis. It can only be top, right, bottom or left inputs.
    * @param {object} config.customizations The customizations of the x axis according to the D3 js axis.
-   * @returns {{position: string, customizations: object}|this}
+   * @returns {{position: string, customizations: object}|ReectangularChart}
    * @see {@link https://d3js.org/d3-scale}
    * @example
    * ```JavaScript
@@ -250,7 +256,7 @@ export default class RectangularChart extends Chart {
    * @description
    * Getter and setter of the name of serie that contains categorical values.
    * @param {string} name The name of the serie in the dataset of the categorical values.
-   * @returns {string|this}
+   * @returns {string|ReectangularChart}
    * @example
    * ```JavaScript
    * const chart = new RectangularChart({

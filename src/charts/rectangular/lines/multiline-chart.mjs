@@ -36,7 +36,7 @@ export default class MultiLineChart extends RectangularChart {
    * @description
    * Getter and setter for the radius property of the circles of the data points of the series.
    * @param {number} value The size of the radius in pixels for the circles in the series.
-   * @returns {number|this}
+   * @returns {number|MultiLineChart}
    * @example
    * ```JavaScript
    * const chart = new MultiLineChart({

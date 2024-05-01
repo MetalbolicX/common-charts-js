@@ -2,9 +2,18 @@ import RectangularChart from "../rectangular-chart.mjs";
 
 ("use strict");
 
-const { scaleOrdinal } = d3;
-
+/**
+ * @description
+ * ScattePlot represents a chart in rectangular coordinates.
+ * @class
+ * @extends RectangularChart
+ */
 export default class ScatterPlot extends RectangularChart {
+  /**
+   * @description
+   * The radius size of the points displayed on the chart.
+   * @type {number}
+   */
   #radius;
   #categoryConfiguration;
   /**
@@ -44,7 +53,7 @@ export default class ScatterPlot extends RectangularChart {
    * @description
    * Getter and setter for the radius property of the circles of the data points of the series.
    * @param {number} value The size of the radius in pixels for the circles in the series.
-   * @returns {number|this}
+   * @returns {number|ScatterPlot}
    * @example
    * ```JavaScript
    * const chart = new ScatterPlot({
@@ -66,7 +75,7 @@ export default class ScatterPlot extends RectangularChart {
    * @param {object} config The configuration object of the serie that contains the categories in the dataset.
    * @param {string} config.serie The name of the serie to iterate the categories.
    * @param {string[]} config.colors The colors to set each category.
-   * @returns {{serie: string, colors: string[]}|this}
+   * @returns {{serie: string, colors: string[]}|ScatterPlot}
    * @example
    * ```JavaScript
    * const chart = new ScatterPlot({
@@ -137,7 +146,7 @@ export default class ScatterPlot extends RectangularChart {
       (d) => d[this.categoryConfiguration().serie]
     );
     // Set the color schema
-    this._colorScale = scaleOrdinal()
+    this.colorScale
       .domain(categoryValues.filter((d, i, ns) => ns.indexOf(d) == i).sort())
       .range(this.categoryConfiguration().colors);
     // Set the the x axis customizations of format
@@ -169,6 +178,8 @@ export default class ScatterPlot extends RectangularChart {
       .selectAll(".series")
       .data([null])
       .join("g")
+      .on("mouseover", (e) => this.listeners.call("mouseover", this, e))
+      .on("mouseout", (e) => this.listeners.call("mouseout", this, e))
       .attr("class", "series");
 
     this._seriesShown = !name
@@ -207,7 +218,13 @@ export default class ScatterPlot extends RectangularChart {
             .call(positionCircles),
         (exit) => exit.remove()
       )
-      .attr("class", (d) => `${d.serie.toLowerCase().replace(" ", "-")} point`);
+      .attr(
+        "class",
+        (d) =>
+          `${d.serie.toLowerCase().replace(" ", "-")} ${d.category
+            .toLowerCase()
+            .replace(" ", "-")} point`
+      );
   }
 
   /**
@@ -453,12 +470,19 @@ export default class ScatterPlot extends RectangularChart {
 
     const seriesGroup = this.svg.select(".series");
 
-    const positionLines = (lines) =>
+    const startPositionLines = (lines) =>
+      lines
+        .attr("x1", (d) => this.x(d.xMin))
+        .attr("y1", (d) => this.y(d.yMin))
+        .attr("x2", (d) => this.x(d.xMin))
+        .attr("y2", (d) => this.y(d.yMin));
+    const finishPositionLines = (lines) =>
       lines
         .attr("x1", (d) => this.x(d.xMin))
         .attr("y1", (d) => this.y(d.yMin))
         .attr("x2", (d) => this.x(d.xMax))
-        .attr("y2", (d) => this.y(d.yMax));
+        .attr("y2", (d) => this.y(d.yMax))
+        .style("stroke", (d) => this.colorScale(d.category));
 
     seriesGroup
       .selectAll("g")
@@ -468,19 +492,15 @@ export default class ScatterPlot extends RectangularChart {
         (enter) =>
           enter
             .append("line")
-            .call(positionLines)
-            .style("stroke", null)
+            .call(startPositionLines)
             .call((enter) =>
-              enter
-                .transition(this.getTransition())
-                .style("stroke", (d) => this.colorScale(d.category))
+              enter.transition(this.getTransition()).call(finishPositionLines)
             ),
         (update) =>
           update
             .transition(this.getTransition())
             .delay((_, i) => i * this.duration())
-            .call(positionLines)
-            .style("stroke", (d) => this.colorScale(d)),
+            .call(finishPositionLines),
         (exit) => exit.remove()
       )
       .attr(

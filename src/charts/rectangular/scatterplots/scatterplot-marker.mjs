@@ -24,9 +24,28 @@ export default class ScatterPlotMarker extends ScatterPlot {
   };
   #markersConfiguration;
   #fillColor;
-
-  constructor() {
-    super();
+  /**
+   * @description
+   * Create a new instance of a ScatterPlotMarker object.
+   * @constructor
+   * @param {object} config The object for the constructor parameters.
+   * @param {string} config.bindTo The css selector for the svg container to draw the chart.
+   * @param {object[]} config.dataset The dataset to create the chart.
+   * @example
+   * ```JavaScript
+   * const dataset = [
+   *    { date: "12-Feb-12", europe: 52, asia: 40, america: 65 },
+   *    { date: "27-Feb-12", europe: 56, asia: 35, america: 70 }
+   * ];
+   *
+   * const chart = new ScatterPlotMarker({
+   *    bindTo: "svg.chart",
+   *    dataset
+   * });
+   * ```
+   */
+  constructor({ bindTo, dataset }) {
+    super({ bindTo, dataset });
     this.#markersConfiguration = undefined;
     this.#fillColor = "#ccc";
   }
@@ -39,8 +58,11 @@ export default class ScatterPlotMarker extends ScatterPlot {
    * @example
    * ```JavaScript
    * // Set all the parameters of the chart
-   * const chart = new ScatterPlotMarker()
-   *  ...;
+   * const chart = new ScatterPlotMarker({
+   *    bindTo: "svg",
+   *    dataset
+   * })
+   * ...;
    *
    * chart.init();
    * chart.markers({
@@ -73,8 +95,11 @@ export default class ScatterPlotMarker extends ScatterPlot {
    * @example
    * ```JavaScript
    * // Set all the parameters of the chart
-   * const chart = new ScatterPlotMarker()
-   *  ...;
+   * const chart = new ScatterPlotMarker({
+   *    bindTo: "svg",
+   *    dataset
+   * })
+   * ...;
    *
    * chart.init();
    * chart.markersConfig({
@@ -109,10 +134,12 @@ export default class ScatterPlotMarker extends ScatterPlot {
    * @returns {void}
    */
   #addSeries(name) {
-    const seriesGroup = this._svg
+    const seriesGroup = this.svg
       .selectAll(".series")
       .data([null])
       .join("g")
+      .on("mouseover", (e) => this.listeners.call("mouseover", this, e))
+      .on("mouseout", (e) => this.listeners.call("mouseout", this, e))
       .attr("class", "series");
 
     this._seriesShown = !name
@@ -129,7 +156,7 @@ export default class ScatterPlotMarker extends ScatterPlot {
       .selectAll(".serie")
       .selectAll("path")
       .data((d) =>
-        this.data().map((row) => ({
+        this.dataset.map((row) => ({
           ...this.getSerie(row, d),
           marker:
             this.markers()[
@@ -158,8 +185,11 @@ export default class ScatterPlotMarker extends ScatterPlot {
    * @example
    * ```JavaScript
    * // Set all the parameters of the chart
-   * const chart = new ScatterPlotMarker()
-   *  ...;
+   * const chart = new ScatterPlotMarker({
+   *    bindTo: "svg",
+   *    dataset
+   * })
+   * ...;
    *
    * chart.init();
    * chart.addAllSeries();
@@ -169,7 +199,7 @@ export default class ScatterPlotMarker extends ScatterPlot {
     this.#addSeries("");
   }
 
-    /**
+  /**
    * @description
    * Create the just one serie in the chart by the given name.
    * @param {string} name The name of the serie to create.
@@ -177,14 +207,17 @@ export default class ScatterPlotMarker extends ScatterPlot {
    * @example
    * ```JavaScript
    * // Set all the parameters of the chart
-   * const chart = new ScatterPlotMarker()
-   *  ...;
+   * const chart = new ScatterPlotMarker({
+   *    bindTo: "svg",
+   *    dataset
+   * })
+   * ...;
    *
    * chart.init();
    * chart.addSerie();
    * ```
    */
-    addSerie(name) {
-      this.#addSeries(name);
-    }
+  addSerie(name) {
+    this.#addSeries(name);
+  }
 }
