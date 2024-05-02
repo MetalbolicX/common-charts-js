@@ -2,9 +2,20 @@ import RectangularChart from "../rectangular-chart.mjs";
 
 ("use strict");
 
-const { line, scaleOrdinal } = d3;
+const { line } = d3;
 
+/**
+ * @description
+ * MultiLineChart represents a multiserie chart in rectangular coordinates.
+ * @class
+ * @extends RectangularChart
+ */
 export default class MultiLineChart extends RectangularChart {
+  /**
+   * @description
+   * The size of the radius of the point to draw the serie.
+   * @type {number}
+   */
   #radius;
 
   /**
@@ -66,7 +77,9 @@ export default class MultiLineChart extends RectangularChart {
       .scale.domain(Object.values(xSerieRange))
       .range([this.margin().left, this.width() - this.margin().right]);
     // Set the numerical series to use
-    this._ySeries = this._getNumericalFieldsToUse(this.xConfiguration().serie);
+    this._ySeries = this._getNumericalFieldsToUse([
+      this.xConfiguration().serie,
+    ]);
     // Which are the range of values for the y scale
     const ySerieRange = this._serieRange(
       this.dataset.flatMap((d) => this.ySeries.map((serie) => d[serie]))
@@ -82,7 +95,7 @@ export default class MultiLineChart extends RectangularChart {
     this._xAxis = this._D3Axis(this.xAxisConfig().position).scale(this.x);
     this._yAxis = this._D3Axis(this.yAxisConfig().position).scale(this.y);
     // Set the color schema
-    this._colorScale = scaleOrdinal()
+    this.colorScale
       .domain(this.ySeries)
       .range(this.yConfiguration().colorSeries);
     // Set the the x axis customizations of format

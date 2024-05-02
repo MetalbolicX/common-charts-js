@@ -2,9 +2,18 @@ import RectangularChart from "../rectangular-chart.mjs";
 
 ("use strict");
 
-const { scaleOrdinal } = d3;
-
+/**
+ * @description
+ * SlopeChart represents previous and posterior state.
+ * @class
+ * @extends RectangularChart
+ */
 export default class SlopeChart extends RectangularChart {
+  /**
+   * @description
+   * The size of the radius of the points of the chart.
+   * @type {number}
+   */
   #radius;
     /**
    * @description
@@ -57,7 +66,7 @@ export default class SlopeChart extends RectangularChart {
    * @returns {void}
    */
   init() {
-    this._ySeries = this._getNumericalFieldsToUse("");
+    this._ySeries = this._getNumericalFieldsToUse([""]);
     // Set the horizontal values of the x axis
     this._x = this.xConfiguration()
       .scale.domain(this.ySeries)
@@ -74,7 +83,7 @@ export default class SlopeChart extends RectangularChart {
     this._xAxis = this._D3Axis(this.xAxisConfig().position).scale(this.x);
     this._yAxis = this._D3Axis(this.yAxisConfig().position).scale(this.y);
     // Set the color schema
-    this._colorScale = scaleOrdinal()
+    this.colorScale
       .domain(this.dataset.map((row) => row[this.xConfiguration().serie]))
       .range(this.yConfiguration().colorSeries);
     // Set the y axis customizations of the y axis.

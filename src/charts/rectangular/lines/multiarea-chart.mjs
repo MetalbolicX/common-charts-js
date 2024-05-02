@@ -4,6 +4,12 @@ import MultiLineChart from "./multiline-chart.mjs";
 
 const { area } = d3;
 
+/**
+ * @description
+ * MultiAreaChart represents a multiserie chart in rectangular coordinates.
+ * @class
+ * @extends MultiLineChart
+ */
 export default class MultiAreaChart extends MultiLineChart {
     /**
    * @description
