@@ -2,6 +2,12 @@ import ScatterPlot from "./scatterplot-chart.mjs";
 
 ("use strict");
 
+/**
+ * @description
+ * ScattePlotMarker represents a chart in rectangular coordinates.
+ * @class
+ * @extends ScatterPlot
+ */
 export default class ScatterPlotMarker extends ScatterPlot {
   /**
    * @description

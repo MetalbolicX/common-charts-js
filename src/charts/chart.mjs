@@ -460,12 +460,14 @@ export default class Chart {
   /**
    * @description
    * Transform a row of the dataset into just numerical series data.
-   * @param {string} fieldToExclude The names of the column to exclude for the numerical fields.
+   * @param {string[]} fieldsToExclude The names of the column to exclude for the numerical fields.
    * @returns {string[]}
    * @access @protected
    */
-  _getNumericalFieldsToUse(fieldToExclude) {
-    return this.numericalSeries.filter((serie) => serie !== fieldToExclude);
+  _getNumericalFieldsToUse(fieldsToExclude) {
+    return this.numericalSeries.filter(
+      (serie) => !fieldsToExclude.includes(serie)
+    );
   }
 
   /**

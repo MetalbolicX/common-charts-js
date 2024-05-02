@@ -132,7 +132,9 @@ export default class ScatterPlot extends RectangularChart {
       .scale.domain(Object.values(xSerieRange))
       .range([this.margin().left, this.width() - this.margin().right]);
     // Get the numerical fields names
-    this._ySeries = this._getNumericalFieldsToUse(this.xConfiguration().serie);
+    this._ySeries = this._getNumericalFieldsToUse([
+      this.xConfiguration().serie,
+    ]);
     const ySerieRange = this._serieRange(
       this.dataset.flatMap((d) => this.ySeries.map((serie) => d[serie]))
     );
