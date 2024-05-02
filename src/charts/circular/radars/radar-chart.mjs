@@ -1,14 +1,45 @@
-import CircleChart from "./circle-chart.mjs";
+import CircleChart from "../circle-chart.mjs";
 
 ("use strict");
 
-const { select, lineRadial, curveLinearClosed, format, scaleOrdinal } = d3;
+const { select, lineRadial, curveLinearClosed, format } = d3;
 
+/**
+ * @description
+ * RadarChart represents a radial chart in polar coordinates.
+ * @class
+ * @extends CircleChart
+ */
 export default class RadarChart extends CircleChart {
+  /**
+   * @description
+   * The quantity of circles to show as the x axis.
+   * @type {number}
+   */
   #axisTicks;
 
-  constructor() {
-    super();
+  /**
+   * @description
+   * Create a new instance of a RadarChart object.
+   * @constructor
+   * @param {object} config The object for the constructor parameters.
+   * @param {string} config.bindTo The css selector for the svg container to draw the chart.
+   * @param {object[]} config.dataset The dataset to create the chart.
+   * @example
+   * ```JavaScript
+   * const dataset = [
+   *    { date: "12-Feb-12", europe: 52, asia: 40, america: 65 },
+   *    { date: "27-Feb-12", europe: 56, asia: 35, america: 70 }
+   * ];
+   *
+   * const chart = new RadarChart({
+   *    bindTo: "svg.chart",
+   *    dataset
+   * });
+   * ```
+   */
+  constructor({ bindTo, dataset }) {
+    super({ bindTo, dataset });
     this.#axisTicks = 3;
   }
 
@@ -30,34 +61,33 @@ export default class RadarChart extends CircleChart {
    * @returns {void}
    */
   init() {
-    const w = this.width() - this.margin().left - this.margin().right;
-    const h = this.height() - this.margin().top - this.margin().bottom;
-    this._circleRadius = Math.min(w, h) / 2;
-
-    this._ySeries = Object.keys(
-      this._getNumericalRow(this.data().at(0), [this.xSerie()])
-    );
+    const widthCircle = this.width() - this.margin().left - this.margin().right;
+    const heightCircle =
+      this.height() - this.margin().top - this.margin().bottom;
+    this._circleRadius = Math.min(widthCircle, heightCircle) / 2;
+    // Set the numerical series to use the chart
+    this._ySeries = this._getNumericalFieldsToUse([""]);
     // Set the color schema
-    this._colorScale = scaleOrdinal()
+    this.colorScale
       .domain(this.ySeries)
       .range(this.yConfiguration().colorSeries);
     // Find the highest value of all series
     const ySerieRange = this._serieRange(
-      this.data().flatMap((row) => this.ySeries.map((serie) => row[serie]))
+      this.dataset.flatMap((row) => this.ySeries.map((serie) => row[serie]))
     );
     // Set the scale of the radius
     this._y = this.yConfiguration()
       .scale.domain([0, (1 + this.yAxisOffset()) * ySerieRange.max])
       .range([0, this.circleRadius]);
-    // Select the svg element to bind chart
-    this._setSvg();
     // Set the g element for centered
-    this._svg
+    this.svg
       .append("g")
       .attr("class", "main")
       .attr(
         "transform",
-        `translate(${w / 2 + this.margin().left}, ${h / 2 + this.margin().top})`
+        `translate(${widthCircle / 2 + this.margin().left}, ${
+          heightCircle / 2 + this.margin().top
+        })`
       );
   }
 
@@ -70,8 +100,11 @@ export default class RadarChart extends CircleChart {
    * @example
    * ```JavaScript
    * // Set all the parameters of the chart
-   * const chart = new RadarChart()
-   *  ...;
+   * const chart = new RadarChart({
+   *    bindTo: "svg.chart",
+   *    dataset
+   * })
+   * ...;
    *
    * // Set a custom format for the postfix in a number
    * const customUnits = d3.formatLocale({
@@ -87,7 +120,7 @@ export default class RadarChart extends CircleChart {
       (_, i) => (this.y.domain().at(-1) * i) / this.axisTicks()
     );
 
-    const groupAxes = this._svg
+    const groupAxes = this.svg
       .select(".main")
       .append("g")
       .attr("class", "radial axes");
@@ -118,21 +151,24 @@ export default class RadarChart extends CircleChart {
    * @example
    * ```JavaScript
    * // Set all the parameters of the chart
-   * const chart = new RadarChart()
-   *  ...;
+   * const chart = new RadarChart({
+   *    bindTo: "svg.chart",
+   *    dataset
+   * })
+   * ...;
    *
    * chart.init();
    * chart.addAxisLines();
    * ```
    */
   addAxisLines() {
-    const groupAxes = this._svg
+    const groupAxes = this.svg
       .select(".main")
       .append("g")
       .attr("class", "lines axes");
 
     /** @type {{x: string, radians: number}[]}*/
-    const anglesPerCategory = this.data().map((row, i, ns) => ({
+    const anglesPerCategory = this.dataset.map((row, i, ns) => ({
       x: row[this.xSerie()],
       radians: ((2 * Math.PI) / ns.length) * i,
     }));
@@ -163,7 +199,7 @@ export default class RadarChart extends CircleChart {
    * @returns {void}
    */
   #addSeries(name) {
-    const seriesGroup = this._svg
+    const seriesGroup = this.svg
       .select(".main")
       .selectAll(".series")
       .data([null])
@@ -195,7 +231,7 @@ export default class RadarChart extends CircleChart {
     const getSerie = (serie) => [
       {
         serie,
-        values: this.data().map((row, i, ns) => ({
+        values: this.dataset.map((row, i, ns) => ({
           y: row[serie],
           radian: ((2 * Math.PI) / ns.length) * i,
         })),
@@ -219,8 +255,11 @@ export default class RadarChart extends CircleChart {
    * @example
    * ```JavaScript
    * // Set all the parameters of the chart
-   * const chart = new RadarChart()
-   *  ...;
+   * const chart = new RadarChart({
+   *    bindTo: "svg.chart",
+   *    dataset
+   * })
+   * ...;
    *
    * chart.init();
    * chart.addAllSeries();
@@ -238,11 +277,14 @@ export default class RadarChart extends CircleChart {
    * @example
    * ```JavaScript
    * // Set all the parameters of the chart
-   * const chart = new RadarChart()
-   *  ...;
+   * const chart = new RadarChart({
+   *    bindTo: "svg.chart",
+   *    dataset
+   * })
+   * ...;
    *
    * chart.init();
-   * chart.addSerie();
+   * chart.addSerie("sales");
    * ```
    */
   addSerie(name) {
@@ -258,8 +300,11 @@ export default class RadarChart extends CircleChart {
    * @example
    * ```JavaScript
    * // Set all the parameters of the chart
-   * const chart = new RadarChart()
-   *  ...;
+   * const chart = new RadarChart({
+   *    bindTo: "svg.chart",
+   *    dataset
+   * })
+   * ...;
    * // Set a custom format for the postfix in a number
    * const customUnits = d3.formatLocale({
    *  currency: ["", "°C"],
@@ -270,12 +315,12 @@ export default class RadarChart extends CircleChart {
    * ```
    */
   addLabels(fnFormat = format(".1f")) {
-    const pathsSeries = this._svg.selectAll(".series > g path");
+    const pathsSeries = this.svg.selectAll(".series > g path");
 
     pathsSeries.each((d, i, ns) => {
       const currentPath = select(ns[i]);
       /** @type {{category: string, value: number}[]} */
-      const serie = this.data().map((row) => ({
+      const serie = this.dataset.map((row) => ({
         value: row[d],
         category: row[this.xSerie()],
       }));
@@ -344,8 +389,11 @@ export default class RadarChart extends CircleChart {
    * @example
    * ```JavaScript
    * // Set all the parameters of the chart
-   * const chart = new RadarChart()
-   *  ...;
+   * const chart = new RadarChart({
+   *    bindTo: "svg.chart",
+   *    dataset
+   * })
+   * ...;
    *
    * chart.init();
    * chart.addLegend({
@@ -359,7 +407,7 @@ export default class RadarChart extends CircleChart {
   addLegend(
     config = { widthOffset: 0.85, heightOffset: 0.05, size: 5, spacing: 5 }
   ) {
-    const legendGroup = this._svg
+    const legendGroup = this.svg
       .select(".main")
       .append("g")
       .attr("class", "legends")
@@ -402,8 +450,11 @@ export default class RadarChart extends CircleChart {
    * @example
    * ```JavaScript
    * // Set all the parameters of the chart
-   * const chart = new RadarChart()
-   *  ...;
+   * const chart = new RadarChart({
+   *    bindTo: "svg.chart",
+   *    dataset
+   * })
+   * ...;
    *
    * chart.init();
    * chart.addTitle({

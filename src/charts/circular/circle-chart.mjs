@@ -2,13 +2,49 @@ import Chart from "../chart.mjs";
 
 ("use strict");
 
+/**
+ * @description
+ * CircleChart represents any chart that needs polar coordinates.
+ * @class
+ * @extends Chart
+ */
 export default class CircleChart extends Chart {
+  /**
+   * @description
+   * The name of the serie to be x values.
+   * @type {string}
+   */
   #xSerie;
+  /**
+   * @description
+   * The radious of the main circle where the svg image will be displayed.
+   * @type {number}
+   */
   #circleRadius;
 
-  constructor() {
-    super();
-    this.#circleRadius = undefined;
+    /**
+   * @description
+   * Create a new instance of a CircleChart object.
+   * @constructor
+   * @param {object} config The object for the constructor parameters.
+   * @param {string} config.bindTo The css selector for the svg container to draw the chart.
+   * @param {object[]} config.dataset The dataset to create the chart.
+   * @example
+   * ```JavaScript
+   * const dataset = [
+   *    { date: "12-Feb-12", europe: 52, asia: 40, america: 65 },
+   *    { date: "27-Feb-12", europe: 56, asia: 35, america: 70 }
+   * ];
+   *
+   * const chart = new CircleChart({
+   *    bindTo: "svg.chart",
+   *    dataset
+   * });
+   * ```
+   */
+  constructor({ bindTo, dataset }) {
+    super({ bindTo, dataset});
+    this.#circleRadius = 0;
   }
 
   /**

@@ -1,4 +1,4 @@
-import CircleChart from "./circle-chart.mjs";
+import CircleChart from "../circle-chart.mjs";
 
 ("use strict");
 
