@@ -22,7 +22,17 @@ export default class ScatterPlotMarker extends ScatterPlot {
     error404: "M3 3h18v18H3zM15 9l-6 6m0-6l6 6",
     gear: "M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z",
   };
+  /**
+   * @description
+   * The object to set the each category to a specific icon.
+   * @type {{[key: string]: string}}
+   */
   #markersConfiguration;
+  /**
+   * @description
+   * The hexadecimal color to fill the icon marker.
+   * @type {string}
+   */
   #fillColor;
   /**
    * @description
@@ -54,7 +64,7 @@ export default class ScatterPlotMarker extends ScatterPlot {
    * @description
    * Getter and setter of new markers to the default object to draw in the chart.
    * @param {{[key: string]: string}} marker Object which add new figures to draw in the chart. Keys are the figures and values are the svg path.
-   * @returns {{[key: string]: string}|this}
+   * @returns {{[key: string]: string}|ScatterPlotMarker}
    * @example
    * ```JavaScript
    * // Set all the parameters of the chart
@@ -91,7 +101,7 @@ export default class ScatterPlotMarker extends ScatterPlot {
    * @description
    * Getter of the svg path to form a figure in the scatter plot.
    * @param {{[key: string]: string}} config The configuration object which the keys are the categories in a series and the values are the svg paths string to figure the marker.
-   * @returns {{[key: string]: string}|this}
+   * @returns {{[key: string]: string}|ScatterPlotMarker}
    * @example
    * ```JavaScript
    * // Set all the parameters of the chart
@@ -119,7 +129,7 @@ export default class ScatterPlotMarker extends ScatterPlot {
    * @description
    * Getter and setter of the color to fill the markers.
    * @param {string} color The hexadecimal code for the color to fill the marker.
-   * @returns {string|this}
+   * @returns {string|ScatterPlotMarker}
    */
   fillColor(color) {
     return arguments.length && typeof color === "string"
@@ -152,6 +162,12 @@ export default class ScatterPlotMarker extends ScatterPlot {
       .join("g")
       .attr("class", (d) => `${d.toLowerCase().replace(" ", "-")} serie`);
 
+    const showMarkers = (paths) =>
+      paths
+        .style("opacity", 0)
+        .transition(this.getTransition())
+        .style("opacity", 1);
+
     seriesGroup
       .selectAll(".serie")
       .selectAll("path")
@@ -164,7 +180,19 @@ export default class ScatterPlotMarker extends ScatterPlot {
             ] || this.markers().error404,
         }))
       )
-      .join("path")
+      .join(
+        (enter) =>
+          enter
+            .append("path")
+            .attr("d", (d) => d.marker)
+            .attr(
+              "transform",
+              (d) => `translate(${this.x(d.x)}, ${this.y(d.y)})`
+            )
+            .call(showMarkers),
+        (update) => update.call(showMarkers),
+        (exit) => exit.remove()
+      )
       .attr(
         "class",
         (d) =>
@@ -172,8 +200,6 @@ export default class ScatterPlotMarker extends ScatterPlot {
             .toLowerCase()
             .replace(" ", "-")} icon`
       )
-      .attr("transform", (d) => `translate(${this.x(d.x)}, ${this.y(d.y)})`)
-      .attr("d", (d) => d.marker)
       .style("fill", this.fillColor())
       .style("stroke", (d) => this.colorScale(d.category));
   }

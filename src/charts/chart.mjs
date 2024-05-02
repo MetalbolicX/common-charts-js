@@ -51,7 +51,7 @@ export default class Chart {
    * The configuration for the y values of the chart. The object holds the color of the series and the D3 js scake to compute the numerical data.
    * @type {{colorSeries: string[], scale: D3Scale}}
    */
-  #yConfiguration;
+  #yConfiguration = { colorSeries: [], scale: undefined };
   /**
    * @description
    * The scale function to compute the numerical data to set the position in screen.
@@ -75,7 +75,7 @@ export default class Chart {
    * The array of the names of the numerical series to be used to draw the chart.
    * @type {string[]}
    */
-  #ySeries;
+  #ySeries = [];
   /**
    * @description
    * The array of the names of the numerical series to displat in the chart. This can you all the ySeries or just one at a time.
@@ -105,13 +105,13 @@ export default class Chart {
    * The name of the fields in the dataset which are categorical type.
    * @type {string[]}
    */
-  #categoricalSeries;
+  #categoricalSeries = [];
   /**
    * @description
    * The name of the fields in the dataset which are numerical type.
    * @type {string[]}
    */
-  #numericalSeries;
+  #numericalSeries = [];
   /**
    * @description
    * The object with the maximum and minimum values per each numerical serie in the dataset.
@@ -146,13 +146,9 @@ export default class Chart {
     // Set the metadata of the fields
     this._fieldsTypes = dataset.at(0);
     // Which are the categorical fields in the dataset
-    this._categoricalSeries = [...this.fieldsTypes]
-      .filter(([field, type]) => type === "categorical" && field.length)
-      .map(([field, _]) => field);
+    this._categoricalSeries = this.#getFieldDataTypes("categorical");
     // Which are the numerical fields in the dataset
-    this._numericalSeries = [...this.fieldsTypes]
-      .filter(([field, type]) => type === "numerical" && field.length)
-      .map(([field, _]) => field);
+    this._numericalSeries = this.#getFieldDataTypes("numerical");
     // The minimum and maximum values per series
     this._criticalPoints = dataset;
     // Set the values of the svg element width and height
@@ -160,12 +156,22 @@ export default class Chart {
     this.#height = this.svg?.node().getBoundingClientRect().height || 600;
     this.#margin = { top: 0, right: 0, bottom: 0, left: 0 };
     this.#yAxisOffset = 0.05;
-    this.#yConfiguration = undefined;
     this._colorScale = scaleOrdinal();
-    this.#ySeries = undefined;
     this.#seriesShown = undefined;
     this.#duration = 2000;
     this.#listeners = dispatch("mouseover", "mouseout");
+  }
+
+  /**
+   * @description
+   * Get the array of the fields from the given input.
+   * @param {string} fieldType The type of the field to be got. The fieldType must be numerical or categorical.
+   * @returns {string[]} The array of the fields names (categorical or numerical).
+   */
+  #getFieldDataTypes(fieldType) {
+    return [...this.fieldsTypes]
+      .filter(([field, type]) => type === fieldType && field.length)
+      .map(([field, _]) => field);
   }
 
   /**
