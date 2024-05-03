@@ -2,11 +2,37 @@ import CircleChart from "../circle-chart.mjs";
 
 ("use strict");
 
-const { pie, arc, format, scaleOrdinal } = d3;
+const { pie, arc, format } = d3;
 
+/**
+ * @description
+ * PieChart represents a single pie chart.
+ * @class
+ * @extends CircleChart
+ */
 export default class PieChart extends CircleChart {
-  constructor() {
-    super();
+  /**
+   * @description
+   * Create a new instance of a PieChart object.
+   * @constructor
+   * @param {object} config The object for the constructor parameters.
+   * @param {string} config.bindTo The css selector for the svg container to draw the chart.
+   * @param {object[]} config.dataset The dataset to create the chart.
+   * @example
+   * ```JavaScript
+   * const dataset = [
+   *    { date: "12-Feb-12", europe: 52, asia: 40, america: 65 },
+   *    { date: "27-Feb-12", europe: 56, asia: 35, america: 70 }
+   * ];
+   *
+   * const chart = new PieChart({
+   *    bindTo: "svg.chart",
+   *    dataset
+   * });
+   * ```
+   */
+  constructor({ bindTo, dataset }) {
+    super({ bindTo, dataset });
   }
 
   /**
@@ -16,26 +42,26 @@ export default class PieChart extends CircleChart {
    */
   init() {
     // What is the least size (width or height) that limits the space of the chart
-    const w = this.width() - (this.margin().right + this.margin().left);
-    const h = this.height() - (this.margin().top + this.margin().bottom);
-    this._circleRadius = Math.min(w, h) / 2;
-    // Set the svg container of the chart
-    this._setSvg();
+    const widthCircle =
+      this.width() - (this.margin().right + this.margin().left);
+    const heightCircle =
+      this.height() - (this.margin().top + this.margin().bottom);
+    this._circleRadius = Math.min(widthCircle, heightCircle) / 2;
     // Set the numerical serie
-    this._ySeries = Object.keys(
-      this._getNumericalRow(this.data().at(0), [this.xSerie()])
-    );
+    this._ySeries = this._getNumericalFieldsToUse([""]);
     // Set the color schema
-    this._colorScale = scaleOrdinal()
-      .domain(this.data().map((d) => d[this.xSerie()]))
+    this.colorScale
+      .domain(this.dataset.map((d) => d[this.xSerie()]))
       .range(this.yConfiguration().colorSeries);
     // Set the g element for centered
-    this._svg
+    this.svg
       .append("g")
       .attr("class", "main")
       .attr(
         "transform",
-        `translate(${w / 2 + this.margin().left}, ${h / 2 + this.margin().top})`
+        `translate(${widthCircle / 2 + this.margin().left}, ${
+          heightCircle / 2 + this.margin().top
+        })`
       );
   }
 
@@ -47,15 +73,18 @@ export default class PieChart extends CircleChart {
    * @example
    * ```JavaScript
    * // Set all the parameters of the chart
-   * const chart = new PieChart()
-   *  ...;
+   * const chart = new PieChart({
+   *    bindTo: "svg.chart",
+   *    dataset
+   * })
+   * ...;
    *
    * chart.init();
    * chart.addSerie("sales");
    * ```
    */
   addSerie(name) {
-    const mainGroup = this._svg.select(".main");
+    const mainGroup = this.svg.select(".main");
 
     this._seriesShown = this.ySeries.filter((serie) => serie === name);
 
@@ -84,7 +113,7 @@ export default class PieChart extends CircleChart {
       .selectAll(".arc")
       .data((d) =>
         pieData(
-          this.data()
+          this.dataset
             .map((row) => getSerie(row, d))
             .sort((a, b) => b.y - a.y)
         )
@@ -114,15 +143,18 @@ export default class PieChart extends CircleChart {
    * @example
    * ```JavaScript
    * // Set all the parameters of the chart
-   * const chart = new PieChart()
-   *  ...;
+   * const chart = new PieChart({
+   *    bindTo: "svg.chart",
+   *    dataset
+   * })
+   * ...;
    *
    * chart.init();
    * chart.addLabels(d3.format("$.1f"));
    * ```
    */
   addLabels(fnFormat = format(".1f")) {
-    const groupSlices = this._svg.selectAll(".arc");
+    const groupSlices = this.svg.selectAll(".arc");
 
     groupSlices
       .append("text")
@@ -151,8 +183,11 @@ export default class PieChart extends CircleChart {
    * @example
    * ```JavaScript
    * // Set all the parameters of the chart
-   * const chart = new PieChart()
-   *  ...;
+   * const chart = new PieChart({
+   *    bindTo: "svg.chart",
+   *    dataset
+   * })
+   * ...;
    *
    * chart.init();
    * chart.addLegend({
@@ -166,7 +201,7 @@ export default class PieChart extends CircleChart {
   addLegend(
     config = { widthOffset: 0.85, heightOffset: 0.05, size: 5, spacing: 5 }
   ) {
-    const legendGroup = this._svg
+    const legendGroup = this.svg
       .select(".main")
       .append("g")
       .attr("class", "legends")
@@ -209,8 +244,11 @@ export default class PieChart extends CircleChart {
    * @example
    * ```JavaScript
    * // Set all the parameters of the chart
-   * const chart = new PieChart()
-   *  ...;
+   * const chart = new PieChart({
+   *    bindTo: "svg.chart",
+   *    dataset
+   * })
+   * ...;
    *
    * chart.init();
    * chart.addTitle({
@@ -221,7 +259,7 @@ export default class PieChart extends CircleChart {
    * ```
    */
   addTitle(config) {
-    const titleGroup = this._svg.append("g").attr("class", "chart-title");
+    const titleGroup = this.svg.append("g").attr("class", "chart-title");
     titleGroup
       .append("text")
       .attr("x", this.width() * config.widthOffset)
