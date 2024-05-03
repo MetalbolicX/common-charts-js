@@ -397,14 +397,13 @@ export default class RadarChart extends CircleChart {
       const currentPath = select(ns[i]);
       /** @type {{category: string, value: number}[]} */
       const serie = this.dataset.map((row) => ({
-        value: row[d],
+        value: row[d.serie],
         category: row[this.xSerie()],
       }));
       const coordinates = this.#extractCoordinates(
         currentPath.attr("d"),
         serie
       );
-
       const parent = select(ns[i].parentElement);
       parent
         .selectAll("circle")
