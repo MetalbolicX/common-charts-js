@@ -17,6 +17,12 @@ export default class RadarChart extends CircleChart {
    * @type {number}
    */
   #axisTicks;
+  /**
+   * @description
+   * The size of the radius of the point to draw the serie.
+   * @type {number}
+   */
+  #radius;
 
   /**
    * @description
@@ -41,6 +47,7 @@ export default class RadarChart extends CircleChart {
   constructor({ bindTo, dataset }) {
     super({ bindTo, dataset });
     this.#axisTicks = 3;
+    this.#radius = 2;
   }
 
   /**
@@ -53,6 +60,26 @@ export default class RadarChart extends CircleChart {
     return arguments.length && value > 0
       ? ((this.#axisTicks = +value), this)
       : this.#axisTicks;
+  }
+
+  /**
+   * @description
+   * Getter and setter for the radius property of the circles of the data points of the series.
+   * @param {number} value The size of the radius in pixels for the circles in the series.
+   * @returns {number|RadarChart}
+   * @example
+   * ```JavaScript
+   * const chart = new RadarChart({
+   *    bindTo: "svg.chart",
+   *    dataset
+   * })
+   * .radius(5);
+   * ```
+   */
+  radius(value) {
+    return arguments.length && value >= 0
+      ? ((this.#radius = +value), this)
+      : this.#radius;
   }
 
   /**
@@ -204,6 +231,8 @@ export default class RadarChart extends CircleChart {
       .selectAll(".series")
       .data([null])
       .join("g")
+      .on("mouseover", (e) => this.listeners.call("mouseover", this, e))
+      .on("mouseout", (e) => this.listeners.call("mouseout", this, e))
       .attr("class", "series");
 
     this._seriesShown = !name
@@ -238,14 +267,28 @@ export default class RadarChart extends CircleChart {
       },
     ];
 
+    const initializePaths = (paths) =>
+      paths
+        .attr("d", (d) => pathGenerator(d.values))
+        .style("opacity", 0)
+        .style("stroke", "none");
+
+    const showPaths = (paths) =>
+      paths
+        .transition(this.getTransition())
+        .style("opacity", 0.4)
+        .style("fill", (d) => this.colorScale(d.serie))
+        .style("stroke", (d) => this.colorScale(d.serie));
+
     pathsGroup
       .selectAll("path")
       .data((d) => getSerie(d))
-      .join("path")
-      .attr("class", (d) => `${d.serie.toLowerCase().replace(" ", "-")} serie`)
-      .attr("d", (d) => pathGenerator(d.values))
-      .style("stroke", (d) => this.colorScale(d.serie))
-      .style("fill", (d) => this.colorScale(d.serie));
+      .join(
+        (enter) => enter.append("path").call(initializePaths).call(showPaths),
+        (update) => update.call(initializePaths).call(showPaths),
+        (exit) => exit.remove()
+      )
+      .attr("class", (d) => `${d.serie.toLowerCase().replace(" ", "-")} serie`);
   }
 
   /**
@@ -344,6 +387,40 @@ export default class RadarChart extends CircleChart {
         .attr("x", (r) => r.xPosition)
         .attr("y", (r) => r.yPosition)
         .text((r) => fnFormat(r.y));
+    });
+  }
+
+  addPoints() {
+    const pathsSeries = this.svg.selectAll(".series > g path");
+
+    pathsSeries.each((d, i, ns) => {
+      const currentPath = select(ns[i]);
+      /** @type {{category: string, value: number}[]} */
+      const serie = this.dataset.map((row) => ({
+        value: row[d],
+        category: row[this.xSerie()],
+      }));
+      const coordinates = this.#extractCoordinates(
+        currentPath.attr("d"),
+        serie
+      );
+
+      const parent = select(ns[i].parentElement);
+      parent
+        .selectAll("circle")
+        .data(coordinates)
+        .join("circle")
+        .attr(
+          "class",
+          (r) =>
+            `${d.serie.toLowerCase().replace(" ", "-")} ${r.category
+              .toLowerCase()
+              .replace(" ", "-")} point`
+        )
+        .attr("r", this.radius())
+        .attr("cx", (r) => r.xPosition)
+        .attr("cy", (r) => r.yPosition)
+        .style("fill", this.colorScale(d.serie));
     });
   }
 
@@ -465,7 +542,7 @@ export default class RadarChart extends CircleChart {
    * ```
    */
   addTitle(config) {
-    const titleGroup = this._svg.append("g").attr("class", "chart-title");
+    const titleGroup = this.svg.append("g").attr("class", "chart-title");
     titleGroup
       .append("text")
       .attr("x", this.width() * config.widthOffset)
