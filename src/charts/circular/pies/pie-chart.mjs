@@ -203,7 +203,9 @@ export default class PieChart extends CircleChart {
   ) {
     const legendGroup = this.svg
       .select(".main")
-      .append("g")
+      .selectAll(".legends")
+      .data([null])
+      .join("g")
       .attr("class", "legends")
       .attr(
         "transform",
