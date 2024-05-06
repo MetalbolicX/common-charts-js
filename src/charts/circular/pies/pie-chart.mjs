@@ -220,7 +220,9 @@ export default class PieChart extends CircleChart {
     const groupSlices = this.svg.selectAll(".arc");
 
     groupSlices
-      .append("text")
+      .selectAll("text")
+      .data(d => [d])
+      .join("text")
       .attr(
         "transform",
         (d) =>
