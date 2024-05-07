@@ -98,7 +98,6 @@ export default class PolarChart extends PieChart {
      * The row of the dataset to create the slice of the pie chart.
      * @param {object} row The row in the dataset.
      * @param {string} serie The name of the serie to get the numeric values.
-     * @param {number} index The index of the dataset row.
      * @returns {{x: string, y: number, textValue: string, serie: string, radius: {inner: number, outer: number}}}
      */
     const getSerie = (row, serie) => ({
@@ -116,22 +115,33 @@ export default class PolarChart extends PieChart {
       .selectAll(".arc")
       .data((d) =>
         pieData(
-          this.data()
-            .map((row) => getSerie(row, d))
-            .sort((a, b) => b.y - a.y)
+          this.dataset.map((row) => getSerie(row, d)).sort((a, b) => b.y - a.y)
         )
       )
       .join("g")
       .attr("class", (d) => `${d.data.x.toLowerCase().replace(" ", "-")} arc`);
+
+    /**
+     * @description
+     * Converte the input from degrees to radians.
+     * @param {number} degrees The value to convert to radians.
+     * @returns {number}
+     */
+    const degreesToRadians = (degrees) => degrees * (180 / Math.PI);
 
     groupSlices
       .selectAll("path")
       .data((d) => [d])
       .join("path")
       .attr("class", (d) => `${d.data.x.toLowerCase().replace(" ", "-")} slice`)
-      .attr("d", (d) =>
-        arc().innerRadius(d.data.radius.inner).outerRadius(d.data.radius.outer)(
-          d
+      .transition(this.getTransition())
+      .attrTween("d", (d) =>
+        this.interpolateSlice(
+          0,
+          0,
+          d.data.radius.outer,
+          degreesToRadians(d.startAngle),
+          degreesToRadians(d.endAngle)
         )
       )
       .style("fill", (d) => this.colorScale(d.data.x));
