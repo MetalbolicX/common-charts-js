@@ -4,12 +4,48 @@ import PieChart from "./pie-chart.mjs";
 
 const { pie, arc } = d3;
 
+/**
+ * @description
+ * PolarChart represents a polar chart for categorical values.
+ * @class
+ * @extends PieChart
+ */
 export default class PolarChart extends PieChart {
+  /**
+   * @description
+   * The fator of the slice to be multiplied, so that it can grow.
+   * @type {number}
+   */
   #sliceSize;
+  /**
+   * @description
+   * The name of the serie to be drawn in the chart.
+   * @type {string}
+   */
   #serieToShow;
 
-  constructor() {
-    super();
+  /**
+   * @description
+   * Create a new instance of a PieChart object.
+   * @constructor
+   * @param {object} config The object for the constructor parameters.
+   * @param {string} config.bindTo The css selector for the svg container to draw the chart.
+   * @param {object[]} config.dataset The dataset to create the chart.
+   * @example
+   * ```JavaScript
+   * const dataset = [
+   *    { date: "12-Feb-12", europe: 52, asia: 40, america: 65 },
+   *    { date: "27-Feb-12", europe: 56, asia: 35, america: 70 }
+   * ];
+   *
+   * const chart = new PolarChart({
+   *    bindTo: "svg.chart",
+   *    dataset
+   * });
+   * ```
+   */
+  constructor({ bindTo, dataset }) {
+    super({ bindTo, dataset });
     this.#sliceSize = 2;
     this.#serieToShow = undefined;
   }
@@ -47,7 +83,7 @@ export default class PolarChart extends PieChart {
    * ```
    */
   addSeries(name) {
-    const mainGroup = this._svg.select(".main");
+    const mainGroup = this.svg.select(".main");
     this.#serieToShow = name;
     const groupSeries = mainGroup
       .selectAll(".serie")
@@ -118,7 +154,7 @@ export default class PolarChart extends PieChart {
    * ```
    */
   addLabels(fnFormat = format(".1f")) {
-    const groupSlices = this._svg.selectAll(".arc");
+    const groupSlices = this.svg.selectAll(".arc");
     groupSlices
       .append("text")
       .attr("transform", (d) => {

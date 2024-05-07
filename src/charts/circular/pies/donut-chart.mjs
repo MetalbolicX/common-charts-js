@@ -112,12 +112,12 @@ export default class DonutChart extends PieChart {
 
     /**
      * Generates an SVG path segment for a circular arc.
-     * @param {number} x - The x-coordinate of the center of the circle.
-     * @param {number} y - The y-coordinate of the center of the circle.
-     * @param {number} innerRadius - The inner radius of the arc.
-     * @param {number} outerRadius - The outer radius of the arc.
-     * @param {number} startAngle - The starting angle of the arc in degrees.
-     * @param {number} endAngle - The ending angle of the arc in degrees.
+     * @param {number} x The x-coordinate of the center of the circle.
+     * @param {number} y The y-coordinate of the center of the circle.
+     * @param {number} innerRadius The inner radius of the arc.
+     * @param {number} outerRadius The outer radius of the arc.
+     * @param {number} startAngle The starting angle of the arc in degrees.
+     * @param {number} endAngle The ending angle of the arc in degrees.
      * @returns {string} SVG path segment representing the arc.
      */
     function generatePieSlice(
@@ -171,19 +171,19 @@ export default class DonutChart extends PieChart {
 
     /**
      * Generates an interpolator function for transitioning between SVG path segments.
-     * @param {number} x - The x-coordinate of the center of the circle.
-     * @param {number} y - The y-coordinate of the center of the circle.
-     * @param {number} innerRadius - The inner radius of the arc.
-     * @param {number} outerRadius - The outer radius of the arc.
-     * @param {number} startAngle - The starting angle of the arc in degrees.
-     * @param {number} endAngle - The ending angle of the arc in degrees.
+     * @param {number} x The x-coordinate of the center of the circle.
+     * @param {number} y The y-coordinate of the center of the circle.
+     * @param {number} innerRadius The inner radius of the arc.
+     * @param {number} outerRadius The outer radius of the arc.
+     * @param {number} startAngle The starting angle of the arc in degrees.
+     * @param {number} endAngle The ending angle of the arc in degrees.
      * @returns {callback} An interpolator function that generates SVG path segments sized according to time.
      */
     const interpolateSlice =
       (x, y, innerRadius, outerRadius, startAngle, endAngle) =>
       /**
        * Interpolator function that generates SVG path segments.
-       * @param {number} t - The time parameter ranging from 0 to 1.
+       * @param {number} t The time parameter ranging from 0 to 1.
        * @returns {string} SVG path segment representing the arc.
        */
       (t) =>
@@ -208,27 +208,30 @@ export default class DonutChart extends PieChart {
       .join("g")
       .attr("class", (d) => `${d.data.x.toLowerCase().replace(" ", "-")} arc`);
 
+    /**
+     * @description
+     * Converte the input from degrees to radians.
+     * @param {number} degrees The value to convert to radians.
+     * @returns {number}
+     */
+    const degreesToRadians = (degrees) => degrees * (180 / Math.PI);
+
     groupSlices
       .selectAll("path")
       .data((d) => [d])
       .join("path")
       .attr("class", (d) => `${d.data.x.toLowerCase().replace(" ", "-")} slice`)
       .transition(this.getTransition())
-      .attrTween("d", (d) => {
-        // Convert the angles from degrees to radians
-        const startAngle = d.startAngle * (180 / Math.PI);
-        const endAngle = d.endAngle * (180 / Math.PI);
-        const x = 0;
-        const y = 0;
-        return interpolateSlice(
-          x,
-          y,
+      .attrTween("d", (d) =>
+        interpolateSlice(
+          0,
+          0,
           d.data.radius.inner,
           d.data.radius.outer,
-          startAngle,
-          endAngle
-        );
-      })
+          degreesToRadians(d.startAngle),
+          degreesToRadians(d.endAngle)
+        )
+      )
       .style("fill", (d) => this.colorScale(d.data.x));
   }
 

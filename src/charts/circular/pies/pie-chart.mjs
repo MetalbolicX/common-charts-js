@@ -66,6 +66,42 @@ export default class PieChart extends CircleChart {
   }
 
   /**
+   * Generates an SVG path segment for a circular arc.
+   * @param {number} x The x-coordinate of the center of the circle.
+   * @param {number} y The y-coordinate of the center of the circle.
+   * @param {number} r The radius of the circle.
+   * @param {number} startAngle The starting angle of the arc in degrees.
+   * @param {number} endAngle The ending angle of the arc in degrees.
+   * @returns {string} SVG path segment representing the arc.
+   */
+  generatePieSlice(x, y, r, startAngle, endAngle) {
+    // convert angles to Radians
+    startAngle *= Math.PI / 180;
+    endAngle *= Math.PI / 180;
+
+    const largeArc = endAngle - startAngle <= Math.PI ? 0 : 1; // 1 if angle > 180 degrees
+    const sweepFlag = 1; // is arc to be drawn in +ve direction?
+
+    return [
+      "M",
+      x,
+      y,
+      "L",
+      x + Math.sin(startAngle) * r,
+      y - Math.cos(startAngle) * r,
+      "A",
+      r,
+      r,
+      0,
+      largeArc,
+      sweepFlag,
+      x + Math.sin(endAngle) * r,
+      y - Math.cos(endAngle) * r,
+      "Z",
+    ].join(" ");
+  }
+
+  /**
    * @description
    * Add the slices to create the chart.
    * @param {string} name The name of the serie to add to the chart.
@@ -109,13 +145,23 @@ export default class PieChart extends CircleChart {
       radius: { inner: 0, outer: this.circleRadius },
     });
 
+    const groupSlices = groupSeries
+      .selectAll(".arc")
+      .data((d) =>
+        pieData(
+          this.dataset.map((row) => getSerie(row, d)).sort((a, b) => b.y - a.y)
+        )
+      )
+      .join("g")
+      .attr("class", (d) => `${d.data.x.toLowerCase().replace(" ", "-")} arc`);
+
     /**
      * Generates an SVG path segment for a circular arc.
-     * @param {number} x - The x-coordinate of the center of the circle.
-     * @param {number} y - The y-coordinate of the center of the circle.
-     * @param {number} r - The radius of the circle.
-     * @param {number} startAngle - The starting angle of the arc in degrees.
-     * @param {number} endAngle - The ending angle of the arc in degrees.
+     * @param {number} x The x-coordinate of the center of the circle.
+     * @param {number} y The y-coordinate of the center of the circle.
+     * @param {number} r The radius of the circle.
+     * @param {number} startAngle The starting angle of the arc in degrees.
+     * @param {number} endAngle The ending angle of the arc in degrees.
      * @returns {string} SVG path segment representing the arc.
      */
     function generatePieSlice(x, y, r, startAngle, endAngle) {
@@ -147,18 +193,18 @@ export default class PieChart extends CircleChart {
 
     /**
      * Generates an interpolator function for transitioning between SVG path segments.
-     * @param {number} x - The x-coordinate of the center of the circle.
-     * @param {number} y - The y-coordinate of the center of the circle.
-     * @param {number} r - The radius of the circle.
-     * @param {number} startAngle - The starting angle of the arc in degrees.
-     * @param {number} endAngle - The ending angle of the arc in degrees.
+     * @param {number} x The x-coordinate of the center of the circle.
+     * @param {number} y The y-coordinate of the center of the circle.
+     * @param {number} r The radius of the circle.
+     * @param {number} startAngle The starting angle of the arc in degrees.
+     * @param {number} endAngle The ending angle of the arc in degrees.
      * @returns {callback} An interpolator function that generates SVG path segments sized according to time.
      */
     const interpolateSlice =
       (x, y, r, startAngle, endAngle) =>
       /**
        * Interpolator function that generates SVG path segments.
-       * @param {number} t - The time parameter ranging from 0 to 1.
+       * @param {number} t The time parameter ranging from 0 to 1.
        * @returns {string} SVG path segment representing the arc.
        */
       (t) =>
@@ -170,15 +216,13 @@ export default class PieChart extends CircleChart {
           startAngle + (endAngle - startAngle) * t
         );
 
-    const groupSlices = groupSeries
-      .selectAll(".arc")
-      .data((d) =>
-        pieData(
-          this.dataset.map((row) => getSerie(row, d)).sort((a, b) => b.y - a.y)
-        )
-      )
-      .join("g")
-      .attr("class", (d) => `${d.data.x.toLowerCase().replace(" ", "-")} arc`);
+    /**
+     * @description
+     * Converte the input from degrees to radians.
+     * @param {number} degrees The value to convert to radians.
+     * @returns {number}
+     */
+    const degreesToRadians = (degrees) => degrees * (180 / Math.PI);
 
     groupSlices
       .selectAll("path")
@@ -186,14 +230,15 @@ export default class PieChart extends CircleChart {
       .join("path")
       .attr("class", (d) => `${d.data.x.toLowerCase().replace(" ", "-")} slice`)
       .transition(this.getTransition())
-      .attrTween("d", (d) => {
-        const startAngle = d.startAngle * (180 / Math.PI); // Convert start angle to degrees
-        const endAngle = d.endAngle * (180 / Math.PI); // Convert end angle to degrees
-        const x = 0; // Center of the circle
-        const y = 0; // Center of the circle
-        const r = d.data.radius.outer; // Outer radius of the slice
-        return interpolateSlice(x, y, r, startAngle, endAngle);
-      })
+      .attrTween("d", (d) =>
+        interpolateSlice(
+          0,
+          0,
+          d.data.radius.outer,
+          degreesToRadians(d.startAngle),
+          degreesToRadians(d.endAngle)
+        )
+      )
       .style("fill", (d) => this.colorScale(d.data.x));
   }
 
@@ -221,7 +266,7 @@ export default class PieChart extends CircleChart {
 
     groupSlices
       .selectAll("text")
-      .data(d => [d])
+      .data((d) => [d])
       .join("text")
       .attr(
         "transform",
