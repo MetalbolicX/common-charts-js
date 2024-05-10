@@ -1,21 +1,83 @@
 import RectangularChart from "../rectangular-chart.mjs";
 
-const { scaleBand, scaleOrdinal } = d3;
-
 ("use strict");
 
+const { scaleBand } = d3;
+
+/**
+ * @description
+ * VBarChart represents a vertical bars chart.
+ * @class
+ * @extends RectangularChart
+ */
 export default class VBarChart extends RectangularChart {
+  /**
+   * @description
+   * The D3 js scaleBand for the grouped columns when the vertical bar chart is not stcaked.
+   * @type {D3Scale}
+   */
   #x1;
+  /**
+   * @description
+   * The value of spacing between bars. The value must be between 0 and 1.
+   * @type {number}
+   */
   #innerPadding;
+  /**
+   * @description
+   * How the sorting order will be. true means ascending. false means descending.
+   * @type {boolean}
+   */
   #sortAscending;
+  /**
+   * @description
+   * Whether the bar chart is stacked or grouped. true means stacked. false means grouped.
+   * @type {boolean}
+   */
+
   #isStacked;
+  /**
+   * @description
+   * Whether the data is represented as percentage of total data.
+   * @type {boolean}
+   */
   #isPercentage;
+  /**
+   * @description
+   * The total amount per all numerical series.
+   * @type {number}
+   */
   #granTotal;
+  /**
+   * @description
+   * Whether the data is represented as normalized (the percentage per category).
+   * @type {boolean}
+   */
   #isNormalized;
 
-  constructor() {
-    super();
-    this.#x1 = undefined;
+    /**
+   * @description
+   * Create a new instance of a VBarChart object.
+   * @constructor
+   * @param {object} config The object for the constructor parameters.
+   * @param {string} config.bindTo The css selector for the svg container to draw the chart.
+   * @param {object[]} config.dataset The dataset to create the chart.
+   * @example
+   * ```JavaScript
+   * const dataset = [
+   *    { date: "12-Feb-12", europe: 52, asia: 40, america: 65 },
+   *    { date: "27-Feb-12", europe: 56, asia: 35, america: 70 }
+   * ];
+   *
+   * const chart = new VBarChart({
+   *    bindTo: "svg.chart",
+   *    dataset
+   * });
+   * ```
+   */
+  constructor({ bindTo, dataset }) {
+    super({ bindTo, dataset });
+    this._x1 = scaleBand();
     this.#innerPadding = 0.1;
     this.#sortAscending = false;
     this.#isStacked = true;
@@ -32,8 +94,11 @@ export default class VBarChart extends RectangularChart {
    * @see {@link https://d3js.org/d3-scale/band}
    * @example
    * ```JavaScript
-   * const chart = new VBarChart()
-   *  .innerPadding(0.1);
+   * const chart = new VBarChart({
+   *    bindTo: "svg.chart",
+   *    dataset
+   * })
+   * .innerPadding(0.1);
    * ```
    */
   innerPadding(value) {
@@ -49,8 +114,11 @@ export default class VBarChart extends RectangularChart {
    * @returns {boolean|this}
    * @example
    * ```JavaScript
-   * const chart = new VBarChart()
-   *  .sortAscending(true);
+   * const chart = new VBarChart({
+   *    bindTo: "svg.chart",
+   *    dataset
+   * })
+   * .sortAscending(true);
    * ```
    */
   sortAscending(value) {
@@ -66,8 +134,11 @@ export default class VBarChart extends RectangularChart {
    * @returns {boolean|this}
    * @example
    * ```JavaScript
-   * const chart = new VBarChart()
-   *  .isStacked(true);
+   * const chart = new VBarChart({
+   *    bindTo: "svg.chart",
+   *    dataset
+   * })
+   * .isStacked(true);
    * ```
    */
   isStacked(value) {
@@ -126,7 +197,7 @@ export default class VBarChart extends RectangularChart {
    * @access @protected
    */
   _setGrantTotal() {
-    this.#granTotal = this.data()
+    this.#granTotal = this.dataset
       .flatMap((d) => this.ySeries.map((serie) => d[serie]))
       .reduce((acc, d) => acc + d, 0);
   }
@@ -147,7 +218,7 @@ export default class VBarChart extends RectangularChart {
    * @access @protected
    */
   _reestructureData() {
-    const records = this.data()
+    const records = this.dataset
       .map((row) => {
         const totalPerCategory = this.ySeries
           .flatMap((serie) => row[serie])
@@ -178,7 +249,7 @@ export default class VBarChart extends RectangularChart {
         !this.sortAscending() ? b.total - a.total : a.total - b.total
       );
     // Reset the records sorted
-    this.data(records);
+    this._dataset = records;
   }
 
   /**
@@ -188,18 +259,14 @@ export default class VBarChart extends RectangularChart {
    */
   init() {
     // Set the numerical series
-    this._ySeries = Object.keys(
-      this._getNumericalRow(this.data().at(0), [this.xConfiguration().serie])
-    );
+    this._ySeries = this._getNumericalFieldsToUse([""])
     this._seriesShown = this.ySeries;
-    // Select the svg element container for the chart
-    this._setSvg();
     // Set the grant total
     this._setGrantTotal();
     // Rearrange the dataset
     this._reestructureData();
     // Which are the maximum values for the domain of the y configuration
-    const yValues = this.data().map((row) => ({
+    const yValues = this.dataset.map((row) => ({
       values: row.values,
       total: row.total,
     }));
@@ -210,7 +277,7 @@ export default class VBarChart extends RectangularChart {
     );
     // Set the band scale for the nain categories
     this._x = this.xConfiguration()
-      .scale.domain(this.data().map((row) => row.x))
+      .scale.domain(this.dataset.map((row) => row.x))
       .range([this.margin().left, this.width() - this.margin().right])
       .paddingInner(this.innerPadding());
     // Set the bar chart horizontally
@@ -218,14 +285,14 @@ export default class VBarChart extends RectangularChart {
       .scale.domain([0, (1 + this.yAxisOffset()) * ySerieRange.max])
       .range([this.height() - this.margin().bottom, this.margin().top]);
     // Set the color schema
-    this._colorScale = scaleOrdinal()
+    this.colorScale
       .domain(this.ySeries)
       .range(this.yConfiguration().colorSeries);
     // Set the axes
     this._xAxis = this._D3Axis(this.xAxisConfig().position).scale(this.x);
     this._yAxis = this._D3Axis(this.yAxisConfig().position).scale(this.y);
     // Set the second scale for the grouped bar chart if the graph is not stacked
-    this._x1 = scaleBand().domain(this.ySeries).range([0, this.x.bandwidth()]);
+    this.x1.domain(this.ySeries).range([0, this.x.bandwidth()]);
     // Set the y axis customizations of the y axis.
     if (this.yAxisConfig().customizations) {
       for (const [yFormat, customFormat] of Object.entries(
@@ -243,18 +310,21 @@ export default class VBarChart extends RectangularChart {
    * @example
    * ```JavaScript
    * // Set all the parameters of the chart
-   * const chart = new VBarChart()
-   *  ...;
+   * const chart = new VBarChart({
+   *    bindTo: "svg.chart",
+   *    dataset
+   * })
+   * ...;
    *
    * chart.init();
    * chart.addBars();
    * ```
    */
   addBars() {
-    const barsGroup = this._svg.append("g").attr("class", "bars");
+    const barsGroup = this.svg.append("g").attr("class", "bars");
     barsGroup
       .selectAll("g")
-      .data(this.data())
+      .data(this.dataset)
       .join("g")
       .attr("transform", (d) => `translate(${this.x(d.x)}, 0)`)
       .attr("class", (d) => `${d.x.toLowerCase().replace(" ", "-")} bar-group`);
@@ -284,15 +354,18 @@ export default class VBarChart extends RectangularChart {
    * @example
    * ```JavaScript
    * // Set all the parameters of the chart
-   * const chart = new VBarChart()
-   *  ...;
+   * const chart = new VBarChart({
+   *    bindTo: "svg.chart",
+   *    dataset
+   * })
+   * ...;
    *
    * chart.init();
    * chart.yGrid();
    * ```
    */
   yGrid() {
-    const yGridGroup = this._svg.append("g").attr("class", "y grid");
+    const yGridGroup = this.svg.append("g").attr("class", "y grid");
     yGridGroup
       .selectAll("line")
       .data(this.y.ticks())
@@ -311,15 +384,18 @@ export default class VBarChart extends RectangularChart {
    * @example
    * ```JavaScript
    * // Set all the parameters of the chart
-   * const chart = new VBarChart()
-   *  ...;
+   * const chart = new VBarChart({
+   *    bindTo: "svg.chart",
+   *    dataset
+   * })
+   * ...;
    *
    * chart.init();
    * chart.addLabels(-10);
    * ```
    */
   addLabels(deltaY = -5) {
-    const bars = this._svg.select(".bars");
+    const bars = this.svg.select(".bars");
     bars
       .selectAll("g")
       .selectAll("text")
@@ -346,15 +422,18 @@ export default class VBarChart extends RectangularChart {
    * @example
    * ```JavaScript
    * // Set all the parameters of the chart
-   * const chart = new VBarChart()
-   *  ...;
+   * const chart = new VBarChart({
+   *    bindTo: "svg.chart",
+   *    dataset
+   * })
+   * ...;
    *
    * chart.init();
    * chart.xAxisArrow();
    * ```
    */
   xAxisArrow() {
-    const arrowGroup = this._svg
+    const arrowGroup = this.svg
       .selectAll(".axis.arrows")
       .data([null])
       .join("g")

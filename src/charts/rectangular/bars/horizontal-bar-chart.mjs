@@ -1,12 +1,36 @@
 import VBarChart from "./vertical-bar-chart.mjs";
 
-const { scaleBand, scaleOrdinal } = d3;
-
 ("use strict");
 
+/**
+ * @description
+ * HBarChart represents horizontal bars chart.
+ * @class
+ * @extends VBarChart
+ */
 export default class HBarChart extends VBarChart {
-  constructor() {
-    super();
+  /**
+   * @description
+   * Create a new instance of a HBarChart object.
+   * @constructor
+   * @param {object} config The object for the constructor parameters.
+   * @param {string} config.bindTo The css selector for the svg container to draw the chart.
+   * @param {object[]} config.dataset The dataset to create the chart.
+   * @example
+   * ```JavaScript
+   * const dataset = [
+   *    { date: "12-Feb-12", europe: 52, asia: 40, america: 65 },
+   *    { date: "27-Feb-12", europe: 56, asia: 35, america: 70 }
+   * ];
+   *
+   * const chart = new HBarChart({
+   *    bindTo: "svg.chart",
+   *    dataset
+   * });
+   * ```
+   */
+  constructor({ bindTo, dataset }) {
+    super({ bindTo, dataset });
   }
   /**
    * @description
@@ -15,17 +39,14 @@ export default class HBarChart extends VBarChart {
    */
   init() {
     // Set the numerical series
-    this._ySeries = Object.keys(
-      this._getNumericalRow(this.data().at(0), [this.xConfiguration().serie])
-    );
-    // Select the svg element container for the chart
-    this._setSvg();
+    this._ySeries = this._getNumericalFieldsToUse([""])
+    this._seriesShown = this.ySeries;
     // Set the grant total
     this._setGrantTotal();
     // Rearrange the dataset
     this._reestructureData();
     // Which are the maximum values for the domain of the y configuration
-    const yValues = this.data().map((row) => ({
+    const yValues = this.dataset.map((row) => ({
       values: row.values,
       total: row.total,
     }));
@@ -36,7 +57,7 @@ export default class HBarChart extends VBarChart {
     );
     // Set the band scale for the nain categories
     this._x = this.xConfiguration()
-      .scale.domain(this.data().map((row) => row.x))
+      .scale.domain(this.dataset.map((row) => row.x))
       .range([this.margin().top, this.height() - this.margin().bottom])
       .paddingInner(this.innerPadding());
     // Set the bar chart horizontally
@@ -44,16 +65,14 @@ export default class HBarChart extends VBarChart {
       .scale.domain([0, (1 + this.yAxisOffset()) * ySerieRange.max])
       .range([this.margin().left, this.width() - this.margin().right]);
     // Set the color schema
-    this._colorScale = scaleOrdinal()
+    this.colorScale
       .domain(this.ySeries)
       .range(this.yConfiguration().colorSeries);
     // Set the axes
     this._xAxis = this._D3Axis(this.xAxisConfig().position).scale(this.x);
     this._yAxis = this._D3Axis(this.yAxisConfig().position).scale(this.y);
     // Set the second scale for the grouped bar chart if the graph is not stacked
-    this._x1 = scaleBand()
-      .domain(this.ySeries)
-      .range([0, this.x.bandwidth()]);
+    this.x1.domain(this.ySeries).range([0, this.x.bandwidth()]);
     // Set the y axis customizations of the y axis.
     if (this.yAxisConfig().customizations) {
       for (const [yFormat, customFormat] of Object.entries(
@@ -71,24 +90,24 @@ export default class HBarChart extends VBarChart {
    * @example
    * ```JavaScript
    * // Set all the parameters of the chart
-   * const chart = new HBarChart()
-   *  ...;
+   * const chart = new HBarChart({
+   *    bindTo: "svg.chart",
+   *    dataset
+   * })
+   * ...;
    *
    * chart.init();
    * chart.addBars();
    * ```
    */
   addBars() {
-    const barsGroup = this._svg.append("g").attr("class", "bars");
+    const barsGroup = this.svg.append("g").attr("class", "bars");
     barsGroup
       .selectAll("g")
-      .data(this.data())
+      .data(this.dataset)
       .join("g")
       .attr("transform", (d) => `translate(0, ${this.x(d.x)})`)
-      .attr(
-        "class",
-        (d) => `${d.x.toLowerCase().replace(" ", "-")} bar-group`
-      );
+      .attr("class", (d) => `${d.x.toLowerCase().replace(" ", "-")} bar-group`);
 
     barsGroup
       .selectAll("g")
@@ -115,15 +134,18 @@ export default class HBarChart extends VBarChart {
    * @example
    * ```JavaScript
    * // Set all the parameters of the chart
-   * const chart = new HBarChart()
-   *  ...;
+   * const chart = new HBarChart({
+   *    bindTo: "svg.chart",
+   *    dataset
+   * })
+   * ...;
    *
    * chart.init();
    * chart.yGrid();
    * ```
    */
   yGrid() {
-    const yGridGroup = this._svg.append("g").attr("class", "y grid");
+    const yGridGroup = this.svg.append("g").attr("class", "y grid");
     yGridGroup
       .selectAll("line")
       .data(this.y.ticks())
@@ -143,27 +165,25 @@ export default class HBarChart extends VBarChart {
    * @example
    * ```JavaScript
    * // Set all the parameters of the chart
-   * const chart = new HBarChart()
-   *  ...;
+   * const chart = new HBarChart({
+   *    bindTo: "svg.chart",
+   *    dataset
+   * })
+   * ...;
    *
    * chart.init();
    * chart.addLabels(-10, 6);
    * ```
    */
   addLabels(deltaX = -5, deltaY = 5) {
-    const bars = this._svg.select(".bars");
+    const bars = this.svg.select(".bars");
     bars
       .selectAll("g")
       .selectAll("text")
       .data((d) => d.values)
       .join("text")
-      .attr(
-        "class",
-        (d) => `${d.x.toLowerCase().replace(" ", "-")} text-label`
-      )
-      .attr("x", (d) =>
-        this.isStacked() ? this.y(d.previous) : this.y(d.y)
-      )
+      .attr("class", (d) => `${d.x.toLowerCase().replace(" ", "-")} text-label`)
+      .attr("x", (d) => (this.isStacked() ? this.y(d.previous) : this.y(d.y)))
       .attr("y", (d) =>
         this.isStacked() ? this.x.bandwidth() / 2 : this.x1(d.serie)
       )
@@ -179,15 +199,18 @@ export default class HBarChart extends VBarChart {
    * @example
    * ```JavaScript
    * // Set all the parameters of the chart
-   * const chart = new VBarChart()
-   *  ...;
+   * const chart = new HBarChart({
+   *    bindTo: "svg.chart",
+   *    dataset
+   * })
+   * ...;
    *
    * chart.init();
    * chart.xAxisArrow();
    * ```
    */
   xAxisArrow() {
-    const arrowGroup = this._svg
+    const arrowGroup = this.svg
       .selectAll(".axis.arrows")
       .data([null])
       .join("g")
