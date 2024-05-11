@@ -2,8 +2,6 @@ import RectangularChart from "../rectangular-chart.mjs";
 
 ("use strict");
 
-const { scaleBand } = d3;
-
 /**
  * @description
  * VBarChart represents a vertical bars chart.
@@ -55,7 +53,7 @@ export default class VBarChart extends RectangularChart {
    */
   #isNormalized;
 
-    /**
+  /**
    * @description
    * Create a new instance of a VBarChart object.
    * @constructor
@@ -77,7 +75,8 @@ export default class VBarChart extends RectangularChart {
    */
   constructor({ bindTo, dataset }) {
     super({ bindTo, dataset });
-    this._x1 = scaleBand();
+    this._x = this._getD3Scale("band");
+    this._x1 = this._getD3Scale("band");
     this.#innerPadding = 0.1;
     this.#sortAscending = false;
     this.#isStacked = true;
@@ -259,7 +258,9 @@ export default class VBarChart extends RectangularChart {
    */
   init() {
     // Set the numerical series
-    this._ySeries = this._getNumericalFieldsToUse([""])
+    this._ySeries = this._getNumericalFieldsToUse([
+      this.xConfiguration().serie,
+    ]);
     this._seriesShown = this.ySeries;
     // Set the grant total
     this._setGrantTotal();
@@ -276,13 +277,14 @@ export default class VBarChart extends RectangularChart {
         : yValues.flatMap((d) => d.values.map((r) => r.y))
     );
     // Set the band scale for the nain categories
-    this._x = this.xConfiguration()
-      .scale.domain(this.dataset.map((row) => row.x))
+    this.x
+      .domain(this.dataset.map((row) => row.x))
       .range([this.margin().left, this.width() - this.margin().right])
       .paddingInner(this.innerPadding());
     // Set the bar chart horizontally
-    this._y = this.yConfiguration()
-      .scale.domain([0, (1 + this.yAxisOffset()) * ySerieRange.max])
+    this._y = this._getD3Scale(this.yConfiguration().scale);
+    this.y
+      .domain([0, (1 + this.yAxisOffset()) * ySerieRange.max])
       .range([this.height() - this.margin().bottom, this.margin().top]);
     // Set the color schema
     this.colorScale

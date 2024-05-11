@@ -35,19 +35,19 @@ export default class RectangularChart extends Chart {
    * @type {{position: string, customizations: object}}
    */
   #xAxisConfiguration;
- /**
+  /**
    * @description
    * The scale function to compute the data for the x values to set the position in screen.
    * @type {D3Scale}
    */
   #x;
-    /**
+  /**
    * @description
    * The configuration for the x values of the chart. The name of the serie for the x values and the scale to be used.
-   * @type {{serie: string, scale: D3Scale}}
+   * @type {{serie: string, scale: string}}
    */
   #xConfiguration;
-      /**
+  /**
    * @description
    * The name of the serie to analyze a serie with categorical values.
    * @type {string}
@@ -78,8 +78,8 @@ export default class RectangularChart extends Chart {
     super({ bindTo, dataset });
     this.#xAxis = undefined;
     this.#yAxis = undefined;
-    this.#x = undefined;
     this.#xConfiguration = undefined;
+    this.#x = undefined;
     this.#yAxisConfiguration = {
       position: "left",
       customizations: { tickFormat: format(".1f") },
@@ -96,8 +96,8 @@ export default class RectangularChart extends Chart {
    * Getter and setter of the configuration of the x values to draw in the chart.
    * @param {object} config The configuration to give to the x values series.
    * @param {string} config.serie The name of the serie for the x axis.
-   * @param {D3Scale} config.scale The D3 js function to process the x data.
-   * @returns {{serie: string, scale: D3Scale}|ReectangularChart}
+   * @param {string} config.scale The D3 js function to process the x data.
+   * @returns {{serie: string, scale: string}|RectangularChart}
    * @example
    * ```JavaScript
    * const chart = new RectangularChart({
@@ -106,7 +106,7 @@ export default class RectangularChart extends Chart {
    * })
    * .xConfiguration({
    *    serie: "date",
-   *    scale: d3.scaleLinear()
+   *    scale: "linear"
    * });
    * ```
    */
@@ -114,7 +114,7 @@ export default class RectangularChart extends Chart {
     if (!arguments.length) {
       return this.#xConfiguration;
     }
-    if (typeof config === "object") {
+    if (typeof config === "object" && "serie" in config && "scale" in config) {
       this.#xConfiguration = { ...config };
     } else {
       console.error(
@@ -130,7 +130,7 @@ export default class RectangularChart extends Chart {
    * @param {object} config Configuration object of the y axis position and customizations.
    * @param {string} config.position The position of the y axis. It can only be top, right, bottom or left inputs.
    * @param {object} config.customizations The customizations of the y axis according to the D3 js axis.
-   * @returns {{position: string, customizations: object}|ReectangularChart}
+   * @returns {{position: string, customizations: object}|RectangularChart}
    * @see {@link https://d3js.org/d3-scale}
    * @example
    * ```JavaScript
@@ -164,7 +164,7 @@ export default class RectangularChart extends Chart {
    * @param {object} config Configuration object of the x axis position and customizations.
    * @param {string} config.position The position of the x axis. It can only be top, right, bottom or left inputs.
    * @param {object} config.customizations The customizations of the x axis according to the D3 js axis.
-   * @returns {{position: string, customizations: object}|ReectangularChart}
+   * @returns {{position: string, customizations: object}|RectangularChart}
    * @see {@link https://d3js.org/d3-scale}
    * @example
    * ```JavaScript
@@ -291,7 +291,7 @@ export default class RectangularChart extends Chart {
    * @description
    * Getter and setter of the name of serie that contains categorical values.
    * @param {string} name The name of the serie in the dataset of the categorical values.
-   * @returns {string|ReectangularChart}
+   * @returns {string|RectangularChart}
    * @example
    * ```JavaScript
    * const chart = new RectangularChart({

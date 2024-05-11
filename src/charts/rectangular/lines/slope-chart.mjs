@@ -15,7 +15,7 @@ export default class SlopeChart extends RectangularChart {
    * @type {number}
    */
   #radius;
-    /**
+  /**
    * @description
    * Create a new instance of a SlopeChart object.
    * @constructor
@@ -35,9 +35,10 @@ export default class SlopeChart extends RectangularChart {
    * });
    * ```
    */
-  constructor({ bindTo, dataset}) {
-    super({ bindTo, dataset});
+  constructor({ bindTo, dataset }) {
+    super({ bindTo, dataset });
     this.#radius = 3;
+    this._x = this._getD3Scale("ordinal");
   }
 
   /**
@@ -66,18 +67,21 @@ export default class SlopeChart extends RectangularChart {
    * @returns {void}
    */
   init() {
-    this._ySeries = this._getNumericalFieldsToUse([""]);
+    this._ySeries = this._getNumericalFieldsToUse([
+      this.xConfiguration().serie,
+    ]);
     // Set the horizontal values of the x axis
-    this._x = this.xConfiguration()
-      .scale.domain(this.ySeries)
+    this.x
+      .domain(this.ySeries)
       .range([this.margin().left, this.width() - this.margin().right]);
     // Set the y scale values
     const ySerieRange = this._serieRange(
       this.dataset.flatMap((row) => this.ySeries.map((serie) => row[serie]))
     );
     // Set the scale for the values in the left position of the y series
-    this._y = this.yConfiguration()
-      .scale.domain([0, (1 + this.yAxisOffset()) * ySerieRange.max])
+    this._y = this._getD3Scale(this.yConfiguration().scale);
+    this.y
+      .domain([0, (1 + this.yAxisOffset()) * ySerieRange.max])
       .range([this.height() - this.margin().bottom, this.margin().top]);
     // Set the axes
     this._xAxis = this._D3Axis(this.xAxisConfig().position).scale(this.x);

@@ -73,20 +73,20 @@ export default class MultiLineChart extends RectangularChart {
       this.dataset.map(({ [this.xConfiguration().serie]: value }) => value)
     );
     // Set the scale for the values in the bottom position of the x axis
-    this._x = this.xConfiguration()
-      .scale.domain(Object.values(xSerieRange))
+    this._x = this._getD3Scale(this.xConfiguration().scale);
+    this.x
+      .domain(Object.values(xSerieRange))
       .range([this.margin().left, this.width() - this.margin().right]);
     // Set the numerical series to use
-    this._ySeries = this._getNumericalFieldsToUse([
-      this.xConfiguration().serie,
-    ]);
+    this._ySeries = this._getNumericalFieldsToUse([this.xConfiguration().serie]);
     // Which are the range of values for the y scale
     const ySerieRange = this._serieRange(
       this.dataset.flatMap((d) => this.ySeries.map((serie) => d[serie]))
     );
     // Set the scale for the values in the left position of the y series
-    this._y = this.yConfiguration()
-      .scale.domain([
+    this._y = this._getD3Scale(this.yConfiguration().scale);
+    this.y
+      .domain([
         (1 - this.yAxisOffset()) * ySerieRange.min,
         (1 + this.yAxisOffset()) * ySerieRange.max,
       ])

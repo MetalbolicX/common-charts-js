@@ -6,6 +6,20 @@ const {
   dispatch,
   greatestIndex,
   leastIndex,
+  scaleLinear,
+  scaleTime,
+  scaleUtc,
+  scalePow,
+  scaleSqrt,
+  scaleLog,
+  scaleSymlog,
+  scaleBand,
+  scalePoint,
+  scaleSequential,
+  scaleDiverging,
+  scaleQuantile,
+  scaleQuantize,
+  scaleThreshold,
   scaleOrdinal,
 } = d3;
 
@@ -156,7 +170,7 @@ export default class Chart {
     this.#height = this.svg?.node().getBoundingClientRect().height || 600;
     this.#margin = { top: 0, right: 0, bottom: 0, left: 0 };
     this.#yAxisOffset = 0.05;
-    this._colorScale = scaleOrdinal();
+    this._colorScale = this._getD3Scale("ordinal");
     this.#seriesShown = undefined;
     this.#duration = 2000;
     this.#listeners = dispatch("mouseover", "mouseout");
@@ -290,8 +304,9 @@ export default class Chart {
    * Getter and setter of the configuration of the y numerical values to draw in the chart.
    * @param {object} config The configuration to give to the y (numerical) values series.
    * @param {string[]} config.colorSeries The string of the color to classify a each of the datasets.
-   * @param {D3SCale} config.scale The D3 js function to process the numerical data.
-   * @returns {{colorSeries: string[], scale: D3Scale}|Chart}
+   * @param {string} config.scale The name of the D3 js scale available by the library.
+   * @returns {{colorSeries: string[], scale: string}|Chart}
+   * @see {@link https://d3js.org/d3-scale}
    * @example
    * ```JavaScript
    * const chart = new Chart({
@@ -300,7 +315,7 @@ export default class Chart {
    * })
    * .yConfiguration({
    *    colorSeries: ["black", "pink", "#aaa"]
-   *    scale: d3.scaleLinear()
+   *    scale: "linear"
    * });
    * ```
    */
@@ -665,6 +680,37 @@ export default class Chart {
         ],
       };
     }, {});
+  }
+
+
+  /**
+   * @description
+   * Get any of the D3 js scales of the library. See details.
+   * @param {string} scale The name of the D3 js scale generator available by the library.
+   * @returns {D3Scale}
+   * @see {@link https://d3js.org/d3-scale}
+   * @access @protected
+   */
+  _getD3Scale(scale) {
+    /** @enum {D3Scale} */
+    const D3Scales = {
+      linear: scaleLinear(),
+      time: scaleTime(),
+      utc: scaleUtc(),
+      pow: scalePow(),
+      sqrt: scaleSqrt(),
+      log: scaleLog(),
+      symlog: scaleSymlog(),
+      band: scaleBand(),
+      point: scalePoint(),
+      sequential: scaleSequential(),
+      diverging: scaleDiverging(),
+      quantile: scaleQuantile(),
+      quantize: scaleQuantize(),
+      threshold: scaleThreshold(),
+      ordinal: scaleOrdinal(),
+    }
+    return D3Scales[scale] || D3Scales.linear;
   }
 
   /**

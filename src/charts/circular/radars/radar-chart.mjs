@@ -93,7 +93,7 @@ export default class RadarChart extends CircleChart {
       this.height() - this.margin().top - this.margin().bottom;
     this._circleRadius = Math.min(widthCircle, heightCircle) / 2;
     // Set the numerical series to use the chart
-    this._ySeries = this._getNumericalFieldsToUse([""]);
+    this._ySeries = this._getNumericalFieldsToUse([this.xSerie()]);
     // Set the color schema
     this.colorScale
       .domain(this.ySeries)
@@ -103,8 +103,9 @@ export default class RadarChart extends CircleChart {
       this.dataset.flatMap((row) => this.ySeries.map((serie) => row[serie]))
     );
     // Set the scale of the radius
-    this._y = this.yConfiguration()
-      .scale.domain([0, (1 + this.yAxisOffset()) * ySerieRange.max])
+    this._y = this._getD3Scale(this.yConfiguration().scale);
+    this.y
+      .domain([0, (1 + this.yAxisOffset()) * ySerieRange.max])
       .range([0, this.circleRadius]);
     // Set the g element for centered
     this.svg

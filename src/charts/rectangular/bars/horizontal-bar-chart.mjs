@@ -39,7 +39,9 @@ export default class HBarChart extends VBarChart {
    */
   init() {
     // Set the numerical series
-    this._ySeries = this._getNumericalFieldsToUse([""])
+    this._ySeries = this._getNumericalFieldsToUse([
+      this.xConfiguration().serie,
+    ]);
     this._seriesShown = this.ySeries;
     // Set the grant total
     this._setGrantTotal();
@@ -56,13 +58,14 @@ export default class HBarChart extends VBarChart {
         : yValues.flatMap((d) => d.values.map((r) => r.y))
     );
     // Set the band scale for the nain categories
-    this._x = this.xConfiguration()
-      .scale.domain(this.dataset.map((row) => row.x))
+    this.x
+      .domain(this.dataset.map((row) => row.x))
       .range([this.margin().top, this.height() - this.margin().bottom])
       .paddingInner(this.innerPadding());
     // Set the bar chart horizontally
-    this._y = this.yConfiguration()
-      .scale.domain([0, (1 + this.yAxisOffset()) * ySerieRange.max])
+    this._y = this._getD3Scale(this.yConfiguration().scale);
+    this.y
+      .domain([0, (1 + this.yAxisOffset()) * ySerieRange.max])
       .range([this.margin().left, this.width() - this.margin().right]);
     // Set the color schema
     this.colorScale
